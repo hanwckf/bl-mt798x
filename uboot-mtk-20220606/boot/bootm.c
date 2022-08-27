@@ -1019,7 +1019,7 @@ static int bootm_host_load_image(const void *fit, int req_image_type,
 	int noffset;
 	ulong load_end;
 	uint8_t image_type;
-	uint8_t imape_comp;
+	uint8_t image_comp;
 	void *load_buf;
 	int ret;
 
@@ -1037,20 +1037,20 @@ static int bootm_host_load_image(const void *fit, int req_image_type,
 		return -EINVAL;
 	}
 
-	if (fit_image_get_comp(fit, noffset, &imape_comp)) {
+	if (fit_image_get_comp(fit, noffset, &image_comp)) {
 		puts("Can't get image compression!\n");
 		return -EINVAL;
 	}
 
 	/* Allow the image to expand by a factor of 4, should be safe */
 	load_buf = malloc((1 << 20) + len * 4);
-	ret = image_decomp(imape_comp, 0, data, image_type, load_buf,
+	ret = image_decomp(image_comp, 0, data, image_type, load_buf,
 			   (void *)data, len, CONFIG_SYS_BOOTM_LEN,
 			   &load_end);
 	free(load_buf);
 
 	if (ret) {
-		ret = handle_decomp_error(imape_comp, load_end - 0, ret);
+		ret = handle_decomp_error(image_comp, load_end - 0, ret);
 		if (ret != BOOTM_ERR_UNIMPLEMENTED)
 			return ret;
 	}
