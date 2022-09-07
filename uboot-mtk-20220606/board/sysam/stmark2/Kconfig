@@ -1,0 +1,22 @@
+if TARGET_STMARK2
+
+config CF_SBF
+	def_bool y
+
+config SYS_INPUT_CLKSRC
+	hex
+	default 30000000
+
+config SYS_CPU
+	default "mcf5445x"
+
+config SYS_BOARD
+	default "stmark2"
+
+config SYS_VENDOR
+	default "sysam"
+
+config SYS_CONFIG_NAME
+	default "stmark2"
+
+endif

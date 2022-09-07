@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: GPL-2.0+ OR X11
+/*
+ * Device Tree Include file for NXP Layerscape-1046A family SoC.
+ *
+ * Copyright 2019 NXP
+ *
+ */
+
+/dts-v1/;
+/include/ "fsl-ls1046a.dtsi"
+
+/ {
+	model = "LS1046A FRWY Board";
+
+	aliases {
+		spi0 = &qspi;
+	};
+
+};
+
+&qspi {
+	status = "okay";
+
+	mt25qu512a0: flash@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "jedec,spi-nor";
+		spi-max-frequency = <50000000>;
+		reg = <0>;
+	};
+
+};
+
+&i2c0 {
+	status = "okay";
+};

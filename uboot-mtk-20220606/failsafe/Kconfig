@@ -1,0 +1,19 @@
+#
+# Failsafe Web UI
+#
+
+menuconfig WEBUI_FAILSAFE
+	bool "Enable Failsafe Web UI"
+	select TCP
+	select HTTPD
+	default n
+	help
+	  Enable Web based failsafe UI
+
+if WEBUI_FAILSAFE
+
+config WEBUI_FAILSAFE_ON_AUTOBOOT_FAIL
+	bool "Start Failsafe Web UI on autoboot failure"
+	default n
+
+endif # WEBUI_FAILSAFE

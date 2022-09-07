@@ -1,0 +1,332 @@
+// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
+/*
+ * Copyright (C) 2019 Marek Vasut <marex@denx.de>
+ */
+
+#include <dt-bindings/clock/stm32mp1-clksrc.h>
+#include "stm32mp15-u-boot.dtsi"
+#include "stm32mp15-ddr3-dhsom-2x1Gb-1066-binG.dtsi"
+#include "stm32mp15-ddr3-dhsom-2x2Gb-1066-binG.dtsi"
+#include "stm32mp15-ddr3-dhsom-2x4Gb-1066-binG.dtsi"
+
+/delete-node/ &ksz8851;
+
+/ {
+	aliases {
+		i2c1 = &i2c2;
+		i2c3 = &i2c4;
+		i2c4 = &i2c5;
+		mmc0 = &sdmmc1;
+		mmc1 = &sdmmc2;
+		spi0 = &qspi;
+		usb0 = &usbotg_hs;
+		eeprom0 = &eeprom0;
+		ethernet1 = &ks8851;
+	};
+
+	config {
+		u-boot,boot-led = "heartbeat";
+		u-boot,error-led = "error";
+		st,fastboot-gpios = <&gpioa 13 GPIO_ACTIVE_LOW>;
+		st,stm32prog-gpios = <&gpioa 14 GPIO_ACTIVE_LOW>;
+		dh,som-coding-gpios = <&gpiof 12 0>, <&gpiof 13 0>, <&gpiof 15 0>;
+		dh,ddr3-coding-gpios = <&gpioz 6 0>, <&gpioz 7 0>;
+	};
+
+	/* This is actually on FMC2, but we do not have bus driver for that */
+	ks8851: ks8851mll@64000000 {
+		compatible = "micrel,ks8851-mll";
+		reg = <0x64000000 0x20000>;
+	};
+};
+
+&ethernet0 {
+	phy-reset-gpios = <&gpioh 3 GPIO_ACTIVE_LOW>;
+	/delete-property/ st,eth-ref-clk-sel;
+};
+
+&ethernet0_rmii_pins_a {
+	pins1 {
+		pinmux = <STM32_PINMUX('G', 13, AF11)>, /* ETH1_RMII_TXD0 */
+			 <STM32_PINMUX('G', 14, AF11)>, /* ETH1_RMII_TXD1 */
+			 <STM32_PINMUX('B', 11, AF11)>, /* ETH1_RMII_TX_EN */
+			 <STM32_PINMUX('A', 1, AF11)>,  /* ETH1_RMII_REF_CLK */
+			 <STM32_PINMUX('A', 2, AF11)>,  /* ETH1_MDIO */
+			 <STM32_PINMUX('C', 1, AF11)>;  /* ETH1_MDC */
+	};
+};
+
+&i2c4 {
+	u-boot,dm-pre-reloc;
+	u-boot,dm-spl;
+
+	eeprom0: eeprom@50 {
+	};
+};
+
+&i2c4_pins_a {
+	u-boot,dm-pre-reloc;
+	pins {
+		u-boot,dm-pre-reloc;
+	};
+};
+
+&phy0 {
+	/delete-property/ reset-gpios;
+};
+
+&pinctrl {
+	/* These should bound to FMC2 bus driver, but we do not have one */
+	pinctrl-0 = <&fmc_pins_b &mco2_pins_a>;
+	pinctrl-1 = <&fmc_sleep_pins_b &mco2_sleep_pins_a>;
+	pinctrl-names = "default", "sleep";
+
+	mco2_pins_a: mco2-0 {
+		pins {
+			pinmux = <STM32_PINMUX('G', 2, AF1)>; /* MCO2 */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <2>;
+		};
+	};
+
+	mco2_sleep_pins_a: mco2-sleep-0 {
+		pins {
+			pinmux = <STM32_PINMUX('G', 2, ANALOG)>; /* MCO2 */
+		};
+	};
+};
+
+&pmic {
+	u-boot,dm-pre-reloc;
+	u-boot,dm-spl;
+
+	regulators {
+		u-boot,dm-spl;
+	};
+};
+
+&flash0 {
+	u-boot,dm-spl;
+};
+
+&qspi {
+	u-boot,dm-spl;
+};
+
+&qspi_clk_pins_a {
+	u-boot,dm-spl;
+	pins {
+		u-boot,dm-spl;
+	};
+};
+
+&qspi_bk1_pins_a {
+	u-boot,dm-spl;
+	pins1 {
+		u-boot,dm-spl;
+	};
+	pins2 {
+		u-boot,dm-spl;
+	};
+};
+
+&qspi_bk2_pins_a {
+	u-boot,dm-spl;
+	pins1 {
+		u-boot,dm-spl;
+	};
+	pins2 {
+		u-boot,dm-spl;
+	};
+};
+
+&rcc {
+	st,clksrc = <
+		CLK_MPU_PLL1P
+		CLK_AXI_PLL2P
+		CLK_MCU_PLL3P
+		CLK_PLL12_HSE
+		CLK_PLL3_HSE
+		CLK_PLL4_HSE
+		CLK_RTC_LSE
+		CLK_MCO1_DISABLED
+		CLK_MCO2_PLL4P
+	>;
+
+	st,clkdiv = <
+		1 /*MPU*/
+		0 /*AXI*/
+		0 /*MCU*/
+		1 /*APB1*/
+		1 /*APB2*/
+		1 /*APB3*/
+		1 /*APB4*/
+		2 /*APB5*/
+		23 /*RTC*/
+		0 /*MCO1*/
+		1 /*MCO2*/
+	>;
+
+	st,pkcs = <
+		CLK_CKPER_HSE
+		CLK_FMC_ACLK
+		CLK_QSPI_ACLK
+		CLK_ETH_PLL4P
+		CLK_SDMMC12_PLL4P
+		CLK_DSI_DSIPLL
+		CLK_STGEN_HSE
+		CLK_USBPHY_HSE
+		CLK_SPI2S1_PLL3Q
+		CLK_SPI2S23_PLL3Q
+		CLK_SPI45_HSI
+		CLK_SPI6_HSI
+		CLK_I2C46_HSI
+		CLK_SDMMC3_PLL4P
+		CLK_USBO_USBPHY
+		CLK_ADC_CKPER
+		CLK_CEC_LSE
+		CLK_I2C12_HSI
+		CLK_I2C35_HSI
+		CLK_UART1_HSI
+		CLK_UART24_HSI
+		CLK_UART35_HSI
+		CLK_UART6_HSI
+		CLK_UART78_HSI
+		CLK_SPDIF_PLL4P
+		CLK_FDCAN_PLL4R
+		CLK_SAI1_PLL3Q
+		CLK_SAI2_PLL3Q
+		CLK_SAI3_PLL3Q
+		CLK_SAI4_PLL3Q
+		CLK_RNG1_LSI
+		CLK_RNG2_LSI
+		CLK_LPTIM1_PCLK1
+		CLK_LPTIM23_PCLK3
+		CLK_LPTIM45_LSE
+	>;
+
+	/* VCO = 1066.0 MHz => P = 266 (AXI), Q = 533 (GPU), R = 533 (DDR) */
+	pll2: st,pll@1 {
+		compatible = "st,stm32mp1-pll";
+		reg = <1>;
+		cfg = < 2 65 1 0 0 PQR(1,1,1) >;
+		frac = < 0x1400 >;
+		u-boot,dm-pre-reloc;
+	};
+
+	/* VCO = 417.8 MHz => P = 209, Q = 24, R = 11 */
+	pll3: st,pll@2 {
+		compatible = "st,stm32mp1-pll";
+		reg = <2>;
+		cfg = < 1 33 1 16 36 PQR(1,1,1) >;
+		frac = < 0x1a04 >;
+		u-boot,dm-pre-reloc;
+	};
+
+	/* VCO = 600.0 MHz => P = 50, Q = 50, R = 50 */
+	pll4: st,pll@3 {
+		compatible = "st,stm32mp1-pll";
+		reg = <3>;
+		cfg = < 1 49 5 11 11 PQR(1,1,1) >;
+		u-boot,dm-pre-reloc;
+	};
+};
+
+&sdmmc1 {
+	u-boot,dm-spl;
+	st,use-ckin;
+	st,cmd-gpios = <&gpiod 2 0>;
+	st,ck-gpios = <&gpioc 12 0>;
+	st,ckin-gpios = <&gpioe 4 0>;
+};
+
+&sdmmc1_b4_pins_a {
+	u-boot,dm-spl;
+	pins1 {
+		u-boot,dm-spl;
+	};
+	pins2 {
+		u-boot,dm-spl;
+	};
+};
+
+&sdmmc1_dir_pins_a {
+	u-boot,dm-spl;
+	pins1 {
+		u-boot,dm-spl;
+	};
+	pins2 {
+		u-boot,dm-spl;
+	};
+};
+
+&sdmmc2 {
+	u-boot,dm-spl;
+};
+
+&sdmmc2_b4_pins_a {
+	u-boot,dm-spl;
+	pins {
+		u-boot,dm-spl;
+	};
+};
+
+&sdmmc2_d47_pins_a {
+	u-boot,dm-spl;
+	pins {
+		u-boot,dm-spl;
+	};
+};
+
+&uart4 {
+	u-boot,dm-pre-reloc;
+};
+
+&uart4_pins_a {
+	u-boot,dm-pre-reloc;
+	pins1 {
+		u-boot,dm-pre-reloc;
+	};
+	pins2 {
+		u-boot,dm-pre-reloc;
+		/* pull-up on rx to avoid floating level */
+		bias-pull-up;
+	};
+};
+
+&reg11 {
+	u-boot,dm-spl;
+};
+
+&reg18 {
+	u-boot,dm-spl;
+};
+
+&usb33 {
+	u-boot,dm-spl;
+};
+
+&usbotg_hs_pins_a {
+	u-boot,dm-spl;
+};
+
+&usbotg_hs {
+	u-boot,dm-spl;
+};
+
+&usbphyc {
+	u-boot,dm-spl;
+};
+
+&usbphyc_port0 {
+	u-boot,dm-spl;
+};
+
+&usbphyc_port1 {
+	u-boot,dm-spl;
+};
+
+&vdd_usb {
+	u-boot,dm-spl;
+};

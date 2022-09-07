@@ -1,0 +1,31 @@
+# Copyright (C) 2021-2022 SkyLake Huang
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+# SD-card layout:
+#       0x0~0x4400    : GPT
+#    0x4400~0x400000  : bl2
+#  0x400000~0x480000  : u-boot-env
+#  0x480000~0x680000  : rf
+#  0x680000~0x880000  : fip
+#  0x880000~0x2880000 : kernel
+# 0x2880000~0x12880000: rootfs
+
+sd:
+  bl2_start: 0x4400
+  rf_start: 0x480000
+  fip_start: 0x680000
+  kernel_start: 0x880000
+  rootfs_start: 0x2880000

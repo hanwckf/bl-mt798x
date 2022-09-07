@@ -1,0 +1,122 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) Siemens AG, 2018-2022
+ *
+ * Authors:
+ *   Le Jin <le.jin@siemens.com>
+ *   Jan Kiszka <jan.kiszka@siemens.com>
+ *
+ * Common U-Boot bits of the IOT2050 Basic and Advanced variants
+ */
+
+/ {
+	aliases {
+		spi0 = &ospi0;
+	};
+
+	leds {
+		u-boot,dm-spl;
+		status-led-red {
+			u-boot,dm-spl;
+		};
+		status-led-green {
+			u-boot,dm-spl;
+		};
+	};
+};
+
+&cbass_mcu {
+	u-boot,dm-spl;
+
+	mcu_navss: bus@28380000 {
+		ringacc@2b800000 {
+			reg =	<0x0 0x2b800000 0x0 0x400000>,
+				<0x0 0x2b000000 0x0 0x400000>,
+				<0x0 0x28590000 0x0 0x100>,
+				<0x0 0x2a500000 0x0 0x40000>,
+				<0x0 0x28440000 0x0 0x40000>;
+			reg-names = "rt", "fifos", "proxy_gcfg", "proxy_target", "cfg";
+			ti,dma-ring-reset-quirk;
+		};
+
+		dma-controller@285c0000 {
+			reg =	<0x0 0x285c0000 0x0 0x100>,
+				<0x0 0x284c0000 0x0 0x4000>,
+				<0x0 0x2a800000 0x0 0x40000>,
+				<0x0 0x284a0000 0x0 0x4000>,
+				<0x0 0x2aa00000 0x0 0x40000>,
+				<0x0 0x28400000 0x0 0x2000>;
+			reg-names = "gcfg", "rchan", "rchanrt", "tchan",
+					    "tchanrt", "rflow";
+		};
+	};
+};
+
+&cbass_wakeup {
+	u-boot,dm-spl;
+};
+
+&cbass_main {
+	u-boot,dm-spl;
+	main_navss: bus@30800000 {
+		u-boot,dm-spl;
+	};
+};
+
+&wkup_pmx0 {
+	u-boot,dm-spl;
+	mcu-fss0-ospi0-pins-default {
+		u-boot,dm-spl;
+	};
+};
+
+&main_pmx0 {
+	u-boot,dm-spl;
+	main-uart1-pins-default {
+		u-boot,dm-spl;
+	};
+};
+
+&main_uart1 {
+	u-boot,dm-spl;
+	current-speed = <115200>;
+};
+
+&wkup_gpio0 {
+	u-boot,dm-spl;
+};
+
+&ospi0 {
+	u-boot,dm-spl;
+	flash@0 {
+		u-boot,dm-spl;
+	};
+};
+
+&secure_proxy_main {
+	u-boot,dm-spl;
+};
+
+&dmsc {
+	u-boot,dm-spl;
+	k3_sysreset: sysreset-controller {
+		compatible = "ti,sci-sysreset";
+		u-boot,dm-spl;
+	};
+};
+
+&k3_pds {
+	u-boot,dm-spl;
+};
+
+&k3_clks {
+	u-boot,dm-spl;
+};
+
+&k3_reset {
+	u-boot,dm-spl;
+};
+
+&fss {
+	u-boot,dm-spl;
+};

@@ -1,0 +1,80 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright (c) 2021, STMicroelectronics - All Rights Reserved
+ */
+
+#include <common/tbbr/tbbr_img_def.h>
+#include <dt-bindings/soc/stm32mp15-tzc400.h>
+
+#include <platform_def.h>
+
+#ifndef DDR_SIZE
+#error "DDR_SIZE is not defined"
+#endif
+
+#define DDR_NS_BASE	STM32MP_DDR_BASE
+#ifdef AARCH32_SP_OPTEE
+/* OP-TEE reserved shared memory: located at DDR top */
+#define DDR_SHARE_SIZE	STM32MP_DDR_SHMEM_SIZE
+#define DDR_SHARE_BASE	(STM32MP_DDR_BASE + (DDR_SIZE - DDR_SHARE_SIZE))
+/* OP-TEE secure memory: located right below OP-TEE reserved shared memory */
+#define DDR_SEC_SIZE	STM32MP_DDR_S_SIZE
+#define DDR_SEC_BASE	(DDR_SHARE_BASE - DDR_SEC_SIZE)
+#define DDR_NS_SIZE	(DDR_SEC_BASE - DDR_NS_BASE)
+#else /* !AARCH32_SP_OPTEE */
+#define DDR_NS_SIZE	DDR_SIZE
+#endif /* AARCH32_SP_OPTEE */
+
+/dts-v1/;
+
+/ {
+	dtb-registry {
+		compatible = "fconf,dyn_cfg-dtb_registry";
+
+		hw-config {
+			load-address = <0x0 STM32MP_HW_CONFIG_BASE>;
+			max-size = <STM32MP_HW_CONFIG_MAX_SIZE>;
+			id = <HW_CONFIG_ID>;
+		};
+
+		nt_fw {
+			load-address = <0x0 STM32MP_BL33_BASE>;
+			max-size = <STM32MP_BL33_MAX_SIZE>;
+			id = <BL33_IMAGE_ID>;
+		};
+
+#ifdef AARCH32_SP_OPTEE
+		tos_fw {
+			load-address = <0x0 STM32MP_OPTEE_BASE>;
+			max-size = <STM32MP_OPTEE_SIZE>;
+			id = <BL32_IMAGE_ID>;
+		};
+#else
+		tos_fw {
+			load-address = <0x0 STM32MP_BL32_BASE>;
+			max-size = <STM32MP_BL32_SIZE>;
+			id = <BL32_IMAGE_ID>;
+		};
+
+		tos_fw-config {
+			load-address = <0x0 STM32MP_BL32_DTB_BASE>;
+			max-size = <STM32MP_BL32_DTB_SIZE>;
+			id = <TOS_FW_CONFIG_ID>;
+		};
+#endif
+	};
+
+	st-mem-firewall {
+		compatible = "st,mem-firewall";
+#ifdef AARCH32_SP_OPTEE
+		memory-ranges = <
+			DDR_NS_BASE DDR_NS_SIZE TZC_REGION_S_NONE TZC_REGION_NSEC_ALL_ACCESS_RDWR
+			DDR_SEC_BASE DDR_SEC_SIZE TZC_REGION_S_RDWR 0
+			DDR_SHARE_BASE DDR_SHARE_SIZE TZC_REGION_S_NONE
+			TZC_REGION_ACCESS_RDWR(STM32MP1_TZC_A7_ID)>;
+#else
+		memory-ranges = <
+			DDR_NS_BASE DDR_NS_SIZE TZC_REGION_S_NONE TZC_REGION_NSEC_ALL_ACCESS_RDWR>;
+#endif
+	};
+};

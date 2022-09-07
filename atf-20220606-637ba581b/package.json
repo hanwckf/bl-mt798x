@@ -1,0 +1,23 @@
+{
+  "name": "trusted-firmware-a",
+  "version": "2.7.0",
+  "license": "BSD-3-Clause",
+  "private": true,
+  "scripts": {
+    "postinstall": "husky install",
+    "release": "standard-version"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^16.1.0",
+    "@commitlint/config-conventional": "^16.0.0",
+    "@commitlint/cz-commitlint": "^16.1.0",
+    "commitizen": "^4.2.4",
+    "conventional-changelog-tf-a": "file:tools/conventional-changelog-tf-a",
+    "husky": "^7.0.4",
+    "js-yaml": "^4.1.0",
+    "standard-version": "^9.3.2"
+  }
+}

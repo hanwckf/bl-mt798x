@@ -1,0 +1,92 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright (C) STMicroelectronics 2020-2022 - All Rights Reserved
+ */
+
+/ {
+#if !STM32MP_EMMC && !STM32MP_SDMMC
+	aliases {
+		/delete-property/ mmc0;
+		/delete-property/ mmc1;
+	};
+#endif
+
+	cpus {
+		/delete-node/ cpu@1;
+	};
+
+	/delete-node/ psci;
+
+	soc {
+		/delete-node/ timer@40006000;
+		/delete-node/ timer@44006000;
+#if !STM32MP_USB_PROGRAMMER
+		/delete-node/ usb-otg@49000000;
+#endif
+		/delete-node/ pwr_mcu@50001014;
+		/delete-node/ cryp@54001000;
+		/delete-node/ rng@54003000;
+#if !STM32MP_RAW_NAND
+		/delete-node/ memory-controller@58002000;
+#endif
+#if !STM32MP_SPI_NAND && !STM32MP_SPI_NOR
+		/delete-node/ spi@58003000;
+#endif
+#if !STM32MP_EMMC && !STM32MP_SDMMC
+		/delete-node/ mmc@58005000;
+		/delete-node/ mmc@58007000;
+#endif
+#if !STM32MP_USB_PROGRAMMER
+		/delete-node/ usbphyc@5a006000;
+#endif
+		/delete-node/ spi@5c001000;
+		/delete-node/ rtc@5c004000;
+		/delete-node/ etzpc@5c007000;
+		/delete-node/ stgen@5c008000;
+		/delete-node/ i2c@5c009000;
+		/delete-node/ tamp@5c00a000;
+
+		pin-controller@50002000 {
+#if !STM32MP_RAW_NAND
+			/delete-node/ fmc-0;
+#endif
+#if !STM32MP_SPI_NAND && !STM32MP_SPI_NOR
+			/delete-node/ qspi-clk-0;
+			/delete-node/ qspi-bk1-0;
+			/delete-node/ qspi-bk2-0;
+#endif
+#if !STM32MP_EMMC && !STM32MP_SDMMC
+			/delete-node/ sdmmc1-b4-0;
+			/delete-node/ sdmmc1-dir-0;
+			/delete-node/ sdmmc2-b4-0;
+			/delete-node/ sdmmc2-b4-1;
+			/delete-node/ sdmmc2-d47-0;
+#endif
+#if !STM32MP_USB_PROGRAMMER
+			/delete-node/ usbotg_hs-0;
+			/delete-node/ usbotg-fs-dp-dm-0;
+#endif
+		};
+	};
+
+#if !STM32MP_USE_STM32IMAGE
+	/*
+	 * UUID's here are UUID RFC 4122 compliant meaning fieds are stored in
+	 * network order (big endian)
+	 */
+
+	st-io_policies {
+		fip-handles {
+			compatible = "st,io-fip-handle";
+			fw_cfg_uuid = "5807e16a-8459-47be-8ed5-648e8dddab0e";
+			bl32_uuid = "05d0e189-53dc-1347-8d2b-500a4b7a3e38";
+			bl32_extra1_uuid = "0b70c29b-2a5a-7840-9f65-0a5682738288";
+			bl32_extra2_uuid = "8ea87bb1-cfa2-3f4d-85fd-e7bba50220d9";
+			bl33_uuid = "d6d0eea7-fcea-d54b-9782-9934f234b6e4";
+			hw_cfg_uuid = "08b8f1d9-c9cf-9349-a962-6fbc6b7265cc";
+			tos_fw_cfg_uuid = "26257c1a-dbc6-7f47-8d96-c4c4b0248021";
+			nt_fw_cfg_uuid = "28da9815-93e8-7e44-ac66-1aaf801550f9";
+		};
+	};
+#endif /* !STM32MP_USE_STM32IMAGE */
+};

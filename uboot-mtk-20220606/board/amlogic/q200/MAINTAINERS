@@ -1,0 +1,12 @@
+Q200
+M:	Neil Armstrong <narmstrong@baylibre.com>
+S:	Maintained
+L:	u-boot-amlogic@groups.io
+F:	board/amlogic/q200/
+F:	include/configs/q200.h
+F:	configs/khadas-vim2_defconfig
+F:	configs/libretech-s905d-pc_defconfig
+F:	configs/libretech-s912-pc_defconfig
+F:	configs/wetek-core2_defconfig
+F:	doc/board/amlogic/khadas-vim2.rst
+F:	doc/board/amlogic/wetek-core2.rst

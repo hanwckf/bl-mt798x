@@ -1,0 +1,29 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (C) 2020 Texas Instruments Incorporated - http://www.ti.com/
+ */
+
+#include "k3-j721e-common-proc-board-u-boot.dtsi"
+
+/ {
+	chosen {
+		firmware-loader = &fs_loader0;
+	};
+
+	aliases {
+		remoteproc0 = &sysctrler;
+		remoteproc1 = &a72_0;
+	};
+
+	fs_loader0: fs_loader@0 {
+		u-boot,dm-pre-reloc;
+		compatible = "u-boot,fs-loader";
+	};
+};
+
+&tps659413a {
+	esm: esm {
+		compatible = "ti,tps659413-esm";
+		u-boot,dm-spl;
+	};
+};

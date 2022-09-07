@@ -1,0 +1,16 @@
+#!/bin/sh
+
+bin_dir=$(dirname $(readlink -f "${0}"))
+sys=$(uname -s)-$(uname -m)
+
+case ${sys} in
+Linux-i*86)
+	exec ${bin_dir}/bromimage-linux-i686 "$@"
+	;;
+Linux-x86_64)
+	exec ${bin_dir}/bromimage-linux-x86_64 "$@"
+	;;
+*)
+	echo "bromimage is not supported on ${sys}!"
+	exit 1
+esac

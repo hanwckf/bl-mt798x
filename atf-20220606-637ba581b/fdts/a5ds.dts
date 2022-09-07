@@ -1,0 +1,158 @@
+/*
+ * Copyright (c) 2019-2020, Arm Limited. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+/dts-v1/;
+
+/ {
+	model = "A5DS";
+	compatible = "arm,A5DS";
+	interrupt-parent = <&gic>;
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	psci {
+		compatible = "arm,psci-1.0", "arm,psci-0.2", "arm,psci";
+		method = "smc";
+		cpu_on = <0x84000003>;
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		enable-method = "psci";
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a5";
+			reg = <0>;
+			next-level-cache = <&L2>;
+		};
+		cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a5";
+			reg = <1>;
+			next-level-cache = <&L2>;
+		};
+		cpu@2 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a5";
+			reg = <2>;
+			next-level-cache = <&L2>;
+		};
+		cpu@3 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a5";
+			reg = <3>;
+			next-level-cache = <&L2>;
+		};
+	};
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x80000000 0x7F000000>;
+	};
+
+	L2: cache-controller@1C010000 {
+		compatible = "arm,pl310-cache";
+		reg = <0x1C010000 0x1000>;
+		interrupts = <0 84 4>;
+		cache-level = <2>;
+		cache-unified;
+		arm,data-latency = <1 1 1>;
+		arm,tag-latency = <1 1 1>;
+	};
+
+	refclk7500khz: refclk7500khz {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <7500000>;
+		clock-output-names = "apb_pclk";
+	};
+
+	refclk24mhz: refclk24mhz {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <24000000>;
+		clock-output-names = "apb_pclk";
+	};
+
+	smbclk: refclk24mhzx2 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <48000000>;
+		clock-output-names = "smclk";
+	};
+
+
+	rtc@1a220000 {
+		compatible = "arm,pl031", "arm,primecell";
+		reg = <0x1a220000 0x1000>;
+		clocks = <&refclk24mhz>;
+		interrupts = <0 6 0xf04>;
+		clock-names = "apb_pclk";
+	};
+
+	gic: interrupt-controller@1c001000 {
+		compatible = "arm,cortex-a9-gic";
+		#interrupt-cells = <3>;
+		#address-cells = <0>;
+		interrupt-controller;
+		reg = <0x1c001000 0x1000>,
+			  <0x1c000100 0x100>;
+		interrupts = <1 9 0xf04>;
+	};
+
+	serial0: uart@1a200000 {
+		compatible = "arm,pl011", "arm,primecell";
+		reg = <0x1a200000 0x1000>;
+		interrupt-parent = <&gic>;
+		interrupts = <0 8 0xf04>;
+		clocks = <&refclk7500khz>;
+		clock-names = "apb_pclk";
+	};
+
+	serial1: uart@1a210000 {
+		compatible = "arm,pl011", "arm,primecell";
+		reg = <0x1a210000 0x1000>;
+		interrupt-parent = <&gic>;
+		interrupts = <0 9 0xf04>;
+		clocks = <&refclk7500khz>;
+		clock-names = "apb_pclk";
+	};
+
+	timer0: timer@1a040000 {
+		compatible = "arm,armv7-timer-mem";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+		reg = <0x1a040000 0x1000>;
+		clock-frequency = <7500000>;
+
+		frame@1a050000 {
+			frame-number = <0>;
+			interrupts = <0 2 0xf04>;
+			reg = <0x1a050000 0x1000>;
+		};
+	};
+	v2m_fixed_3v3: fixed-regulator-0 {
+		compatible = "regulator-fixed";
+		regulator-name = "3V3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+
+	ethernet@4020000 {
+		compatible = "smsc,lan9220", "smsc,lan9115";
+		reg = <0x40200000 0x10000>;
+		interrupt-parent = <&gic>;
+		interrupts = <0 43 0xf04>;
+		reg-io-width = <4>;
+		phy-mode = "mii";
+		smsc,irq-active-high;
+		vdd33a-supply = <&v2m_fixed_3v3>;
+		vddvario-supply = <&v2m_fixed_3v3>;
+       };
+};

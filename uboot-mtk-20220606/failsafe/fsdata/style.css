@@ -1,0 +1,134 @@
+h1,
+p,
+form,
+ul {
+	margin: 0;
+	padding: 0;
+}
+
+html,
+body {
+	font: 13px/20px Arial, sans-serif;
+	background: #EDEDED;
+}
+
+#m {
+	max-width: 750px;
+	margin: 30px auto 10px;
+	border: solid 1px #BABABA;
+	background: #FFF;
+	border-radius: 7px;
+	box-shadow: 0 0 10px #D2D1D1;
+}
+
+#m > * {
+	padding: 20px;
+}
+
+h1 {
+	font: bold 50px/50px Tahoma;
+	border-bottom: solid 1px #E8E8E8;
+}
+
+a,
+h1 {
+	color: #2450AD;
+	text-decoration: none;
+}
+
+.i {
+	margin: 20px;
+	border-radius: 7px;
+	text-align: justify;
+}
+
+.w {
+	background: #FEFDCE;
+	border: solid 1px #FFC643;
+}
+
+.e {
+	background: #FFE7E7;
+	border:solid 1px #FE7171;
+}
+
+#version {
+	text-align: center;
+}
+
+form,
+p,
+h1 {
+	text-align: center;
+}
+
+ul {
+	list-style: square;
+	margin: 0 0 0 20px;
+}
+
+.red {
+	color: #E41616;
+}
+
+.i strong {
+	margin: 0 0 5px;
+	display: block;
+}
+
+#upgrade-btn {
+	margin: 0 auto;
+}
+
+.bar {
+    height: 20px; width:400px;
+    background-color: #f5f5f5;
+    border-radius: 25px;
+	margin: 0 auto;
+}
+
+.bar::before {
+    counter-reset: progress var(--percent);
+    content: counter(progress) '%\2002';
+    display: block;
+    width: calc(400px * var(--percent) / 100);
+    font-size: 12px;
+    color: #fff;
+    background-color: #2486ff;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+	border-radius: 25px;
+}
+
+#md5 {
+	font-size: 1.6em;
+	margin-left: 155px;
+}
+
+#upgrade {
+	text-align: center;
+}
+
+#upgrade p {
+	color: green;
+	font-size: 2em;
+}
+
+.button {
+	box-shadow: inset 0px -3px 7px 0px #29bbff;
+	background: linear-gradient(to bottom, #2dabf9 5%, #0688fa 100%);
+	background-color: #2dabf9;
+	border-radius: 10px;
+	border: 1px solid #0b0e07;
+	color: white;
+	font-size: 2em;
+	padding: 9px 23px;
+	text-shadow: 0px 1px 0px #263666;
+	margin-top: 10px;
+}
+
+.button:hover {
+	background: linear-gradient(to bottom, #0688fa 5%, #2dabf9 100%);
+	background-color: #0688fa;
+}

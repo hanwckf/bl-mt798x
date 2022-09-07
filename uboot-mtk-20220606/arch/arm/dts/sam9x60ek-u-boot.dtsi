@@ -1,0 +1,80 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * sam9x60-u-boot.dts - Device Tree file for SAM9X60 SoC.
+ *
+ * Copyright (C) 2019 Microchip Technology Inc. and its subsidiaries
+ */
+
+/ {
+	chosen {
+		u-boot,dm-pre-reloc;
+	};
+
+	ahb {
+		u-boot,dm-pre-reloc;
+
+		apb {
+			u-boot,dm-pre-reloc;
+
+			pinctrl {
+				u-boot,dm-pre-reloc;
+			};
+		};
+	};
+};
+
+&clk32 {
+	u-boot,dm-pre-reloc;
+};
+
+&dbgu {
+	u-boot,dm-pre-reloc;
+};
+
+&main_rc {
+	u-boot,dm-pre-reloc;
+};
+
+&main_xtal {
+	u-boot,dm-pre-reloc;
+};
+
+&pinctrl_dbgu {
+	u-boot,dm-pre-reloc;
+};
+
+&pinctrl_sdhci0 {
+	u-boot,dm-pre-reloc;
+};
+
+&pinctrl_qspi {
+	u-boot,dm-pre-reloc;
+};
+
+&pioA {
+	u-boot,dm-pre-reloc;
+};
+
+&pioB {
+	u-boot,dm-pre-reloc;
+};
+
+&pmc {
+	u-boot,dm-pre-reloc;
+};
+
+&qspi {
+	u-boot,dm-pre-reloc;
+};
+
+&sdhci0 {
+	u-boot,dm-pre-reloc;
+};
+
+&slow_xtal {
+	u-boot,dm-pre-reloc;
+};
+
+&slow_rc_osc {
+	u-boot,dm-pre-reloc;
+};

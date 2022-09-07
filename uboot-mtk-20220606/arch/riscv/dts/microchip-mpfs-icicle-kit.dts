@@ -1,0 +1,157 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (C) 2021 Microchip Technology Inc.
+ * Padmarao Begari <padmarao.begari@microchip.com>
+ */
+
+/dts-v1/;
+
+#include "microchip-mpfs.dtsi"
+
+/* Clock frequency (in Hz) of the rtcclk */
+#define RTCCLK_FREQ		1000000
+
+/ {
+	model = "Microchip PolarFire-SoC Icicle Kit";
+	compatible = "microchip,mpfs-icicle-kit", "microchip,mpfs";
+
+	aliases {
+		serial1 = &uart1;
+		ethernet0 = &mac1;
+	};
+
+	chosen {
+		stdout-path = "serial1";
+	};
+
+	cpus {
+		timebase-frequency = <RTCCLK_FREQ>;
+	};
+
+	reserved-memory {
+		ranges;
+		#size-cells = <2>;
+		#address-cells = <2>;
+
+		fabricbuf0: fabricbuf@0 {
+			compatible = "shared-dma-pool";
+			reg = <0x0 0xae000000 0x0 0x2000000>;
+			label = "fabricbuf0-ddr-c";
+		};
+
+		fabricbuf1: fabricbuf@1 {
+			compatible = "shared-dma-pool";
+			reg = <0x0 0xc0000000 0x0 0x8000000>;
+			label = "fabricbuf1-ddr-nc";
+		};
+
+		fabricbuf2: fabricbuf@2 {
+			compatible = "shared-dma-pool";
+			reg = <0x0 0xd8000000 0x0 0x8000000>;
+			label = "fabricbuf2-ddr-nc-wcb";
+		};
+	};
+
+	udmabuf0 {
+		compatible = "ikwzm,u-dma-buf";
+		device-name = "udmabuf-ddr-c0";
+		minor-number = <0>;
+		size = <0x0 0x2000000>;
+		memory-region = <&fabricbuf0>;
+		sync-mode = <3>;
+	};
+
+	udmabuf1 {
+		compatible = "ikwzm,u-dma-buf";
+		device-name = "udmabuf-ddr-nc0";
+		minor-number = <1>;
+		size = <0x0 0x8000000>;
+		memory-region = <&fabricbuf1>;
+		sync-mode = <3>;
+	};
+
+	udmabuf2 {
+		compatible = "ikwzm,u-dma-buf";
+		device-name = "udmabuf-ddr-nc-wcb0";
+		minor-number = <2>;
+		size = <0x0 0x8000000>;
+		memory-region = <&fabricbuf2>;
+		sync-mode = <3>;
+	};
+
+	ddrc_cache_lo: memory@80000000 {
+		device_type = "memory";
+		reg = <0x0 0x80000000 0x0 0x2e000000>;
+		clocks = <&clkcfg CLK_DDRC>;
+		status = "okay";
+	};
+
+	ddrc_cache_hi: memory@1000000000 {
+		device_type = "memory";
+		reg = <0x10 0x0 0x0 0x40000000>;
+		clocks = <&clkcfg CLK_DDRC>;
+		status = "okay";
+	};
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&mmc {
+	status = "okay";
+
+	bus-width = <4>;
+	disable-wp;
+	cap-mmc-highspeed;
+	cap-sd-highspeed;
+	card-detect-delay = <200>;
+	mmc-ddr-1_8v;
+	mmc-hs200-1_8v;
+	sd-uhs-sdr12;
+	sd-uhs-sdr25;
+	sd-uhs-sdr50;
+	sd-uhs-sdr104;
+};
+
+&i2c1 {
+	status = "okay";
+	clock-frequency = <100000>;
+
+	pac193x: pac193x@10 {
+		compatible = "microchip,pac1934";
+		reg = <0x10>;
+		samp-rate = <64>;
+		status = "okay";
+		ch1: channel0 {
+			uohms-shunt-res = <10000>;
+			rail-name = "VDDREG";
+			channel_enabled;
+		};
+		ch2: channel1 {
+			uohms-shunt-res = <10000>;
+			rail-name = "VDDA25";
+			channel_enabled;
+		};
+		ch3: channel2 {
+			uohms-shunt-res = <10000>;
+			rail-name = "VDD25";
+			channel_enabled;
+		};
+		ch4: channel3 {
+			uohms-shunt-res = <10000>;
+			rail-name = "VDDA_REG";
+			channel_enabled;
+		};
+	};
+};
+
+&mac1 {
+	status = "okay";
+	phy-mode = "sgmii";
+	phy-handle = <&phy1>;
+	phy1: ethernet-phy@9 {
+		reg = <9>;
+		ti,fifo-depth = <0x1>;
+	};
+};

@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright (C) 2021, MediaTek Inc. All rights reserved.
+ */
+/dts-v1/;
+
+/ {
+	soc {
+		qspi: spi@11009000 {
+			compatible = "mediatek,ipm-spi";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x11009000 0x100>;
+//			interrupts = <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>;
+//			clocks = <&rcc QSPI_K>;
+//			resets = <&rcc QSPI_R>;
+			status = "okay";
+
+			flash0: spiflash@0 {
+				compatible = "spi-flash";
+				reg = <0>;
+				spi-tx-bus-width = <4>;
+				spi-rx-bus-width = <4>;
+				spi-cpol = <1>;
+				spi-cpha = <1>;
+				spi-max-frequency = <52000000>;
+				sample-sel = <0>;
+				tick-dly = <2>;
+				inter-loopback = <0>;
+				#address-cells = <1>;
+				#size-cells = <1>;
+			};
+		};
+	};
+};

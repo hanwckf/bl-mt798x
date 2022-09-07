@@ -1,0 +1,70 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (C) 2018 EETS GmbH - https://www.eets.ch/
+ */
+
+#include "am33xx-u-boot.dtsi"
+
+&l4_wkup {
+	u-boot,dm-pre-reloc;
+	segment@200000 {
+
+		target-module@10000 {
+			u-boot,dm-pre-reloc;
+		};
+	};
+};
+
+&l4_per {
+	u-boot,dm-pre-reloc;
+	segment@100000 {
+		u-boot,dm-pre-reloc;
+
+		target-module@a6000 {
+			u-boot,dm-pre-reloc;
+		};
+	};
+
+	segment@300000 {
+
+		target-module@e000 {
+			u-boot,dm-pre-reloc;
+
+			lcdc: lcdc@0 {
+				u-boot,dm-pre-reloc;
+			};
+		};
+	};
+};
+
+&scm {
+	u-boot,dm-pre-reloc;
+};
+
+&am33xx_pinmux {
+	u-boot,dm-pre-reloc;
+};
+
+&uart3_pins {
+	u-boot,dm-pre-reloc;
+};
+
+&uart3 {
+	u-boot,dm-pre-reloc;
+};
+
+&mmc1 {
+	u-boot,dm-pre-reloc;
+};
+
+&mmc1_pins {
+	u-boot,dm-pre-reloc;
+};
+
+&mmc2 {
+	u-boot,dm-pre-reloc;
+};
+
+&mmc2_pins {
+	u-boot,dm-pre-reloc;
+};

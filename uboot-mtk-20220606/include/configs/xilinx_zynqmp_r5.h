@@ -1,0 +1,29 @@
+/* SPDX-License-Identifier: GPL-2.0 */
+/*
+ * (C) Copyright 2018 Xilinx, Inc. (Michal Simek)
+ */
+
+#ifndef __CONFIG_ZYNQMP_R5_H
+#define __CONFIG_ZYNQMP_R5_H
+
+#define CONFIG_EXTRA_ENV_SETTINGS
+
+/* Serial drivers */
+/* The following table includes the supported baudrates */
+#define CONFIG_SYS_BAUDRATE_TABLE  \
+	{300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400}
+
+/* Boot configuration */
+
+#define CONFIG_SYS_MAXARGS		32 /* max number of command args */
+
+#define CONFIG_SYS_INIT_RAM_ADDR	0xFFFF0000
+#define CONFIG_SYS_INIT_RAM_SIZE	0x1000
+#define CONFIG_SYS_INIT_SP_ADDR		(CONFIG_SYS_INIT_RAM_ADDR + \
+					CONFIG_SYS_INIT_RAM_SIZE - \
+					GENERATED_GBL_DATA_SIZE)
+
+/* Extend size of kernel image for uncompression */
+#define CONFIG_SYS_BOOTM_LEN	(60 * 1024 * 1024)
+
+#endif /* __CONFIG_ZYNQ_ZYNQMP_R5_H */

@@ -1,0 +1,91 @@
+if TARGET_MT7988
+
+config SYS_BOARD
+	default "mt7988"
+
+config SYS_CONFIG_NAME
+	default "mt7988"
+
+config MTK_BROM_HEADER_INFO
+	string
+	default "lk=1"
+
+config MTK_BROM_HEADER_INFO
+	string
+	default "media=nor"
+
+config ENABLE_NAND_NMBM
+    bool "Enable NAND bad block mapping management"
+    default n
+    select MTD_DEVICE
+    select NMBM
+    select NMBM_MTD
+    help
+      Select this if you want to use bad block management to handle
+      bad blocks marked druing factory production, and to handle new
+      bad blocks during use.
+      Enabling this option will create a MTD translation layer on
+      the original MTD of the NAND device.
+
+config NMBM_MAX_RATIO
+    int "Default ratio for reserved block for management (N/16)"
+    range 1 8
+    default 1
+    depends on ENABLE_NAND_NMBM
+    help
+      This option determines how many blocks at the high adress of NAND
+      can be used for NMBM. For a large size NAND, 1/16 of total blocks
+      are still too large for NMBM. For this situation please set
+      CONFIG_NMBM_MAX_BLOCKS to a proper value to limit the maximum
+      reserved blocks.
+
+config NMBM_MAX_BLOCKS
+    int "Maximum blocks allowed for reserved block for management"
+    range 32 2147483647
+    default 256
+    depends on ENABLE_NAND_NMBM
+    help
+      This option is applied after NMBM_MAX_RATIO to ensure maximum
+      blocks reserved block for NMBM will not exceed the value set by
+      this option.
+
+source "board/mediatek/common/Kconfig"
+
+choice
+	prompt "Device type for bootmenu"
+	default MT7988_BOOTMENU_SNAND
+	depends on MEDIATEK_BOOTMENU
+
+config MT7988_BOOTMENU_SNOR
+	bool "SPI-NOR"
+
+config MT7988_BOOTMENU_SNAND
+	bool "SPI-NAND"
+
+config MT7988_BOOTMENU_EMMC
+	bool "eMMC"
+
+config MT7988_BOOTMENU_SD
+	bool "SD"
+
+config MT7988_BOOTMENU_UBI
+	bool "UBI"
+	select MTD
+	select MTD_PARTITIONS
+	select MTD_UBI
+	help
+	  This is intended for using UBI built on the top of MTD devices.
+	  Generally you should select this instead of SPI-NAND for new design
+	  in order to extend the lifecycle of NAND devices.
+	  By selecting this you should specify mtdparts in environment.
+endchoice
+
+config MEDIATEK_UBI_FIXED_MTDPARTS
+	bool "Do not allow mtdparts to be changed by user"
+	depends on MT7988_BOOTMENU_UBI
+	help
+	  Enable this option if you do not want the user to change the
+	  mtdparts which lead to unexpceted results such as missing ubi
+	  partition or changing ubi partition to a different offset.
+
+endif

@@ -1,0 +1,88 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (C) 2018 EETS GmbH - https://www.eets.ch/
+ * Copyright (C) 2018 Robert Bosch Power Tools GmbH
+ */
+
+#include "am33xx-u-boot.dtsi"
+
+/ {
+	ocp {
+		u-boot,dm-pre-reloc;
+	};
+};
+
+&l4_wkup {
+	u-boot,dm-pre-reloc;
+};
+
+&l4_per {
+
+	segment@300000 {
+
+		target-module@e000 {
+			u-boot,dm-pre-reloc;
+
+			lcdc: lcdc@0 {
+				u-boot,dm-pre-reloc;
+			};
+		};
+	};
+};
+
+&mmc1 {
+	u-boot,dm-pre-reloc;
+};
+
+&mmc1_pins {
+	u-boot,dm-pre-reloc;
+};
+
+&scm {
+	u-boot,dm-pre-reloc;
+};
+
+&spi0 {
+	lcd0: display@0 {
+		compatible = "himax,hx8238d";
+		pinctrl-names = "default";
+		pinctrl-0 = <&lcd0_pins>;
+		reg = <0>;
+		label = "lcd";
+		spi-max-frequency = <100000>;
+	};
+};
+
+&uart0 {
+	u-boot,dm-pre-reloc;
+};
+
+&uart0_pins {
+	u-boot,dm-pre-reloc;
+};
+
+&usb {
+	u-boot,dm-pre-reloc;
+};
+
+&usb_ctrl_mod {
+	u-boot,dm-pre-reloc;
+};
+
+&usb0 {
+	u-boot,dm-pre-reloc;
+};
+
+&usb0_phy {
+	u-boot,dm-pre-reloc;
+};
+
+&am33xx_pinmux {
+	u-boot,dm-pre-reloc;
+
+	lcd0_pins: pinmux_lcd0_pins {
+		pinctrl-single,pins = <
+			AM33XX_PADCONF(AM335X_PIN_MII1_COL, PIN_OUTPUT_PULLUP, MUX_MODE7)
+		>;
+	};
+};

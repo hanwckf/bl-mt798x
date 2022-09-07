@@ -1,0 +1,36 @@
+{
+	"gpt": {
+		"start": 0,
+		"end" : 33
+	},
+
+	"u-boot-env" : {
+		"start": 8192,
+		"end" : 9215,
+		"uuid" : "{19a4763a-6b19-4a4b-a0c4-8cc34f4c2ab9}"
+	},
+
+	"factory" : {
+		"start": 9216,
+		"end" : 13311,
+		"uuid" : "{8142c1b2-1697-41d9-b1bf-a88d76c7213f}"
+	},
+
+	"fip": {
+		"start": 13312,
+		"end" : 17407,
+		"uuid" : "{18de6587-4f17-4e08-a6c9-d9d3d424f4c5}"
+	},
+
+	"kernel" : {
+		"start": 17408,
+		"end" : 82943,
+		"uuid" : "{971f7556-ef1a-44cd-8b28-0cf8100b9c7e}"
+	},
+
+	"rootfs" : {
+		"start": 82944,
+		"end" : 607231,
+		"uuid" : "{309a3e76-270b-41b2-b5d5-ed8154e7542b}"
+	}
+}

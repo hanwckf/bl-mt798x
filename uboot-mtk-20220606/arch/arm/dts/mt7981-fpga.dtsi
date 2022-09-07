@@ -1,0 +1,250 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) 2021 MediaTek Inc.
+ * Author: Sam Shih <sam.shih@mediatek.com>
+ */
+
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/clock/mt7986-clk.h>
+#include <dt-bindings/reset/mt7629-reset.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	compatible = "mediatek,mt7981-fpga";
+	interrupt-parent = <&gic>;
+	#address-cells = <1>;
+	#size-cells = <1>;
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		cpu0: cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x0>;
+			clock-frequency = <1300000000>;
+		};
+		cpu1: cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x1>;
+			clock-frequency = <1300000000>;
+		};
+	};
+
+	dummy_clk: dummy12m {
+		compatible = "fixed-clock";
+		clock-frequency = <12000000>;
+		#clock-cells = <0>;
+		/* must need this line, or uart uanable to get dummy_clk */
+		u-boot,dm-pre-reloc;
+	};
+	gpt_clk: dummy6m {
+		compatible = "fixed-clock";
+		clock-frequency = <6000000>;
+		#clock-cells = <0>;
+		u-boot,dm-pre-reloc;
+	};
+
+	timer {
+		compatible = "arm,armv8-timer";
+		interrupt-parent = <&gic>;
+		clock-frequency = <12000000>;
+		interrupts = <GIC_PPI 13 IRQ_TYPE_LEVEL_LOW>,
+			     <GIC_PPI 14 IRQ_TYPE_LEVEL_LOW>,
+			     <GIC_PPI 11 IRQ_TYPE_LEVEL_LOW>,
+			     <GIC_PPI 10 IRQ_TYPE_LEVEL_LOW>;
+		arm,cpu-registers-not-fw-configured;
+	};
+
+	timer0: timer@10008000 {
+		compatible = "mediatek,mt7986-timer";
+		reg = <0x10008000 0x1000>;
+		interrupts = <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&gpt_clk>;
+		clock-names = "gpt-clk";
+		u-boot,dm-pre-reloc;
+	};
+
+	watchdog: watchdog@1001c000 {
+		compatible = "mediatek,mt7986-wdt";
+		reg = <0x1001c000 0x1000>;
+		interrupts = <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>;
+		#reset-cells = <1>;
+		status = "disabled";
+	};
+
+	gic: interrupt-controller@c000000 {
+		compatible = "arm,gic-v3";
+		#interrupt-cells = <3>;
+		interrupt-parent = <&gic>;
+		interrupt-controller;
+		reg = <0x0c000000 0x40000>,  /* GICD */
+		      <0x0c080000 0x200000>; /* GICR */
+
+		interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH>;
+	};
+
+	apmixedsys: apmixedsys@1001e000 {
+		compatible = "mediatek,mt7986-apmixedsys",
+			     "syscon";
+		reg = <0x1001e000 0x1000>;
+		#clock-cells = <1>;
+	};
+
+	topckgen: topckgen@1001b000 {
+		compatible = "mediatek,mt7986-topckgen",
+			     "syscon";
+		reg = <0x1001b000 0x1000>;
+		#clock-cells = <1>;
+	};
+
+	infrasys: infrasys@10001000 {
+		compatible = "mediatek,mt7986-infrasys",
+			     "syscon";
+		reg = <0x10001000 0x1000>;
+		clock-parent = <&topckgen>;
+		#clock-cells = <1>;
+	};
+
+	infracfg: infracg@10001000 {
+		compatible = "mediatek,mt7986-infrasys-cg",
+			     "syscon";
+		reg = <0x10001000 0x1000>;
+		clock-parent = <&infrasys>;
+		#clock-cells = <1>;
+	};
+
+	pinctrl: pinctrl@11d00000 {
+		compatible = "mediatek,mt7981-pinctrl";
+		reg = <0x11d00000 0x1000>,
+		      <0x11c00000 0x1000>,
+		      <0x11c10000 0x1000>,
+		      <0x11d20000 0x1000>,
+		      <0x11e00000 0x1000>,
+		      <0x11e20000 0x1000>,
+		      <0x11f00000 0x1000>,
+		      <0x11f10000 0x1000>,
+		      <0x1000b000 0x1000>;
+		reg-names = "gpio_base", "iocfg_rt_base", "iocfg_rm_base",
+			    "iocfg_rb_base", "iocfg_lb_base", "iocfg_bl_base",
+			    "iocfg_tm_base", "iocfg_tl_base", "eint";
+		gpio: gpio-controller {
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+	};
+
+	pwm0: pwm@10048000 {
+		compatible = "mediatek,mt7986-pwm";
+		reg = <0x10048000 0x1000>;
+		#clock-cells = <1>;
+		#pwm-cells = <2>;
+		interrupts = <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&dummy_clk>,
+			 <&dummy_clk>,
+			 <&dummy_clk>,
+			 <&dummy_clk>;
+		clock-names = "top", "main", "pwm1", "pwm2";
+		status = "disabled";
+	};
+
+	uart0: serial@11002000 {
+		compatible = "mediatek,hsuart";
+		reg = <0x11002000 0x400>;
+		interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&dummy_clk>;
+		status = "disabled";
+		u-boot,dm-pre-reloc;
+	};
+
+	uart1: serial@11003000 {
+		compatible = "mediatek,hsuart";
+		reg = <0x11003000 0x400>;
+		interrupts = <GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&dummy_clk>;
+		status = "disabled";
+		u-boot,dm-pre-reloc;
+	};
+
+	uart2: serial@11004000 {
+		compatible = "mediatek,hsuart";
+		reg = <0x11004000 0x400>;
+		interrupts = <GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&dummy_clk>;
+		status = "disabled";
+		u-boot,dm-pre-reloc;
+	};
+
+	snand: snand@11005000 {
+		compatible = "mediatek,mt7986-snand";
+		reg = <0x11005000 0x1000>,
+		      <0x11006000 0x1000>;
+		reg-names = "nfi", "ecc";
+
+		clocks = <&dummy_clk>,
+			 <&dummy_clk>,
+			 <&dummy_clk>;
+		clock-names = "nfi_clk", "pad_clk", "ecc_clk";
+
+		status = "disabled";
+	};
+
+	mmc0: mmc@11230000 {
+		compatible = "mediatek,mt7986-mmc";
+		reg = <0x11230000 0x1000>,
+		      <0x11C20000 0x1000>;
+		interrupts = <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&dummy_clk>,
+			 <&dummy_clk>,
+			 <&dummy_clk>;
+		clock-names = "source", "hclk", "source_cg";
+		status = "disabled";
+	};
+
+	ethsys: syscon@15000000 {
+		compatible = "mediatek,mt7981-ethsys", "syscon";
+		reg = <0x15000000 0x1000>;
+		clock-parent = <&topckgen>;
+		#clock-cells = <1>;
+		#reset-cells = <1>;
+	};
+
+	eth: ethernet@15100000 {
+		compatible = "mediatek,mt7981-eth", "syscon";
+		reg = <0x15100000 0x20000>;
+		mediatek,ethsys = <&ethsys>;
+		resets = <&ethsys ETHSYS_FE_RST>;
+		reset-names = "fe";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	spi0: spi@1100a000 {
+		compatible = "mediatek,ipm-spi";
+		reg = <0x1100a000 0x100>;
+		clocks = <&dummy_clk>,
+			 <&dummy_clk>;
+		clock-names = "sel-clk", "spi-clk";
+		interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
+		status = "disabled";
+	};
+
+	spi1: spi@1100b000 {
+		compatible = "mediatek,ipm-spi";
+		reg = <0x1100b000 0x100>;
+		interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>;
+		status = "disabled";
+	};
+
+	spi2: spi@11009000 {
+		compatible = "mediatek,ipm-spi";
+		reg = <0x11009000 0x100>;
+		clocks = <&dummy_clk>,
+			 <&dummy_clk>;
+		clock-names = "sel-clk", "spi-clk";
+		interrupts = <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>;
+		status = "disabled";
+	};
+};

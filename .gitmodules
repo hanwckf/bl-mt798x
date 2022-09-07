@@ -1,6 +1,0 @@
-[submodule "u-boot"]
-	path = u-boot
-	url = https://github.com/mtk-openwrt/u-boot
-[submodule "arm-trusted-firmware"]
-	path = arm-trusted-firmware
-	url = https://github.com/mtk-openwrt/arm-trusted-firmware

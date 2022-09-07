@@ -1,0 +1,28 @@
+if ARCH_IMX8ULP
+
+config IMX8ULP
+	bool
+
+config SYS_SOC
+	default "imx8ulp"
+
+config IMX8ULP_LD_MODE
+	bool
+
+config IMX8ULP_ND_MODE
+	bool "i.MX8ULP Low Driver Mode"
+
+choice
+	prompt "i.MX8ULP board select"
+	optional
+
+config TARGET_IMX8ULP_EVK
+	bool "imx8ulp_evk"
+	select IMX8ULP
+	select SUPPORT_SPL
+
+endchoice
+
+source "board/freescale/imx8ulp_evk/Kconfig"
+
+endif

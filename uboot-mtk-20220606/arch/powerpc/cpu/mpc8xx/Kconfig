@@ -1,0 +1,89 @@
+menu "mpc8xx CPU"
+	depends on MPC8xx
+
+config SYS_CPU
+	default "mpc8xx"
+
+choice
+	prompt "Target select"
+	optional
+
+config TARGET_MCR3000
+	bool "Support MCR3000 board from CSSI"
+
+endchoice
+
+choice
+	prompt "CPU select"
+	default MPC866
+
+config MPC866
+	bool "MPC866"
+	select SYS_CACHE_SHIFT_4
+
+config MPC885
+	bool "MPC885"
+	select SYS_CACHE_SHIFT_4
+
+endchoice
+
+config 8xx_GCLK_FREQ
+	int "CPU GCLK Frequency"
+
+comment "Specific commands"
+
+config CMD_IMMAP
+	bool "Enable various commands to dump IMMR information"
+	help
+	  This enables various commands such as:
+
+	    siuinfo - print System Interface Unit (SIU) registers
+	    memcinfo - print Memory Controller registers
+
+comment "Configuration Registers"
+
+config SYS_SIUMCR
+	hex "SIUMCR register"
+	help
+	  SIU Module Configuration (11-6)
+
+config SYS_SYPCR
+	hex "SYPCR register"
+	help
+	  System Protection Control (11-9)
+
+config SYS_TBSCR
+	hex "TBSCR register"
+	help
+	  Time Base Status and Control (11-26)
+
+config SYS_PISCR
+	hex "PISCR register"
+	help
+	  Periodic Interrupt Status and Control (11-31)
+
+config SYS_PLPRCR_BOOL
+	bool "Customise PLPRCR"
+
+config SYS_PLPRCR
+	hex "PLPRCR register"
+	depends on SYS_PLPRCR_BOOL
+	help
+	  PLL, Low-Power, and Reset Control Register (15-30)
+
+config SYS_SCCR
+	hex "SCCR register"
+	help
+	  System Clock and reset Control Register (15-27)
+
+config SYS_SCCR_MASK
+	hex "MASK for setting SCCR register"
+
+config SYS_DER
+	hex "DER register"
+	help
+	  Debug Event Register (37-47)
+
+source "board/cssi/MCR3000/Kconfig"
+
+endmenu

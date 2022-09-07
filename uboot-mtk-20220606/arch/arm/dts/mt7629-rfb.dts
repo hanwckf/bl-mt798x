@@ -1,0 +1,133 @@
+/*
+ * Copyright (C) 2018 MediaTek Inc.
+ * Author: Ryder Lee <ryder.lee@mediatek.com>
+ *
+ * SPDX-License-Identifier: (GPL-2.0 OR MIT)
+ */
+
+/dts-v1/;
+#include "mt7629.dtsi"
+#include "mt7629-rfb-u-boot.dtsi"
+
+/ {
+	model = "MediaTek MT7629 RFB";
+	compatible = "mediatek,mt7629-rfb", "mediatek,mt7629";
+
+	aliases {
+		spi0 = &snor;
+	};
+
+	chosen {
+		stdout-path = &uart0;
+	};
+};
+
+&eth {
+	status = "okay";
+	mediatek,gmac-id = <0>;
+	phy-mode = "sgmii";
+	mediatek,switch = "mt7531";
+	reset-gpios = <&gpio 28 GPIO_ACTIVE_HIGH>;
+
+	fixed-link {
+		speed = <1000>;
+		full-duplex;
+	};
+};
+
+&pinctrl {
+	state_default: pinmux_conf {
+		u-boot,dm-pre-reloc;
+
+		mux {
+			function = "jtag";
+			groups = "ephy_leds_jtag";
+			u-boot,dm-pre-reloc;
+		};
+	};
+
+	snfi_pins: snfi-pins {
+		u-boot,dm-pre-reloc;
+
+		mux {
+			function = "flash";
+			groups = "snfi";
+			u-boot,dm-pre-reloc;
+		};
+	};
+
+	snor_pins: snor-pins {
+		mux {
+			function = "flash";
+			groups = "spi_nor";
+		};
+	};
+
+	uart0_pins: uart0-default {
+		mux {
+			function = "uart";
+			groups = "uart0_txd_rxd";
+		};
+	};
+
+	watchdog_pins: watchdog-default {
+		mux {
+			function = "watchdog";
+			groups = "watchdog";
+		};
+	};
+};
+
+&snfi {
+	pinctrl-names = "default", "snfi";
+	pinctrl-0 = <&snor_pins>;
+	pinctrl-1 = <&snfi_pins>;
+	status = "disabled";
+
+	spi-flash@0{
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		u-boot,dm-pre-reloc;
+	};
+};
+
+&snor {
+	pinctrl-names = "default";
+	pinctrl-0 = <&snor_pins>;
+	status = "okay";
+
+	spi-flash@0{
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-tx-bus-width = <1>;
+		spi-rx-bus-width = <4>;
+		u-boot,dm-pre-reloc;
+	};
+};
+
+&snand {
+	pinctrl-names = "default";
+	pinctrl-0 = <&snfi_pins>;
+	status = "okay";
+	quad-spi;
+};
+
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0_pins>;
+	status = "okay";
+};
+
+&xhci {
+	status = "okay";
+};
+
+&u3phy {
+	status = "okay";
+};
+
+&watchdog {
+	pinctrl-names = "default";
+	pinctrl-0 = <&watchdog_pins>;
+	status = "okay";
+};

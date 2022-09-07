@@ -1,0 +1,184 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
+/*
+ * Copyright 2017-2018 NXP
+ */
+
+#ifndef __LS1088_COMMON_H
+#define __LS1088_COMMON_H
+
+/* SPL build */
+#ifdef CONFIG_SPL_BUILD
+#define SPL_NO_BOARDINFO
+#define SPL_NO_QIXIS
+#define SPL_NO_PCI
+#define SPL_NO_ENV
+#define SPL_NO_RTC
+#define SPL_NO_USB
+#define SPL_NO_SATA
+#define SPL_NO_QSPI
+#define SPL_NO_IFC
+#endif
+
+#include <asm/arch/stream_id_lsch3.h>
+#include <asm/arch/config.h>
+#include <asm/arch/soc.h>
+
+#define LS1088ARDB_PB_BOARD            0x4A
+/* Link Definitions */
+#ifdef CONFIG_TFABOOT
+#define CONFIG_SYS_INIT_SP_ADDR		CONFIG_SYS_TEXT_BASE
+#else
+#define CONFIG_SYS_INIT_SP_ADDR		(CONFIG_SYS_FSL_OCRAM_BASE + 0xfff0)
+#endif
+
+/* Link Definitions */
+#define CONFIG_SYS_FSL_QSPI_BASE	0x20000000
+
+#define CONFIG_VERY_BIG_RAM
+#define CONFIG_SYS_DDR_SDRAM_BASE	0x80000000UL
+#define CONFIG_SYS_FSL_DDR_SDRAM_BASE_PHY	0
+#define CONFIG_SYS_SDRAM_BASE		CONFIG_SYS_DDR_SDRAM_BASE
+#define CONFIG_SYS_DDR_BLOCK2_BASE	0x8080000000ULL
+#define CONFIG_SYS_FSL_DDR_MAIN_NUM_CTRLS	1
+/*
+ * SMP Definitinos
+ */
+#define CPU_RELEASE_ADDR		secondary_boot_addr
+
+/* GPIO */
+
+/* I2C */
+
+
+/* Serial Port */
+#define CONFIG_SYS_NS16550_SERIAL
+#define CONFIG_SYS_NS16550_REG_SIZE     1
+#define CONFIG_SYS_NS16550_CLK          (get_bus_freq(0) / 2)
+
+/*
+ * During booting, IFC is mapped at the region of 0x30000000.
+ * But this region is limited to 256MB. To accommodate NOR, promjet
+ * and FPGA. This region is divided as below:
+ * 0x30000000 - 0x37ffffff : 128MB : NOR flash
+ * 0x38000000 - 0x3BFFFFFF : 64MB  : Promjet
+ * 0x3C000000 - 0x40000000 : 64MB  : FPGA etc
+ *
+ * To accommodate bigger NOR flash and other devices, we will map IFC
+ * chip selects to as below:
+ * 0x5_1000_0000..0x5_1fff_ffff	Memory Hole
+ * 0x5_2000_0000..0x5_3fff_ffff	IFC CSx (FPGA, NAND and others 512MB)
+ * 0x5_4000_0000..0x5_7fff_ffff	ASIC or others 1GB
+ * 0x5_8000_0000..0x5_bfff_ffff	IFC CS0 1GB (NOR/Promjet)
+ * 0x5_C000_0000..0x5_ffff_ffff	IFC CS1 1GB (NOR/Promjet)
+ *
+ * For e.g. NOR flash at CS0 will be mapped to 0x580000000 after relocation.
+ * CONFIG_SYS_FLASH_BASE has the final address (core view)
+ * CONFIG_SYS_FLASH_BASE_PHYS has the final address (IFC view)
+ * CONFIG_SYS_FLASH_BASE_PHYS_EARLY has the temporary IFC address
+ * CONFIG_SYS_TEXT_BASE is linked to 0x30000000 for booting
+ */
+
+#define CONFIG_SYS_FLASH_BASE			0x580000000ULL
+#define CONFIG_SYS_FLASH_BASE_PHYS		0x80000000
+#define CONFIG_SYS_FLASH_BASE_PHYS_EARLY	0x00000000
+
+#define CONFIG_SYS_FLASH1_BASE_PHYS		0xC0000000
+#define CONFIG_SYS_FLASH1_BASE_PHYS_EARLY	0x8000000
+
+#ifndef __ASSEMBLY__
+unsigned long long get_qixis_addr(void);
+#endif
+
+#define QIXIS_BASE				get_qixis_addr()
+#define QIXIS_BASE_PHYS				0x20000000
+#define QIXIS_BASE_PHYS_EARLY			0xC000000
+
+
+#define CONFIG_SYS_NAND_BASE			0x530000000ULL
+#define CONFIG_SYS_NAND_BASE_PHYS		0x30000000
+
+
+/* MC firmware */
+/* TODO Actual DPL max length needs to be confirmed with the MC FW team */
+#define CONFIG_SYS_LS_MC_DPC_MAX_LENGTH	    0x20000
+#define CONFIG_SYS_LS_MC_DRAM_DPC_OFFSET    0x00F00000
+#define CONFIG_SYS_LS_MC_DPL_MAX_LENGTH	    0x20000
+#define CONFIG_SYS_LS_MC_DRAM_DPL_OFFSET    0x00F20000
+#define CONFIG_SYS_LS_MC_AIOP_IMG_MAX_LENGTH	0x200000
+#define CONFIG_SYS_LS_MC_DRAM_AIOP_IMG_OFFSET	0x07000000
+
+/*
+ * Carve out a DDR region which will not be used by u-boot/Linux
+ *
+ * It will be used by MC and Debug Server. The MC region must be
+ * 512MB aligned, so the min size to hide is 512MB.
+ */
+
+#if defined(CONFIG_FSL_MC_ENET)
+#define CONFIG_SYS_LS_MC_DRAM_BLOCK_MIN_SIZE		(128UL * 1024 * 1024)
+#endif
+
+/* Miscellaneous configurable options */
+
+/* SATA */
+#ifdef CONFIG_SCSI
+#define CONFIG_SYS_SATA1		AHCI_BASE_ADDR1
+#endif
+
+/* Physical Memory Map */
+
+#define CONFIG_HWCONFIG
+#define HWCONFIG_BUFFER_SIZE		128
+
+#ifndef SPL_NO_ENV
+/* Initial environment variables */
+#define CONFIG_EXTRA_ENV_SETTINGS		\
+	"hwconfig=fsl_ddr:bank_intlv=auto\0"	\
+	"loadaddr=0x80100000\0"			\
+	"kernel_addr=0x100000\0"		\
+	"ramdisk_addr=0x800000\0"		\
+	"ramdisk_size=0x2000000\0"		\
+	"fdt_high=0xa0000000\0"			\
+	"initrd_high=0xffffffffffffffff\0"	\
+	"kernel_start=0x581000000\0"		\
+	"kernel_load=0xa0000000\0"		\
+	"kernel_size=0x2800000\0"		\
+	"console=ttyAMA0,38400n8\0"		\
+	"mcinitcmd=fsl_mc start mc 0x580a00000"	\
+	" 0x580e00000 \0"
+#endif
+
+/* Monitor Command Prompt */
+#define CONFIG_SYS_CBSIZE		512	/* Console I/O Buffer Size */
+#define CONFIG_SYS_PBSIZE		(CONFIG_SYS_CBSIZE + \
+					sizeof(CONFIG_SYS_PROMPT) + 16)
+#define CONFIG_SYS_BARGSIZE		CONFIG_SYS_CBSIZE /* Boot args buffer */
+#define CONFIG_SYS_MAXARGS		64	/* max command args */
+
+#ifdef CONFIG_SPL
+#define CONFIG_SPL_BSS_START_ADDR      0x80100000
+#define CONFIG_SPL_BSS_MAX_SIZE                0x00100000
+#define CONFIG_SPL_MAX_SIZE            0x16000
+#define CONFIG_SPL_STACK               (CONFIG_SYS_FSL_OCRAM_BASE + 0x9ff0)
+#define CONFIG_SPL_TARGET              "u-boot-with-spl.bin"
+
+#define CONFIG_SYS_SPL_MALLOC_SIZE     0x00100000
+#define CONFIG_SYS_SPL_MALLOC_START    0x80200000
+
+#ifdef CONFIG_NXP_ESBC
+#define CONFIG_U_BOOT_HDR_SIZE		(16 << 10)
+/*
+ * HDR would be appended at end of image and copied to DDR along
+ * with U-Boot image. Here u-boot max. size is 512K. So if binary
+ * size increases then increase this size in case of secure boot as
+ * it uses raw u-boot image instead of fit image.
+ */
+#define CONFIG_SYS_MONITOR_LEN         (0x100000 + CONFIG_U_BOOT_HDR_SIZE)
+#else
+#define CONFIG_SYS_MONITOR_LEN         0x100000
+#endif /* ifdef CONFIG_NXP_ESBC */
+
+#endif
+#define CONFIG_SYS_BOOTM_LEN   (64 << 20)      /* Increase max gunzip size */
+
+#endif /* __LS1088_COMMON_H */

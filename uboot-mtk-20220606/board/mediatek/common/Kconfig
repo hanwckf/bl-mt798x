@@ -1,0 +1,123 @@
+
+config MEDIATEK_BOOTMENU
+	bool "Enable MediaTek bootmenu framework"
+	select CMD_BOOTMENU
+	select CMD_BOOTMENU_ENTER_UBOOT_CONSOLE
+	select UTF16_STRING_SUPPORT
+	select PARTITIONS
+	default n
+	help
+	  Enable this option will allow boards to use a bootmenu containing
+	  features for easy upgrading/booting.
+
+config MEDIATEK_BOOTMENU_COUNTDOWN
+	bool "Enable bootmenu countdown"
+	default y
+	depends on MEDIATEK_BOOTMENU
+	help
+	  Enable bootmenu auto-booting countdown timer.
+
+config MEDIATEK_BOOTMENU_DELAY
+	int "MediaTek bootmenu delay time (s)"
+	range 1 10
+	default 4
+	depends on MEDIATEK_BOOTMENU_COUNTDOWN
+	help
+	  The dealy seconds for the bootmenu to show before running the
+	  default command.
+
+config MEDIATEK_LOAD_FROM_RAM
+	bool "Enable loading from RAM support"
+	default n
+	depends on MEDIATEK_BOOTMENU
+	help
+	  Enable loading from RAM support for mtkload and mtkupgrade. This is
+	  useful when using JTAG debugging and ethernet is not available.
+
+config MTK_SECURE_BOOT
+	bool "Enable MediaTek secure boot framework"
+	select FIT_SIGNATURE
+	select RSA
+	select RSA_VERIFY
+	select ENV_IS_NOWHERE if !MTK_DUAL_BOOT
+	select CHAIN_OF_TRUST if !MTK_DUAL_BOOT
+	select IMAGE_FORCED_VERIFY
+	select FDT_NO_BOOTARGS_OVERRIDE
+	default n
+	help
+	  Enable this option will allow boards to verify Linux and Filesystem.
+
+config CHAIN_OF_TRUST
+	bool
+	default n
+
+config MTK_ANTI_ROLLBACK
+	bool "Enable MediaTek anti-rollback framework"
+	default n
+	depends on MTK_SECURE_BOOT
+	help
+	  Enable this option will allow boards to verify Firmware Anti-rollback
+	  Version.
+
+config MTK_UPGRADE_IMAGE_VERIFY
+	bool "Verify firmware image before upgrading"
+	select FIT
+	default y
+	help
+	  Enable this option will force to verify the image being upgraded.
+	  Upgrading UBI raw partition image and UBI hybrid image will be
+	  rejected.
+
+config MTK_UPGRADE_IMAGE_ROOTFS_VERIFY
+	bool "Verify rootfs part"
+	depends on MTK_UPGRADE_IMAGE_VERIFY
+	default y if MTK_DUAL_BOOT
+	default n
+	help
+	  Enable this option will force to verify the rootfs part of the image.
+	  The rootfs hash should be embedded into the FIT image.
+	  If no such hash found, verification will fail.
+
+config SUPPORT_MTK_DUAL_BOOT
+	bool
+	default n
+
+config MTK_DUAL_BOOT
+	bool "Enable A/B System Updates"
+	depends on SUPPORT_MTK_DUAL_BOOT
+	help
+	  A/B system updates ensure a workable booting system remains on the
+	  flash device during an firmware upgrading.
+
+config MTK_DUAL_BOOT_IMAGE_ROOTFS_VERIFY
+	bool "Verify rootfs part"
+	depends on MTK_DUAL_BOOT
+	default y
+	help
+	  Enable this option will force to verify the rootfs part of the image.
+	  The rootfs hash should be embedded into the FIT image.
+	  If no such hash found, verification will fail.
+
+config MTK_DUAL_BOOT_SLOT_1_KERNEL_NAME
+	string "Name for kernel of image slot 1"
+	depends on MTK_DUAL_BOOT
+	default "kernel2"
+	help
+	  The partition/volume name for kernel of image slot 1
+
+config MTK_DUAL_BOOT_SLOT_1_ROOTFS_NAME
+	string "Name for rootfs of image slot 1"
+	depends on MTK_DUAL_BOOT
+	default "rootfs2"
+	help
+	  The partition/volume name for rootfs of image slot 1
+
+config MTK_DUAL_BOOT_SHARED_ROOTFS_DATA
+	bool "Use shared rootfs_data for both images"
+	depends on MTK_DUAL_BOOT
+	default y
+
+config MTK_DUAL_BOOT_ROOTFS_DATA_NAME
+	string "Name for rootfs_data of both image slots"
+	depends on MTK_DUAL_BOOT_SHARED_ROOTFS_DATA
+	default "rootfs_data"
