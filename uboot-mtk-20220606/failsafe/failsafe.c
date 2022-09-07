@@ -338,6 +338,9 @@ int start_web_failsafe(void)
 	}
 
 	httpd_register_uri_handler(inst, "/", &html_handler, NULL);
+#ifdef CONFIG_MT7981_BOOTMENU_EMMC
+        httpd_register_uri_handler(inst, "/gpt.html", &html_handler, NULL);
+#endif
 	httpd_register_uri_handler(inst, "/bl2.html", &html_handler, NULL);
 	httpd_register_uri_handler(inst, "/uboot.html", &html_handler, NULL);
 	httpd_register_uri_handler(inst, "/fail.html", &html_handler, NULL);
