@@ -481,6 +481,13 @@ const char *bootdelay_process(void)
 	return s;
 }
 
+static void try_auto_upgrade(void)
+{
+	run_command("setenv tftptimeout 1000;setenv tftptimeoutcountmax 1;run lf && mtkboardboot", 0);
+	run_command("setenv tftptimeout;setenv tftptimeoutcountmax", 0);
+}
+
+
 void autoboot_command(const char *s)
 {
 	debug("### main_loop: bootcmd=\"%s\"\n", s ? s : "<UNDEFINED>");
@@ -489,6 +496,8 @@ void autoboot_command(const char *s)
 		 (stored_bootdelay != -1 && !abortboot(stored_bootdelay)))) {
 		bool lock;
 		int prev;
+		
+		try_auto_upgrade();
 
 		lock = autoboot_keyed() &&
 			!IS_ENABLED(CONFIG_AUTOBOOT_KEYED_CTRLC);

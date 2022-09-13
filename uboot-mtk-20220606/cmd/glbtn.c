@@ -12,12 +12,6 @@ static void led_action_post(void *arg)
 	run_command("led blue:run on", 0);
 }
 
-static void try_auto_upgrade(void)
-{
-	run_command("setenv tftptimeout 1000;setenv tftptimeoutcountmax 1;run lf && mtkboardboot", 0);
-	run_command("setenv tftptimeout;setenv tftptimeoutcountmax", 0);
-}
-
 static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	const char *button_label = "reset";
@@ -29,13 +23,11 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 	run_command("gpio clear 12", 0);
 	ret = button_get_by_label(button_label, &dev);
 	if (ret) {
-		try_auto_upgrade();
 		printf("Button '%s' not found (err=%d)\n", button_label, ret);
 		return CMD_RET_FAILURE;
 	}
 
 	if (!button_get_state(dev)) {
-		try_auto_upgrade();
 		poller_async_register(&led_p, "led_pa");
 		poller_call_async(&led_p, 1000000, led_action_post, NULL);
 		return CMD_RET_SUCCESS;
