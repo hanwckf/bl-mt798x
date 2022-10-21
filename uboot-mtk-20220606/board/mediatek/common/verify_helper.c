@@ -133,7 +133,8 @@ static bool verify_kernel_fit(const void *fit,  size_t size,
 	}
 
 	/* Find kernel image node */
-	kernel_noffset = fit_conf_get_prop_node(fit, default_noffset, "kernel");
+	kernel_noffset = fit_conf_get_prop_node(fit, default_noffset, "kernel",
+						IH_PHASE_NONE);
 
 	debug("%s: kernel_noffset = 0x%x\n", __func__, kernel_noffset);
 
