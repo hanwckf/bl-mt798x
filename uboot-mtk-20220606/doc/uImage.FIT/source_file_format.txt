@@ -185,6 +185,9 @@ the '/images' node should have the following layout:
   - compatible : compatible method for loading image.
     Mandatory for types: "fpga", and images that do not specify a load address.
     To use the generic fpga loading routine, use "u-boot,fpga-legacy".
+  - phase : U-Boot phase for which the image is intended.
+    "spl" - image is an SPL image
+    "u-boot" - image is a U-Boot image
 
   Optional nodes:
   - hash-1 : Each hash sub-node represents separate hash or checksum
