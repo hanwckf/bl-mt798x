@@ -29,3 +29,4 @@ u-boot.cfg
 /mkgpt/bin
 /mkgpt/gpttable
 __pycache__
+./*-fip.bin
