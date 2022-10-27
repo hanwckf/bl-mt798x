@@ -20,7 +20,7 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 	ulong ts;
 
 	run_command("ledblink blue:run 250", 0);
-	run_command("gpio clear 12", 0);
+	//run_command("gpio clear 12", 0);
 	ret = button_get_by_label(button_label, &dev);
 	if (ret) {
 		printf("Button '%s' not found (err=%d)\n", button_label, ret);

@@ -497,7 +497,7 @@ void autoboot_command(const char *s)
 		bool lock;
 		int prev;
 		
-		try_auto_upgrade();
+		//try_auto_upgrade();
 
 		lock = autoboot_keyed() &&
 			!IS_ENABLED(CONFIG_AUTOBOOT_KEYED_CTRLC);
