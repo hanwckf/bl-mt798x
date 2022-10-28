@@ -31,9 +31,14 @@
 		compatible = "gpio-leds";
 
 		led@0 {
-			label = "blue:run"; /* green */
+			label = "white:system"; /* green */
 			gpios = <&gpio 7 GPIO_ACTIVE_LOW>;
 		};
+
+		led@1 {
+			label = "blue:run"; /* red */
+			gpios = <&gpio 3 GPIO_ACTIVE_LOW>;
+        };
 	};
 };
 
