@@ -19,6 +19,7 @@ echo "build u-boot..."
 cp -f $UBOOT_DIR/configs/$UBOOT_CFG $UBOOT_DIR/.config
 if [ "$1" = "fixedparts" ]; then
 	echo "CONFIG_MEDIATEK_UBI_FIXED_MTDPARTS=y" >> $UBOOT_DIR/.config
+	echo "Build uboot with fixed-mtdparts!"
 fi
 
 make -C $UBOOT_DIR olddefconfig all
