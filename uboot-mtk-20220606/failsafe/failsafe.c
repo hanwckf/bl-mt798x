@@ -172,6 +172,7 @@ static void upload_handler(enum httpd_uri_handler_status status,
 	static char hexchars[] = "0123456789abcdef";
 	struct httpd_form_value *fw;
 	static char md5_str[33] = "";
+	static char resp[128];
 	u8 md5_sum[16];
 	int i;
 
@@ -230,7 +231,9 @@ done:
 		md5_str[i * 2 + 1] = hexchars[hex];
 	}
 
-	response->data = md5_str;
+	sprintf(resp, "%ld %s", fw->size, md5_str);
+
+	response->data = resp;
 	response->size = strlen(response->data);
 }
 

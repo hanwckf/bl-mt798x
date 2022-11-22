@@ -101,7 +101,7 @@ ul {
 	border-radius: 25px;
 }
 
-#md5 {
+#md5, #size {
 	font-size: 1.6em;
 	margin-left: 155px;
 }
