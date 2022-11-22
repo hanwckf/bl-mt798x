@@ -13,6 +13,7 @@
 #include <part.h>
 #include <div64.h>
 #include <linux/math64.h>
+#include <poller.h>
 #include "mmc_private.h"
 
 static ulong mmc_erase_t(struct mmc *mmc, ulong start, lbaint_t blkcnt)
@@ -106,6 +107,8 @@ ulong mmc_berase(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt)
 		       & ~(mmc->erase_grp_size - 1)) - 1);
 
 	while (blk < blkcnt) {
+		poller_call();
+
 		if (IS_SD(mmc) && mmc->ssr.au) {
 			blk_r = ((blkcnt - blk) > mmc->ssr.au) ?
 				mmc->ssr.au : (blkcnt - blk);
@@ -211,6 +214,8 @@ ulong mmc_bwrite(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt,
 		return 0;
 
 	do {
+		poller_call();
+
 		cur = (blocks_todo > mmc->cfg->b_max) ?
 			mmc->cfg->b_max : blocks_todo;
 		if (mmc_write_blocks(mmc, start, cur, src) != cur)

@@ -68,23 +68,35 @@ static bool verify_fip(const void *data, size_t size)
 
 static int write_firmware_failsafe(size_t data_addr, uint32_t data_size)
 {
+	int r;
+
+	run_command("ledblink blue:run 100", 0);
+
 	switch (fw_type) {
 #ifdef CONFIG_MT7981_BOOTMENU_EMMC
 	case FW_TYPE_GPT:
-		return write_gpt(NULL, NULL, (const void *)data_addr, data_size);
+		r = write_gpt(NULL, NULL, (const void *)data_addr, data_size);
+		break;
 #endif
 
 	case FW_TYPE_BL2:
-		return write_bl2(NULL, NULL, (const void *)data_addr, data_size);
+		r = write_bl2(NULL, NULL, (const void *)data_addr, data_size);
+		break;
 
 	case FW_TYPE_FIP:
 		if (!verify_fip((const void *)data_addr, data_size))
 			return -1;
-		return write_fip(NULL, NULL, (const void *)data_addr, data_size);
+		r = write_fip(NULL, NULL, (const void *)data_addr, data_size);
+		break;
 
 	default:
-		return write_firmware(NULL, NULL, (const void *)data_addr, data_size);
+		r = write_firmware(NULL, NULL, (const void *)data_addr, data_size);
+		break;
 	}
+
+	run_command("ledblink blue:run 0", 0);
+
+	return r;
 }
 
 static int output_plain_file(struct httpd_response *response,
