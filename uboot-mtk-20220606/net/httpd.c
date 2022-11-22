@@ -468,12 +468,7 @@ static int httpd_recv_hdr(struct httpd_instance *inst,
 			/* uploading mark */
 			pdata->is_uploading = 1;
 			is_uploading = 1;
-			/*
-			 * if we havn't received any payload, stop going to
-			 * next status.
-			 */
-			if (pdata->upload_size == 0)
-				ret = 1;
+			ret = 1;
 		}
 	} else {
 		pdata->status = HTTPD_S_FULL_RCVD;

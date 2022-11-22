@@ -68,23 +68,35 @@ static bool verify_fip(const void *data, size_t size)
 
 static int write_firmware_failsafe(size_t data_addr, uint32_t data_size)
 {
+	int r;
+
+	run_command("ledblink blue:run 100", 0);
+
 	switch (fw_type) {
 #ifdef CONFIG_MT7981_BOOTMENU_EMMC
 	case FW_TYPE_GPT:
-		return write_gpt(NULL, NULL, (const void *)data_addr, data_size);
+		r = write_gpt(NULL, NULL, (const void *)data_addr, data_size);
+		break;
 #endif
 
 	case FW_TYPE_BL2:
-		return write_bl2(NULL, NULL, (const void *)data_addr, data_size);
+		r = write_bl2(NULL, NULL, (const void *)data_addr, data_size);
+		break;
 
 	case FW_TYPE_FIP:
 		if (!verify_fip((const void *)data_addr, data_size))
 			return -1;
-		return write_fip(NULL, NULL, (const void *)data_addr, data_size);
+		r = write_fip(NULL, NULL, (const void *)data_addr, data_size);
+		break;
 
 	default:
-		return write_firmware(NULL, NULL, (const void *)data_addr, data_size);
+		r = write_firmware(NULL, NULL, (const void *)data_addr, data_size);
+		break;
 	}
+
+	run_command("ledblink blue:run 0", 0);
+
+	return r;
 }
 
 static int output_plain_file(struct httpd_response *response,
@@ -160,6 +172,7 @@ static void upload_handler(enum httpd_uri_handler_status status,
 	static char hexchars[] = "0123456789abcdef";
 	struct httpd_form_value *fw;
 	static char md5_str[33] = "";
+	static char resp[128];
 	u8 md5_sum[16];
 	int i;
 
@@ -218,7 +231,9 @@ done:
 		md5_str[i * 2 + 1] = hexchars[hex];
 	}
 
-	response->data = md5_str;
+	sprintf(resp, "%ld %s", fw->size, md5_str);
+
+	response->data = resp;
 	response->size = strlen(response->data);
 }
 

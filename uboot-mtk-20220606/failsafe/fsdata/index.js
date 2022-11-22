@@ -61,8 +61,14 @@ function upload(name) {
             if (resp == 'fail') {
                 location = '/fail.html';
             } else {
+                const info = resp.split(' ');
+
+                document.getElementById('size').style.display = 'block';
+                document.getElementById('size').innerHTML = 'Size: ' + info[0];
+
                 document.getElementById('md5').style.display = 'block';
-                document.getElementById('md5').innerHTML = 'MD5: ' + resp;
+                document.getElementById('md5').innerHTML = 'MD5: ' + info[1];
+
                 document.getElementById('upgrade').style.display = 'block';
             }
         },
