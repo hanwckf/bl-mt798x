@@ -3,12 +3,13 @@
 #include <button.h>
 #include <linux/delay.h>
 #include <poller.h>
+#include <dm/ofnode.h>
 
 static struct poller_async led_p;
 
 void led_control(const char *cmd, const char *name, const char *arg)
 {
-	const char *led = env_get(name);
+	const char *led = ofnode_conf_read_str(name);
 	char buf[128];
 
 	if (!led)
@@ -19,16 +20,24 @@ void led_control(const char *cmd, const char *name, const char *arg)
 	run_command(buf, 0);
 }
 
-static void usb_power_clr(void)
+static void gpio_power_clr(void)
 {
-	const char *num = env_get("gpio_usb_power");
-	char buf[128];
+	ofnode node = ofnode_path("/config");
+	char cmd[128];
+	const u32 *val;
+	int size, i;
 
-	if (!num)
+	if (!ofnode_valid(node))
 		return;
 
-	sprintf(buf, "gpio clear %s", num);
-	run_command(buf, 0);
+	val = ofnode_read_prop(node, "gpio_power_clr", &size);
+	if (!val)
+		return;
+
+	for (i = 0; i < size / 4; i++) {
+		sprintf(cmd, "gpio clear %u", fdt32_to_cpu(val[i]));
+		run_command(cmd, 0);
+	}
 }
 
 static void led_action_post(void *arg)
@@ -46,7 +55,7 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 
 	led_control("ledblink", "blink_led", "250");
 
-	usb_power_clr();
+	gpio_power_clr();
 
 	ret = button_get_by_label(button_label, &dev);
 	if (ret) {
