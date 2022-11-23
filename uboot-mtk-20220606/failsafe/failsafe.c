@@ -18,6 +18,8 @@
 
 #include "fs.h"
 
+void led_control(const char *cmd, const char *name, const char *arg);
+
 enum {
 	FW_TYPE_GPT,
 	FW_TYPE_BL2,
@@ -70,7 +72,7 @@ static int write_firmware_failsafe(size_t data_addr, uint32_t data_size)
 {
 	int r;
 
-	run_command("ledblink blue:run 100", 0);
+	led_control("ledblink", "blink_led", "100");
 
 	switch (fw_type) {
 #ifdef CONFIG_MT7981_BOOTMENU_EMMC
@@ -94,7 +96,7 @@ static int write_firmware_failsafe(size_t data_addr, uint32_t data_size)
 		break;
 	}
 
-	run_command("ledblink blue:run 0", 0);
+	led_control("ledblink", "blink_led", "0");
 
 	return r;
 }
@@ -293,8 +295,8 @@ static void result_handler(enum httpd_uri_handler_status status,
 		/* invalidate upload identifier */
 		upload_data_id = rand();
 
-		run_command("led blue:run on", 0);
-		run_command("led white:system off", 0);
+		led_control("led", "blink_led", "on");
+		led_control("led", "system_led", "off");
 
 		if (!st->ret)
 			response->data = "success";

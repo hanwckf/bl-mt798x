@@ -6,10 +6,35 @@
 
 static struct poller_async led_p;
 
+void led_control(const char *cmd, const char *name, const char *arg)
+{
+	const char *led = env_get(name);
+	char buf[128];
+
+	if (!led)
+		return;
+
+	sprintf(buf, "%s %s %s", cmd, led, arg);
+
+	run_command(buf, 0);
+}
+
+static void usb_power_clr(void)
+{
+	const char *num = env_get("gpio_usb_power");
+	char buf[128];
+
+	if (!num)
+		return;
+
+	sprintf(buf, "gpio clear %s", num);
+	run_command(buf, 0);
+}
+
 static void led_action_post(void *arg)
 {
-	run_command("ledblink blue:run 0", 0);
-	run_command("led blue:run on", 0);
+	led_control("ledblink", "blink_led", "0");
+	led_control("led", "blink_led", "on");
 }
 
 static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
@@ -19,8 +44,10 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 	struct udevice *dev;
 	ulong ts;
 
-	run_command("ledblink blue:run 250", 0);
-	run_command("gpio clear 12", 0);
+	led_control("ledblink", "blink_led", "250");
+
+	usb_power_clr();
+
 	ret = button_get_by_label(button_label, &dev);
 	if (ret) {
 		printf("Button '%s' not found (err=%d)\n", button_label, ret);
@@ -33,7 +60,7 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 		return CMD_RET_SUCCESS;
 	}
 
-	run_command("ledblink blue:run 500", 0);
+	led_control("ledblink", "blink_led", "500");
 
 	printf("RESET button is pressed for: %2d second(s)", counter++);
 
@@ -50,13 +77,13 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 
 	printf("\n");
 
-	run_command("ledblink blue:run 0", 0);
+	led_control("ledblink", "blink_led", "0");
 
 	if (counter == 6) {
-		run_command("led white:system on", 0);
+		led_control("led", "system_led", "on");
 		run_command("httpd", 0);
 	} else {
-		run_command("led blue:run on", 0);
+		led_control("ledblink", "blink_led", "0");
 	}
 
 	return CMD_RET_SUCCESS;

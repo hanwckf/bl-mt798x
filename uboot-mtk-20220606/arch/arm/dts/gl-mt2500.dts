@@ -24,6 +24,9 @@
 		environment {
 			lu = "mtkupgrade fip uboot-gl-mt2500.bin";
 			lf = "mtkupgrade fw openwrt-gl-mt2500.bin";
+			blink_led = "blue:run";
+			system_led = "white:system";
+			gpio_usb_power = "12";
 		};
 	};
 
