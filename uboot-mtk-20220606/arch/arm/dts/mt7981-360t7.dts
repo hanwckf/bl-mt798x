@@ -16,6 +16,8 @@
 
 	config {
 		bootcmd = "mtkboardboot";
+		blink_led = "red:run";
+		system_led = "green:system";
 	};
 
 	gpio-keys-polled {
@@ -31,12 +33,12 @@
 		compatible = "gpio-leds";
 
 		led@0 {
-			label = "white:system"; /* green */
+			label = "green:system";
 			gpios = <&gpio 7 GPIO_ACTIVE_LOW>;
 		};
 
 		led@1 {
-			label = "blue:run"; /* red */
+			label = "red:run";
 			gpios = <&gpio 3 GPIO_ACTIVE_LOW>;
         };
 	};
