@@ -3,13 +3,47 @@
 #include <button.h>
 #include <linux/delay.h>
 #include <poller.h>
+#include <dm/ofnode.h>
 
 static struct poller_async led_p;
 
+void led_control(const char *cmd, const char *name, const char *arg)
+{
+	const char *led = ofnode_conf_read_str(name);
+	char buf[128];
+
+	if (!led)
+		return;
+
+	sprintf(buf, "%s %s %s", cmd, led, arg);
+
+	run_command(buf, 0);
+}
+
+static void gpio_power_clr(void)
+{
+	ofnode node = ofnode_path("/config");
+	char cmd[128];
+	const u32 *val;
+	int size, i;
+
+	if (!ofnode_valid(node))
+		return;
+
+	val = ofnode_read_prop(node, "gpio_power_clr", &size);
+	if (!val)
+		return;
+
+	for (i = 0; i < size / 4; i++) {
+		sprintf(cmd, "gpio clear %u", fdt32_to_cpu(val[i]));
+		run_command(cmd, 0);
+	}
+}
+
 static void led_action_post(void *arg)
 {
-	run_command("ledblink blue:run 0", 0);
-	run_command("led blue:run on", 0);
+	led_control("ledblink", "blink_led", "0");
+	led_control("led", "blink_led", "on");
 }
 
 static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
@@ -19,8 +53,10 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 	struct udevice *dev;
 	ulong ts;
 
-	run_command("ledblink blue:run 250", 0);
-	//run_command("gpio clear 12", 0);
+	led_control("ledblink", "blink_led", "250");
+
+	gpio_power_clr();
+
 	ret = button_get_by_label(button_label, &dev);
 	if (ret) {
 		printf("Button '%s' not found (err=%d)\n", button_label, ret);
@@ -33,7 +69,7 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 		return CMD_RET_SUCCESS;
 	}
 
-	run_command("ledblink blue:run 500", 0);
+	led_control("ledblink", "blink_led", "500");
 
 	printf("RESET button is pressed for: %2d second(s)", counter++);
 
@@ -50,13 +86,13 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 
 	printf("\n");
 
-	run_command("ledblink blue:run 0", 0);
+	led_control("ledblink", "blink_led", "0");
 
 	if (counter == 6) {
-		run_command("led white:system on", 0);
+		led_control("led", "system_led", "on");
 		run_command("httpd", 0);
 	} else {
-		run_command("led blue:run on", 0);
+		led_control("ledblink", "blink_led", "0");
 	}
 
 	return CMD_RET_SUCCESS;

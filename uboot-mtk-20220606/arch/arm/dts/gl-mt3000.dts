@@ -21,6 +21,10 @@
 	config {
 		bootcmd = "mtkboardboot";
 
+		blink_led = "blue:run";
+		system_led = "white:system";
+		gpio_power_clr = <12>;
+
 		environment {
 			lu = "mtkupgrade fip uboot-gl-mt3000.bin";
 			lf = "mtkupgrade fw openwrt-gl-mt3000.bin";

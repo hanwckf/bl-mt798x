@@ -16,6 +16,8 @@
 #include <net/httpd.h>
 #include <command.h>
 
+void led_control(const char *cmd, const char *name, const char *arg);
+
 struct httpd_instance {
 	struct list_head node;
 
@@ -641,7 +643,7 @@ static int httpd_handle_request(struct httpd_instance *inst,
 		free(boundary);
 	}
 
-	run_command("ledblink blue:run 0", 0);
+	led_control("ledblink", "blink_led", "0");
 
 	/* call uri handler */
 	assert((size_t) req->urih->cb > CONFIG_SYS_SDRAM_BASE);
@@ -684,7 +686,7 @@ static void httpd_rx(struct httpd_instance *inst, struct tcb_cb_data *cbd)
 	u8 sip[4];
 
 	if (pdata->status == HTTPD_S_NEW) {
-		run_command("ledblink blue:run 100", 0);
+		led_control("ledblink", "blink_led", "100");
 
 		memcpy(sip, &cbd->sip, 4);
 		debug("New connection from %d.%d.%d.%d:%d\n",
