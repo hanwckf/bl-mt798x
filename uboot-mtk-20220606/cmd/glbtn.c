@@ -75,7 +75,7 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 
 	ts = get_timer(0);
 
-	while (button_get_state(dev) && counter < 6) {
+	while (button_get_state(dev) && counter < 4) {
 		if (get_timer(ts) < 1000)
 			continue;
 
@@ -88,7 +88,7 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 
 	led_control("ledblink", "blink_led", "0");
 
-	if (counter == 6) {
+	if (counter == 4) {
 		led_control("led", "system_led", "on");
 		run_command("httpd", 0);
 	} else {
