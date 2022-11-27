@@ -2,6 +2,13 @@
 
 ![](/u-boot.gif)
 
+# Build
+```
+Usage: SOC=[mt7981|mt7986] BOARD=[360t7|redmi_ax6000] FIXED_MTDPARTS=[1|0] ./build.sh
+eg: SOC=mt7981 BOARD=360t7 ./build.sh
+eg: SOC=mt7986 BOARD=redmi_ax6000 ./build.sh
+```
+
 # Quickstart
 
 ## Prepare
