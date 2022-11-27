@@ -37,19 +37,19 @@ static int write_part(const char *partname, const void *data, size_t size,
 	return mtd_write_generic(mtd, 0, 0, data, size, verify);
 }
 
-static int write_bl2(void *priv, const struct data_part_entry *dpe,
+int write_bl2(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
 	return write_part("bl2", data, size, true);
 }
 
-static int write_fip(void *priv, const struct data_part_entry *dpe,
+int write_fip(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
 	return write_part("fip", data, size, true);
 }
 
-static int write_firmware(void *priv, const struct data_part_entry *dpe,
+int write_firmware(void *priv, const struct data_part_entry *dpe,
 			  const void *data, size_t size)
 {
 	int ret;
