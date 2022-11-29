@@ -48,7 +48,7 @@ static void led_action_post(void *arg)
 
 static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
-	const char *button_label = "reset";
+	const char *button_label = NULL;
 	int ret, counter = 0;
 	struct udevice *dev;
 	ulong ts;
@@ -56,6 +56,10 @@ static int do_glbtn(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[
 	led_control("ledblink", "blink_led", "250");
 
 	gpio_power_clr();
+
+	button_label = env_get("glbtn_key");
+	if (!button_label)
+		button_label = "reset";
 
 	ret = button_get_by_label(button_label, &dev);
 	if (ret) {
