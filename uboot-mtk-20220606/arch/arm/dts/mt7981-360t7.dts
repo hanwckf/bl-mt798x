@@ -31,7 +31,7 @@
 
 		mesh-button {
 			label = "mesh";
-			gpios = <&gpio 0 GPIO_ACTIVE_HIGH>;
+			gpios = <&gpio 0 GPIO_ACTIVE_LOW>;
 		};
 	};
 
