@@ -4,7 +4,7 @@
 
 # Build
 ```
-Usage: SOC=[mt7981|mt7986] BOARD=[360t7|redmi_ax6000] FIXED_MTDPARTS=[1|0] ./build.sh
+Usage: SOC=[mt7981|mt7986] BOARD=[xiaomi_wr30u|360t7|redmi_ax6000] FIXED_MTDPARTS=[1|0] ./build.sh
 eg: SOC=mt7981 BOARD=360t7 ./build.sh
 eg: SOC=mt7986 BOARD=redmi_ax6000 ./build.sh
 ```
@@ -13,7 +13,7 @@ eg: SOC=mt7986 BOARD=redmi_ax6000 ./build.sh
 
 ## Prepare
 
-	sudo apt install gcc-aarch64-linux-gnu
+	sudo apt install build-essential bison flex bc libssl-dev python-is-python3 device-tree-compiler gcc-aarch64-linux-gnu
 	export CROSS_COMPILE=aarch64-linux-gnu-
 
 ## Build u-boot
