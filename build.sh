@@ -5,7 +5,7 @@ UBOOT_DIR=uboot-mtk-20220606
 ATF_DIR=atf-20220606-637ba581b
 
 if [ -z "$SOC" ] || [ -z "$BOARD" ]; then
-	echo "Usage: SOC=[mt7981|mt7986] BOARD=[360t7|redmi_ax6000] FIXED_MTDPARTS=[1|0] $0"
+	echo "Usage: SOC=[mt7981|mt7986] BOARD=[xiaomi_wr30u|360t7|redmi_ax6000] FIXED_MTDPARTS=[1|0] $0"
 	echo "eg: SOC=mt7981 BOARD=360t7 $0"
 	echo "eg: SOC=mt7986 BOARD=redmi_ax6000 $0"
 	exit 1
