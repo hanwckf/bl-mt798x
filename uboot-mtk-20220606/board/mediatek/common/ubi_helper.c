@@ -89,7 +89,7 @@ static int write_ubi1_image(const void *data, size_t size,
 				  ii->ubi_size + ii->marker_size);
 }
 
-static int mount_ubi(struct mtd_info *mtd, bool auto_erase_ubi)
+static int mount_ubi(struct mtd_info *mtd)
 {
 	struct ubi_device *ubi;
 	int ret;
@@ -103,19 +103,15 @@ static int mount_ubi(struct mtd_info *mtd, bool auto_erase_ubi)
 	ret = ubi_init();
 	if (ret) {
 		cprintln(CAUTION, "*** Failed to attach UBI ***");
+		cprintln(NORMAL, "*** Rebuilding UBI ***");
 
-		if (auto_erase_ubi) {
-			cprintln(NORMAL, "*** Rebuilding UBI ***");
-			ret = mtd_erase_generic(mtd, 0, mtd->size);
-			if (ret)
-				return ret;
+		ret = mtd_erase_generic(mtd, 0, mtd->size);
+		if (ret)
+			return ret;
 
-			ret = ubi_init();
-			if (ret) {
-				cprintln(ERROR, "*** Failed to attach UBI ***");
-				return -ret;
-			}
-		} else {
+		ret = ubi_init();
+		if (ret) {
+			cprintln(ERROR, "*** Failed to attach UBI ***");
 			return -ret;
 		}
 	}
@@ -414,7 +410,7 @@ static int write_ubi1_tar_image(const void *data, size_t size,
 	if (ret)
 		return ret;
 
-	ret = mount_ubi(mtd_ubi, true);
+	ret = mount_ubi(mtd_ubi);
 	if (ret)
 		return ret;
 
@@ -445,7 +441,7 @@ static int write_ubi2_tar_image(const void *data, size_t size,
 	if (ret)
 		return ret;
 
-	ret = mount_ubi(mtd, true);
+	ret = mount_ubi(mtd);
 	if (ret)
 		return ret;
 
@@ -480,7 +476,7 @@ static int boot_from_ubi(struct mtd_info *mtd)
 	data_load_addr = CONFIG_LOADADDR;
 #endif
 
-	ret = mount_ubi(mtd, false);
+	ret = mount_ubi(mtd);
 	if (ret)
 		return ret;
 
