@@ -210,6 +210,8 @@ obj-$(CONFIG_CMD_SCP03) += scp03.o
 
 obj-$(CONFIG_CMD_GL_BTN) += glbtn.o
 
+obj-$(CONFIG_CMD_SHOW_MTD_LAYOUT) += showlayout.o
+
 obj-$(CONFIG_ARM) += arm/
 obj-$(CONFIG_RISCV) += riscv/
 obj-$(CONFIG_SANDBOX) += sandbox/

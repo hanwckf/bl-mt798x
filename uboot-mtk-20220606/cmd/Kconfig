@@ -2600,5 +2600,10 @@ config CMD_GL_BTN
 	bool "GL-iNet button check command"
 	depends on BUTTON
 	default n
+
+config CMD_SHOW_MTD_LAYOUT
+	bool "Show mtd layout command"
+	depends on OF_LIBFDT
+	default n
 endmenu
 
