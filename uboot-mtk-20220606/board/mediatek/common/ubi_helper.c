@@ -429,6 +429,49 @@ out:
 	return ret;
 }
 
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+static int write_ubi2_tar_image_separate(const void *data, size_t size,
+				struct mtd_info *mtd_kernel, struct mtd_info *mtd_rootfs)
+{
+	const void *kernel_data, *rootfs_data;
+	size_t kernel_size, rootfs_size;
+	int ret;
+
+	ret = parse_tar_image(data, size, &kernel_data, &kernel_size,
+			      &rootfs_data, &rootfs_size);
+	if (ret)
+		return ret;
+
+	ret = mount_ubi(mtd_kernel);
+	if (ret)
+		return ret;
+
+	ret = update_ubi_volume("kernel", -1, kernel_data, kernel_size);
+	if (ret)
+		goto out;
+
+	umount_ubi();
+
+	ret = mount_ubi(mtd_rootfs);
+	if (ret)
+		return ret;
+
+	/* Remove this volume first in case of no enough PEBs */
+	remove_ubi_volume("rootfs_data");
+
+	ret = update_ubi_volume("rootfs", -1, rootfs_data, rootfs_size);
+	if (ret)
+		goto out;
+
+	ret = create_ubi_volume("rootfs_data", 0, -1, true);
+
+out:
+	umount_ubi();
+
+	return ret;
+}
+#endif
+
 static int write_ubi2_tar_image(const void *data, size_t size,
 				struct mtd_info *mtd)
 {
@@ -492,6 +535,12 @@ int ubi_upgrade_image(const void *data, size_t size)
 	struct owrt_image_info ii;
 	struct mtd_info *mtd, *mtd_kernel;
 	int ret;
+	const char *ubi_flash_part = "ubi";
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+	struct mtd_info *mtd_ubikernel, *mtd_ubirootfs;
+	const char *ubi_kernel_part;
+	const char *ubi_rootfs_part;
+#endif
 
 	ubi_probe_mtd_devices();
 
@@ -501,7 +550,13 @@ int ubi_upgrade_image(const void *data, size_t size)
 	else
 		mtd_kernel = NULL;
 
-	mtd = get_mtd_device_nm("ubi");
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+	ubi_flash_part = env_get("factory_part");
+	if (!ubi_flash_part)
+		ubi_flash_part = "ubi";
+#endif
+
+	mtd = get_mtd_device_nm(ubi_flash_part);
 	if (!IS_ERR_OR_NULL(mtd)) {
 		put_mtd_device(mtd);
 
@@ -521,8 +576,24 @@ int ubi_upgrade_image(const void *data, size_t size)
 			if (!ret && ii.type == IMAGE_UBI2)
 				return mtd_update_generic(mtd, data, size);
 
-			if (!ret && ii.type == IMAGE_TAR)
+			if (!ret && ii.type == IMAGE_TAR) {
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+				ubi_kernel_part = env_get("sysupgrade_kernel_ubipart");
+				ubi_rootfs_part = env_get("sysupgrade_rootfs_ubipart");
+				if (ubi_kernel_part && ubi_rootfs_part) {
+					mtd_ubikernel = get_mtd_device_nm(ubi_kernel_part);
+					mtd_ubirootfs = get_mtd_device_nm(ubi_rootfs_part);
+					if (!IS_ERR_OR_NULL(mtd_ubikernel) && !IS_ERR_OR_NULL(mtd_ubirootfs)) {
+						put_mtd_device(mtd_ubikernel);
+						put_mtd_device(mtd_ubirootfs);
+						return write_ubi2_tar_image_separate(data, size, mtd_ubikernel, mtd_ubirootfs);
+					} else {
+						return -ENOTSUPP;
+					}
+				}
+#endif
 				return write_ubi2_tar_image(data, size, mtd);
+			}
 		}
 	}
 
@@ -541,6 +612,7 @@ int ubi_upgrade_image(const void *data, size_t size)
 int ubi_boot_image(void)
 {
 	struct mtd_info *mtd, *mtd_kernel;
+	const char *ubi_boot_part = "ubi";
 
 	ubi_probe_mtd_devices();
 
@@ -550,7 +622,13 @@ int ubi_boot_image(void)
 	else
 		mtd_kernel = NULL;
 
-	mtd = get_mtd_device_nm("ubi");
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+	ubi_boot_part = env_get("ubi_boot_part");
+	if (!ubi_boot_part)
+		ubi_boot_part = "ubi";
+#endif
+
+	mtd = get_mtd_device_nm(ubi_boot_part);
 	if (!IS_ERR_OR_NULL(mtd)) {
 		put_mtd_device(mtd);
 

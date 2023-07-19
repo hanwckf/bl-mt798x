@@ -121,3 +121,8 @@ config MTK_DUAL_BOOT_ROOTFS_DATA_NAME
 	string "Name for rootfs_data of both image slots"
 	depends on MTK_DUAL_BOOT_SHARED_ROOTFS_DATA
 	default "rootfs_data"
+
+config MEDIATEK_MULTI_MTD_LAYOUT
+	bool "Enable multi mtd layout support"
+	select SYS_MTDPARTS_RUNTIME
+	default n

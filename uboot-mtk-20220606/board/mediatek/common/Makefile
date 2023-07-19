@@ -9,6 +9,7 @@ obj-$(CONFIG_MEDIATEK_BOOTMENU) += load_data.o upgrade_helper.o boot_helper.o \
 				   dm_parser.o
 ifdef CONFIG_MTD
 obj-$(CONFIG_MEDIATEK_BOOTMENU) += ubi_helper.o
+obj-$(CONFIG_MEDIATEK_MULTI_MTD_LAYOUT) += mtd_layout.o
 endif
 
 obj-$(CONFIG_MEDIATEK_BOOTMENU) += cmd_mtkupgrade.o cmd_mtkload.o \
