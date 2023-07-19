@@ -19,6 +19,27 @@
 		bootcmd = "mtkboardboot";
 	};
 
+	mtd-layout {
+		layout@0 {
+			label = "default";
+			// mtd layout for xiaomi stock ubi or openwrt-stock/immortalwrt-stock firmware
+			cmdline = "console=ttyS0,115200n1 loglevel=8 swiotlb=512 firmware=0 mtd=ubi uart_en=1";
+			mtdids = "nmbm0=nmbm0";
+			mtdparts = "nmbm0:1024k(bl2),256k(Nvram),256k(Bdata),2048k(factory),2048k(fip),256k(crash),256k(crash_log),30720k(ubi_kernel),81920k(ubi)";
+			boot_part = "ubi_kernel"; // ubi boot part, default is "ubi"
+			factory_part = "ubi_kernel"; // factory firmware write part, default is "ubi"
+			sysupgrade_kernel_ubipart = "ubi_kernel"; // sysupgrade kernel write part (ubi volume: kernel), default is "ubi"
+			sysupgrade_rootfs_ubipart = "ubi"; // sysupgrade rootfs write part (ubi volume: rootfs, rootfs_data)
+		};
+
+		layout@1 {
+			label = "immortalwrt-110m";
+			// mtd layout for immortalwrt/openwrt 110M ubi firmware
+			mtdids = "nmbm0=nmbm0";
+			mtdparts = "nmbm0:1024k(bl2),256k(Nvram),256k(Bdata),2048k(factory),2048k(fip),256k(crash),256k(crash_log),110m(ubi)";
+		};
+	};
+
 	gpio-keys {
 		compatible = "gpio-keys";
 
