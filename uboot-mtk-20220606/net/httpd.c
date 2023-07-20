@@ -279,6 +279,11 @@ u32 http_make_response_header(struct http_response_info *info, char *buff,
 	if (p >= buff + size)
 		return size;
 
+	p += snprintf(p, buff + size - p, "Cache-Control: no-store\r\n");
+
+	if (p >= buff + size)
+		return size;
+
 	if (info->location)
 		p += snprintf(p, buff + size - p, "Location: %s\r\n",
 			info->location);
