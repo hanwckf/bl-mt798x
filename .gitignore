@@ -10,6 +10,7 @@
 *.tab.*
 *.bin
 *.srec
+*.pyc
 .binman_stamp
 .config.old
 .mconf-cfg
