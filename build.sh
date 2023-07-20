@@ -5,8 +5,9 @@ UBOOT_DIR=uboot-mtk-20220606
 ATF_DIR=atf-20220606-637ba581b
 
 if [ -z "$SOC" ] || [ -z "$BOARD" ]; then
-	echo "Usage: SOC=[mt7981|mt7986] BOARD=[360t7|redmi_ax6000] FIXED_MTDPARTS=[1|0] $0"
+	echo "Usage: SOC=[mt7981|mt7986] BOARD=<board name> FIXED_MTDPARTS=[1|0] MULTI_LAYOUT=[0|1] $0"
 	echo "eg: SOC=mt7981 BOARD=360t7 $0"
+	echo "eg: SOC=mt7981 BOARD=wr30u MULTI_LAYOUT=1 $0"
 	echo "eg: SOC=mt7986 BOARD=redmi_ax6000 $0"
 	exit 1
 fi
@@ -18,10 +19,15 @@ export CROSS_COMPILE=$TOOLCHAIN
 
 # Build fixed-mtdparts by default
 fixedparts=${FIXED_MTDPARTS:-1}
+multilayout=${MULTI_LAYOUT:-0}
 
-echo "Building for CPU: $SOC, BOARD: $BOARD, fixed-mtdparts: $fixedparts"
+echo "Building for CPU: $SOC, BOARD: $BOARD, fixed-mtdparts: $fixedparts, multi-layout: $multilayout"
 
 UBOOT_CFG="${SOC}_${BOARD}_defconfig"
+if [ "$multilayout" = "1" ]; then
+	UBOOT_CFG="${SOC}_${BOARD}_multi_layout_defconfig"
+fi
+
 if [ ! -f $UBOOT_DIR/configs/$UBOOT_CFG ]; then
 	echo "$UBOOT_DIR/configs/$UBOOT_CFG not found!"
 	exit 1
