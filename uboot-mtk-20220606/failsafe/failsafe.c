@@ -301,6 +301,8 @@ done:
 	if (mtd) {
 		mtd_layout_label = mtd->data;
 		sprintf(resp, "%ld %s %s", fw->size, md5_str, mtd->data);
+	} else {
+		sprintf(resp, "%ld %s", fw->size, md5_str);
 	}
 #else
 	sprintf(resp, "%ld %s", fw->size, md5_str);
