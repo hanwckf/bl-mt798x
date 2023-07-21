@@ -32,32 +32,31 @@ static ofnode ofnode_get_mtd_layout(const char *layout_label)
 	return ofnode_null();
 }
 
-#define MTD_LABEL_MAXLEN 32
+const char *get_mtd_layout_label(void)
+{
+	const char *layout_label;
+
+	if (gd->flags & GD_FLG_ENV_READY)
+		layout_label = env_get("mtd_layout_label");
+
+	if (!layout_label)
+		layout_label = "default";
+
+	return layout_label;
+}
 
 void board_mtdparts_default(const char **mtdids, const char **mtdparts)
 {
 	const char *ids = NULL;
 	const char *parts = NULL;
-	const char *layout_label = NULL;
 	const char *boot_part = NULL;
 	const char *factory_part = NULL;
 	const char *sysupgrade_kernel_ubipart = NULL;
 	const char *sysupgrade_rootfs_ubipart = NULL;
 	const char *cmdline = NULL;
-
-	static char tmp_label[MTD_LABEL_MAXLEN];
 	ofnode layout_node;
 
-	// try to get mtd layout from fdt
-	if (gd->flags & GD_FLG_ENV_READY)
-		layout_label = env_get("mtd_layout_label");
-	else if (env_get_f("mtd_layout_label", tmp_label, sizeof(tmp_label)) != -1)
-		layout_label = tmp_label;
-
-	if (!layout_label)
-		layout_label = "default";
-
-	layout_node = ofnode_get_mtd_layout(layout_label);
+	layout_node = ofnode_get_mtd_layout(get_mtd_layout_label());
 
 	if (ofnode_valid(layout_node)) {
 		ids = ofnode_read_string(layout_node, "mtdids");
