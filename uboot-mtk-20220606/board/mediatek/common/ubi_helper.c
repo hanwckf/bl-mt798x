@@ -105,6 +105,10 @@ static int mount_ubi(struct mtd_info *mtd)
 		cprintln(CAUTION, "*** Failed to attach UBI ***");
 		cprintln(NORMAL, "*** Rebuilding UBI ***");
 
+		ubi_exit();
+
+		ubi_mtd_param_parse(mtd->name, NULL);
+
 		ret = mtd_erase_generic(mtd, 0, mtd->size);
 		if (ret)
 			return ret;
