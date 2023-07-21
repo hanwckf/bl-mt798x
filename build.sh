@@ -61,12 +61,14 @@ else
 	make -C $ATF_DIR -f makefile all CONFIG_CROSS_COMPILER=${TOOLCHAIN}
 	if [ -f "$ATF_DIR/build/${SOC}/release/fip.bin" ]; then
 		mkdir -p output
+		FIP_NAME="${SOC}_${BOARD}-fip"
 		if [ "$fixedparts" = "1" ]; then
-			FIP_NAME="${SOC}_${BOARD}-fip-fixed-parts.bin"
-		else
-			FIP_NAME="${SOC}_${BOARD}-fip.bin"
+			FIP_NAME="${FIP_NAME}-fixed-parts"
 		fi
-		cp -f $ATF_DIR/build/${SOC}/release/fip.bin output/${FIP_NAME}
+		if [ "$multilayout" = "1" ]; then
+			FIP_NAME="${FIP_NAME}-multi-layout"
+		fi
+		cp -f $ATF_DIR/build/${SOC}/release/fip.bin output/${FIP_NAME}.bin
 		echo "$FIP_NAME build done"
 	else
 		echo "fip build fail!"
