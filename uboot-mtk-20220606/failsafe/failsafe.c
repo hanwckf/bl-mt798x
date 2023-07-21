@@ -361,7 +361,8 @@ static void result_handler(enum httpd_uri_handler_status status,
 
 		if (upload_data_id == upload_id) {
 #ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
-			if (mtd_layout_label) {
+			if (mtd_layout_label &&
+					strcmp(get_mtd_layout_label(), mtd_layout_label) != 0) {
 				printf("httpd: saving mtd_layout_label: %s\n", mtd_layout_label);
 				env_set("mtd_layout_label", mtd_layout_label);
 				env_save();
