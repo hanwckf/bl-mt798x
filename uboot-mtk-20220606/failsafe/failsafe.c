@@ -11,9 +11,11 @@
 #include <common.h>
 #include <malloc.h>
 #include <command.h>
+#include <env.h>
 #include <net/tcp.h>
 #include <net/httpd.h>
 #include <u-boot/md5.h>
+#include <dm/ofnode.h>
 #include <version_string.h>
 
 #include "fs.h"
@@ -41,6 +43,11 @@ static const void *upload_data;
 static size_t upload_size;
 static int upgrade_success;
 static int fw_type;
+
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+static const char *mtd_layout_label;
+const char *get_mtd_layout_label(void);
+#endif
 
 struct data_part_entry;
 
@@ -167,12 +174,66 @@ static void version_handler(enum httpd_uri_handler_status status,
 	response->info.content_type = "text/plain";
 }
 
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+#define MTD_LAYOUTS_MAXLEN	128
+
+static void mtd_layout_handler(enum httpd_uri_handler_status status,
+	struct httpd_request *request,
+	struct httpd_response *response)
+{
+	static char mtd_layout_str[MTD_LAYOUTS_MAXLEN];
+	ofnode node, layout;
+
+	if (status != HTTP_CB_NEW)
+		return;
+
+	sprintf(mtd_layout_str, "%s;", get_mtd_layout_label());
+
+	node = ofnode_path("/mtd-layout");
+	if (ofnode_valid(node) && ofnode_get_child_count(node)) {
+		ofnode_for_each_subnode(layout, node) {
+			strcat(mtd_layout_str, ofnode_read_string(layout, "label"));
+			strcat(mtd_layout_str, ";");
+		}
+	}
+
+	response->status = HTTP_RESP_STD;
+
+	response->data = mtd_layout_str;
+	response->size = strlen(response->data);
+
+	response->info.code = 200;
+	response->info.connection_close = 1;
+	response->info.content_type = "text/plain";
+}
+#else
+static void mtd_layout_handler(enum httpd_uri_handler_status status,
+	struct httpd_request *request,
+	struct httpd_response *response)
+{
+	if (status != HTTP_CB_NEW)
+		return;
+
+	response->status = HTTP_RESP_STD;
+
+	response->data = "error";
+	response->size = strlen(response->data);
+
+	response->info.code = 200;
+	response->info.connection_close = 1;
+	response->info.content_type = "text/plain";
+}
+#endif
+
 static void upload_handler(enum httpd_uri_handler_status status,
 	struct httpd_request *request,
 	struct httpd_response *response)
 {
 	static char hexchars[] = "0123456789abcdef";
 	struct httpd_form_value *fw;
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+	struct httpd_form_value *mtd = NULL;
+#endif
 	static char md5_str[33] = "";
 	static char resp[128];
 	u8 md5_sum[16];
@@ -211,6 +272,9 @@ static void upload_handler(enum httpd_uri_handler_status status,
 	fw = httpd_request_find_value(request, "firmware");
 	if (fw) {
 		fw_type = FW_TYPE_FW;
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+		mtd = httpd_request_find_value(request, "mtd_layout");
+#endif
 		goto done;
 	}
 
@@ -233,7 +297,14 @@ done:
 		md5_str[i * 2 + 1] = hexchars[hex];
 	}
 
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+	if (mtd) {
+		mtd_layout_label = mtd->data;
+		sprintf(resp, "%ld %s %s", fw->size, md5_str, mtd->data);
+	}
+#else
 	sprintf(resp, "%ld %s", fw->size, md5_str);
+#endif
 
 	response->data = resp;
 	response->size = strlen(response->data);
@@ -288,9 +359,17 @@ static void result_handler(enum httpd_uri_handler_status status,
 			return;
 		}
 
-		if (upload_data_id == upload_id)
+		if (upload_data_id == upload_id) {
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+			if (mtd_layout_label) {
+				printf("httpd: saving mtd_layout_label: %s\n", mtd_layout_label);
+				env_set("mtd_layout_label", mtd_layout_label);
+				env_save();
+			}
+#endif
 			st->ret = write_firmware_failsafe((size_t) upload_data,
 				upload_size);
+		}
 
 		/* invalidate upload identifier */
 		upload_data_id = rand();
@@ -363,6 +442,7 @@ int start_web_failsafe(void)
 	httpd_register_uri_handler(inst, "/fail.html", &html_handler, NULL);
 	httpd_register_uri_handler(inst, "/flashing.html", &html_handler, NULL);
 	httpd_register_uri_handler(inst, "/version", &version_handler, NULL);
+	httpd_register_uri_handler(inst, "/getmtdlayout", &mtd_layout_handler, NULL);
 	httpd_register_uri_handler(inst, "/upload", &upload_handler, NULL);
 	httpd_register_uri_handler(inst, "/result", &result_handler, NULL);
 	httpd_register_uri_handler(inst, "/style.css", &style_handler, NULL);
