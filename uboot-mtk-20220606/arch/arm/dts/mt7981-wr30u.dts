@@ -40,6 +40,13 @@
 			mtdids = "nmbm0=nmbm0";
 			mtdparts = "nmbm0:1024k(bl2),256k(Nvram),256k(Bdata),2048k(factory),2048k(fip),256k(crash),256k(crash_log),112m(ubi),256k(KF)";
 		};
+
+		layout@2 {
+			label = "qwrt";
+			// mtd layout for lean qwrt
+			mtdids = "nmbm0=nmbm0";
+			mtdparts = "nmbm0:1024k(bl2),256k(Nvram),256k(Bdata),2048k(factory),2048k(fip),256k(crash),256k(crash_log),1024k(rsv0),110m(ubi)";
+		};
 	};
 
 	gpio-keys {
