@@ -34,7 +34,7 @@ static ofnode ofnode_get_mtd_layout(const char *layout_label)
 
 const char *get_mtd_layout_label(void)
 {
-	const char *layout_label;
+	const char *layout_label = NULL;
 
 	if (gd->flags & GD_FLG_ENV_READY)
 		layout_label = env_get("mtd_layout_label");
