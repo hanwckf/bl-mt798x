@@ -1,5 +1,8 @@
 # ATF and u-boot for mt798x
 
+## About bl-mt798x
+- https://cmi.hanwckf.top/p/mt798x-uboot-usage
+
 ![](/u-boot.gif)
 
 ## Prepare
