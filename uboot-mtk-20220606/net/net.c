@@ -103,6 +103,7 @@
 #endif
 #include <watchdog.h>
 #include <linux/compiler.h>
+#include <linux/stringify.h>
 #include "arp.h"
 #include "bootp.h"
 #include "cdp.h"
@@ -205,6 +206,7 @@ int __maybe_unused net_busy_flag;
 
 /**********************************************************************/
 
+#ifndef CONFIG_NET_FORCE_IPADDR
 static int on_ipaddr(const char *name, const char *value, enum env_op op,
 	int flags)
 {
@@ -216,6 +218,7 @@ static int on_ipaddr(const char *name, const char *value, enum env_op op,
 	return 0;
 }
 U_BOOT_ENV_CALLBACK(ipaddr, on_ipaddr);
+#endif
 
 static int on_gatewayip(const char *name, const char *value, enum env_op op,
 	int flags)
@@ -229,6 +232,7 @@ static int on_gatewayip(const char *name, const char *value, enum env_op op,
 }
 U_BOOT_ENV_CALLBACK(gatewayip, on_gatewayip);
 
+#ifndef CONFIG_NET_FORCE_IPADDR
 static int on_netmask(const char *name, const char *value, enum env_op op,
 	int flags)
 {
@@ -240,6 +244,7 @@ static int on_netmask(const char *name, const char *value, enum env_op op,
 	return 0;
 }
 U_BOOT_ENV_CALLBACK(netmask, on_netmask);
+#endif
 
 static int on_serverip(const char *name, const char *value, enum env_op op,
 	int flags)
@@ -410,6 +415,11 @@ int net_loop(enum proto_t protocol)
 	net_dev_exists = 0;
 	net_try_count = 1;
 	debug_cond(DEBUG_INT_STATE, "--- net_loop Entry\n");
+
+#ifdef CONFIG_NET_FORCE_IPADDR
+	net_ip = string_to_ip(__stringify(CONFIG_IPADDR));
+	net_netmask = string_to_ip(__stringify(CONFIG_NETMASK));
+#endif
 
 	bootstage_mark_name(BOOTSTAGE_ID_ETH_START, "eth_start");
 	net_init();
