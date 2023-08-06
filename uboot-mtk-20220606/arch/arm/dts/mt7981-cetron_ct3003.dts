@@ -29,8 +29,8 @@
 			gpios = <&gpio 1 GPIO_ACTIVE_LOW>;
 		};
 
-		button-wps {
-			label = "wps";
+		button-mesh {
+			label = "mesh";
 			gpios = <&gpio 0 GPIO_ACTIVE_HIGH>;
 		};
 	};
