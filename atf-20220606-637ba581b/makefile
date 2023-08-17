@@ -117,7 +117,7 @@ endif
 endif
 endif
 
-PYTHON := $(shell which python)
+PYTHON := $(shell which python3)
 
 ifeq (${MTK_CONFIG_EXIST},y)
 
