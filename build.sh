@@ -12,6 +12,10 @@ if [ -z "$SOC" ] || [ -z "$BOARD" ]; then
 	exit 1
 fi
 
+# Check if Python is installed on the system
+command -v python
+[ "$?" != "0" ] && { echo "Error: Python is not installed on this system."; exit 0; }
+
 echo "Trying cross compiler..."
 command -v ${TOOLCHAIN}gcc
 [ "$?" != "0" ] && { echo ${TOOLCHAIN}gcc not found!; exit 0; }
