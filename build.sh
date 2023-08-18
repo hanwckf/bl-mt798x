@@ -13,7 +13,7 @@ if [ -z "$SOC" ] || [ -z "$BOARD" ]; then
 fi
 
 # Check if Python is installed on the system
-command -v python
+command -v python3
 [ "$?" != "0" ] && { echo "Error: Python is not installed on this system."; exit 0; }
 
 echo "Trying cross compiler..."
