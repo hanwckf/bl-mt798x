@@ -1,0 +1,55 @@
+#
+#修改以下代码或者开启触发开关都好，要严格按格式对好,前面有多少空格也要看清楚
+#
+# This is a basic workflow to help you get started with Actions
+
+name: bl-mt798x-r30b1 uboot
+on: 
+  workflow_dispatch:
+    inputs:
+      fixed_mtdparts:
+        description: 'Fixed mtd parts? (will not follow uboot env)'
+        required: true
+        type: boolean
+        default: 'true'
+jobs:
+  build:
+    name: 编译bl-mt798x uboot
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: 准备结束
+        uses: actions/checkout@v3
+      - name: 下载源码并编译多分区 clt_r30b1 uboot
+        if: ${{ inputs.fixed_mtdparts == true }}
+        run: |
+          sudo apt update
+          sudo apt install build-essential bison flex bc libssl-dev python-is-python3 device-tree-compiler gcc-aarch64-linux-gnu
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          git clone https://github.com/benboguan/bl-mt798x
+          cd bl-mt798x
+          SOC=mt7981 BOARD=clt_r30b1 MULTI_LAYOUT=1 ./build.sh
+
+      - name: 下载源码并编译单分区 clt_r30b1 uboot
+        if: ${{ inputs.fixed_mtdparts == false }}
+        run: |
+          sudo apt update
+          sudo apt install build-essential bison flex bc libssl-dev python-is-python3 device-tree-compiler gcc-aarch64-linux-gnu
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          git clone https://github.com/benboguan/bl-mt798x
+          cd bl-mt798x
+          SOC=mt7981 BOARD=clt_r30b1 FIXED_MTDPARTS=0 MULTI_LAYOUT=0 ./build.sh
+          
+      - name: 上传多分区 uboot
+        if: ${{ inputs.fixed_mtdparts == true }}
+        uses: actions/upload-artifact@v3
+        with: 
+            name: clt_r30b1_uboot_fixed-parts
+            path: bl-mt798x/output/mt7981_clt_r30b1-fip-fixed-parts.bin
+          
+      - name: 上传单分区 uboot
+        if: ${{ inputs.fixed_mtdparts == false }}
+        uses: actions/upload-artifact@v3
+        with: 
+            name: clt_r30b1_uboot_fixed-parts
+            path: bl-mt798x/output/mt7981_clt_r30b1-fip.bin
