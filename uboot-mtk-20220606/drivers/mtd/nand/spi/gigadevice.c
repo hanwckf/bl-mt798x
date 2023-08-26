@@ -259,45 +259,7 @@ static int gd5fxgq4ufxxg_ecc_get_status(struct spinand_device *spinand,
 	return -EINVAL;
 }
 
-static int esmt_1_ooblayout_ecc(struct mtd_info *mtd, int section,
-				  struct mtd_oob_region *region)
-{
-	if (section > 3)
-		return -ERANGE;
-
-	region->offset = (16 * section) + 8;
-	region->length = 8;
-
-	return 0;
-}
-
-static int esmt_1_ooblayout_free(struct mtd_info *mtd, int section,
-				   struct mtd_oob_region *region)
-{
-	if (section > 3)
-		return -ERANGE;
-
-	region->offset = (16 * section) + 2;
-	region->length = 6;
-
-	return 0;
-}
-
-static const struct mtd_ooblayout_ops esmt_1_ooblayout = {
-	.ecc = esmt_1_ooblayout_ecc,
-	.rfree = esmt_1_ooblayout_free,
-};
-
 static const struct spinand_info gigadevice_spinand_table[] = {
-	SPINAND_INFO("F50L1G41LB",
-		     SPINAND_ID(SPINAND_READID_METHOD_OPCODE_ADDR, 0x01),
-		     NAND_MEMORG(1, 2048, 64, 64, 1024, 1, 1, 1),
-		     NAND_ECCREQ(8, 512),
-		     SPINAND_INFO_OP_VARIANTS(&dummy2_read_cache_variants,
-					      &write_cache_variants,
-					      &update_cache_variants),
-		     0,
-		     SPINAND_ECCINFO(&esmt_1_ooblayout, NULL)),
 	SPINAND_INFO("GD5F1GQ4xA",
 		     SPINAND_ID(SPINAND_READID_METHOD_OPCODE_ADDR, 0xf1),
 		     NAND_MEMORG(1, 2048, 64, 64, 1024, 1, 1, 1),
