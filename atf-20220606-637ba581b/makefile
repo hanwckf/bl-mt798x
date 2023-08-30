@@ -106,7 +106,7 @@ ifeq ($(CONFIG_AARCH32),y)
 MAKE_ARGS += ARCH=aarch32
 endif
 ifeq ($(CONFIG_NEED_FIP),y)
-TARGET_ARGS += all fip
+TARGET_ARGS += fip
 else
 ifeq ($(CONFIG_TARGET_BL2),y)
 TARGET_ARGS += bl2
