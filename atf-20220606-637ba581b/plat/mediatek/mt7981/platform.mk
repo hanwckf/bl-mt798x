@@ -9,6 +9,7 @@ MTK_PLAT_SOC		:=	${MTK_PLAT}/${PLAT}
 
 include lib/libfdt/libfdt.mk
 include lib/xz/xz.mk
+include make_helpers/dep.mk
 
 PLAT_INCLUDES		:=	-I${MTK_PLAT}/common/				\
 				-I${MTK_PLAT}/common/drivers/uart		\
