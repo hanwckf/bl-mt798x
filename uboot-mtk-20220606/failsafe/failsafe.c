@@ -144,6 +144,14 @@ static void not_found_handler(enum httpd_uri_handler_status status,
 	}
 }
 
+static void index_handler(enum httpd_uri_handler_status status,
+	struct httpd_request *request,
+	struct httpd_response *response)
+{
+	if (status == HTTP_CB_NEW)
+		output_plain_file(response, "index.html");
+}
+
 static void html_handler(enum httpd_uri_handler_status status,
 	struct httpd_request *request,
 	struct httpd_response *response)
@@ -151,9 +159,7 @@ static void html_handler(enum httpd_uri_handler_status status,
 	if (status != HTTP_CB_NEW)
 		return;
 
-	if (!strcmp(request->urih->uri, "/"))
-		output_plain_file(response, "index.html");
-	else if (output_plain_file(response, request->urih->uri + 1))
+	if (output_plain_file(response, request->urih->uri + 1))
 		not_found_handler(status, request, response);
 }
 
@@ -436,7 +442,9 @@ int start_web_failsafe(void)
 		return -1;
 	}
 
-	httpd_register_uri_handler(inst, "/", &html_handler, NULL);
+	httpd_register_uri_handler(inst, "/", &index_handler, NULL);
+	httpd_register_uri_handler(inst, "/cgi-bin/luci", &index_handler, NULL);
+	httpd_register_uri_handler(inst, "/cgi-bin/luci/", &index_handler, NULL);
 #ifdef CONFIG_MT7981_BOOTMENU_EMMC
         httpd_register_uri_handler(inst, "/gpt.html", &html_handler, NULL);
 #endif
