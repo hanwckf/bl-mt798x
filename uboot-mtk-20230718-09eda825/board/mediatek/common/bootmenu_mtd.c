@@ -364,7 +364,7 @@ static const struct data_part_entry mtd_parts[] = {
 		.validate = validate_fip_image,
 		.write = write_fip,
 		.post_action = UPGRADE_ACTION_CUSTOM,
-		.do_post_action = erase_env,
+		//.do_post_action = erase_env,
 	},
 #ifdef CONFIG_MTK_FIP_SUPPORT
 	{
@@ -382,7 +382,7 @@ static const struct data_part_entry mtd_parts[] = {
 		.validate = validate_bl33_image,
 		.write = write_bl33,
 		.post_action = UPGRADE_ACTION_CUSTOM,
-		.do_post_action = erase_env,
+		//.do_post_action = erase_env,
 	},
 #endif
 	{
