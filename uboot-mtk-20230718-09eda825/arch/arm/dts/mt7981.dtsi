@@ -9,6 +9,7 @@
 #include <dt-bindings/clock/mt7981-clk.h>
 #include <dt-bindings/reset/mt7629-reset.h>
 #include <dt-bindings/pinctrl/mt65xx.h>
+#include <dt-bindings/input/linux-event-codes.h>
 
 / {
 	compatible = "mediatek,mt7981";
