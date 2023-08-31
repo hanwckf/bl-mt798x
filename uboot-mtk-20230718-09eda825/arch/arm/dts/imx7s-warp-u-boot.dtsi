@@ -1,0 +1,26 @@
+/ {
+    aliases {
+        mmc0 = &usdhc3;
+        usb0 = &usbotg1;
+    };
+
+    chosen {
+        stdout-path = &uart1;
+    };
+};
+
+&aips3 {
+	bootph-all;
+};
+
+&pinctrl_uart1 {
+	bootph-all;
+};
+
+&soc {
+	bootph-all;
+};
+
+&uart1 {
+	bootph-all;
+};

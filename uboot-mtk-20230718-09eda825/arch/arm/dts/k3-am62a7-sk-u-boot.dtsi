@@ -1,0 +1,140 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Common AM62A EVM dts file for SPLs
+ * Copyright (C) 2022 Texas Instruments Incorporated - https://www.ti.com/
+ */
+
+/ {
+	chosen {
+		stdout-path = "serial2:115200n8";
+		tick-timer = &timer1;
+	};
+
+	memory@80000000 {
+		bootph-pre-ram;
+	};
+};
+
+&cbass_main{
+	bootph-pre-ram;
+
+	timer1: timer@2400000 {
+		compatible = "ti,omap5430-timer";
+		reg = <0x00 0x2400000 0x00 0x80>;
+		ti,timer-alwon;
+		clock-frequency = <25000000>;
+		bootph-pre-ram;
+	};
+};
+
+&dmss {
+	bootph-pre-ram;
+};
+
+&secure_proxy_main {
+	bootph-pre-ram;
+};
+
+&dmsc {
+	bootph-pre-ram;
+};
+
+&k3_pds {
+	bootph-pre-ram;
+};
+
+&k3_clks {
+	bootph-pre-ram;
+};
+
+&k3_reset {
+	bootph-pre-ram;
+};
+
+&wkup_conf {
+	bootph-pre-ram;
+};
+
+&chipid {
+	bootph-pre-ram;
+};
+
+&main_pmx0 {
+	bootph-pre-ram;
+};
+
+&main_uart0 {
+	bootph-pre-ram;
+};
+
+&main_uart0_pins_default {
+	bootph-pre-ram;
+};
+
+&main_uart1 {
+	bootph-pre-ram;
+};
+
+&cbass_mcu {
+	bootph-pre-ram;
+};
+
+&cbass_wakeup {
+	bootph-pre-ram;
+};
+
+&mcu_pmx0 {
+	bootph-pre-ram;
+};
+
+&wkup_uart0 {
+	bootph-pre-ram;
+};
+
+&main_gpio0 {
+	bootph-pre-ram;
+};
+
+&main_i2c0 {
+	bootph-pre-ram;
+};
+
+&main_i2c0_pins_default {
+	bootph-pre-ram;
+};
+
+&main_i2c1 {
+	bootph-pre-ram;
+};
+
+&main_i2c1_pins_default {
+	bootph-pre-ram;
+};
+
+&exp1 {
+	bootph-pre-ram;
+};
+
+&sdhci1 {
+	bootph-pre-ram;
+};
+
+&main_mmc1_pins_default {
+	bootph-pre-ram;
+};
+
+&k3_reset {
+	bootph-pre-ram;
+};
+
+&dmsc {
+	bootph-pre-ram;
+	k3_sysreset: sysreset-controller {
+		compatible = "ti,sci-sysreset";
+		bootph-pre-ram;
+	};
+};
+
+&vdd_mmc1 {
+	bootph-pre-ram;
+};

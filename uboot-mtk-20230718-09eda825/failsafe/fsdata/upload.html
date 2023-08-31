@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+	<title>Confirm - MediaTek System Recovery Mode</title>
+	<link rel="stylesheet" type="text/css" href="/style.css">
+</head>
+<body>
+	<div id="banner">
+		MediaTek U-Boot System Recovery Mode
+	</div>
+	<div id="main">
+		<p>File confirmation:</p>
+		<div id="fileinfo">
+			<p>MD5: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</p>
+			<p>Size: YYYYYYYYYY Bytes</p>
+		</div>
+		<p>If all information above is correct, click [Proceed].</p>
+		<form action="/flashing" method="post" enctype="multipart/form-data">
+			<p><input type="submit" id="submit" value="Proceed" /></p>
+		</form>
+	</div>
+</body>
+</html>

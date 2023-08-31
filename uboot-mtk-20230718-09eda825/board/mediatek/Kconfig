@@ -1,0 +1,379 @@
+if ARCH_MEDIATEK || ARCH_MTMIPS
+
+menu "MediaTek specific configurations"
+
+menuconfig MEDIATEK_BOOTMENU
+	bool "Enable bootmenu framework"
+	select CMD_BOOTMENU
+	select CMD_BOOTMENU_ENTER_UBOOT_CONSOLE
+	select PARTITIONS
+	default n
+	help
+	  Enable this option will allow boards to use a bootmenu containing
+	  features for easy upgrading/booting.
+
+if MEDIATEK_BOOTMENU
+
+config MTK_BOOTMENU_DEFAULT
+	bool "Use default bootmenu"
+	default y
+	help
+	  Enable this is you want to use default bootmenu. Otherwise you must
+	  provide your own bootmenu implementation.
+
+choice
+	prompt "Device type for bootmenu"
+	default MTK_BOOTMENU_MTD
+	depends on MTK_BOOTMENU_DEFAULT
+
+config MTK_BOOTMENU_MTD
+	bool "MTD (NOR/NAND/UBI)"
+	select MTD
+	select MTD_PARTITIONS
+	help
+	  This is intended for raw flashes (e.g. SPI-NOR and SPI-NAND). Both
+	  raw jffs2 images and UBI-based images which are built on top of MTD
+	  are supported.
+
+	  To enable legacy raw jffs2 support (not recommended), please define
+	  mtdparts to contain a partition named 'firmware', and do not create
+	  any partition named 'kernel' or 'ubi'.
+
+	  To enable UBI-based image support, please select MTK_UBI_SUPPORT
+	  first, and define mtdparts to contain a partition named 'ubi', and do
+	  not create any partition named 'kernel' or 'firmware'.
+
+config MTK_BOOTMENU_MTD_LEGACY
+	bool "MTD (NOR/NAND/UBI) legacy"
+	select MTD
+	select MTD_PARTITIONS
+	depends on ARCH_MTMIPS || TARGET_MT7629
+	help
+	  Similar to MTK_BOOTMENU_MTD, but single bootloader is used.
+	  e.g., MIPS platform, or ARMv7 without ATF.
+
+config MTK_BOOTMENU_MMC
+	bool "SD/eMMC"
+	select MMC
+	select MMC_WRITE
+	select MMC_HW_PARTITIONING
+	select SUPPORT_EMMC_BOOT
+	help
+	  This is intended SD and eMMC. GPT partition table must define two
+	  partitions 'kernel' and 'rootfs' to support this image type.
+	  Only upgrade images using tar archive are supported.
+
+endchoice
+
+config MTK_MMC_BOOT_BUS_WIDTH_1B
+	bool
+	default y if TARGET_MT7622
+	default n
+
+config MTK_FIXED_MTD_MTDPARTS
+	bool "Do not allow mtdparts to be changed by user"
+	depends on MTK_BOOTMENU_MTD
+	help
+	  Enable this option if you do not want the user to change the
+	  mtdparts which lead to unexpceted results such as missing ubi
+	  partition or changing ubi partition to a different offset.
+
+config MTK_BOOTMENU_MMC_DEV_INDEX
+	int "MMC device for bootmenu"
+	range 0 1
+	default 0
+	depends on MTK_BOOTMENU_MMC
+	help
+	  The MMC device id in u-boot to be used for bootmenu.
+
+config MEDIATEK_BOOTMENU_COUNTDOWN
+	bool "Enable bootmenu countdown"
+	default y
+	help
+	  Enable bootmenu auto-booting countdown timer.
+
+config MEDIATEK_BOOTMENU_DELAY
+	int "MediaTek bootmenu delay time (s)"
+	range 1 10
+	default 4
+	depends on MEDIATEK_BOOTMENU_COUNTDOWN
+	help
+	  The dealy seconds for the bootmenu to show before running the
+	  default command.
+
+config MTK_LOAD_FROM_SD
+	bool "Enable support for loading from SD card"
+	default n
+	select FS_FAT
+	select PARTITIONS
+	select DOS_PARTITION
+	select EFI_PARTITION
+	select HAVE_BLK
+	depends on DM_MMC
+	help
+	  Enable support for loading from SD card for mtkload and mtkupgrade.
+
+config MTK_SD_DEV_IDX
+	int "MMC device index for SD card"
+	range 0 1
+	default 1 if TARGET_MT7622
+	default 0
+	depends on MTK_LOAD_FROM_SD
+	help
+	  The MMC device index used for SD card loading.
+
+config MEDIATEK_LOAD_FROM_RAM
+	bool "Enable loading from RAM support"
+	default n
+	help
+	  Enable loading from RAM support for mtkload and mtkupgrade. This is
+	  useful when using JTAG debugging and ethernet is not available.
+
+config MTK_WEB_FAILSAFE
+	bool "Enable Web-based failsafe for firmware upgrading"
+	default n
+	select WEBUI_FAILSAFE
+	help
+	  Enable Web-based failsafe for firmware upgrading. A bootmenu item
+	  will be added to allow entering failsafe mode.
+
+config MTK_WEB_FAILSAFE_AFTER_BOOT_FAILURE
+	bool "Automatically start failsafe after booting failure"
+	default n
+	depends on MTK_WEB_FAILSAFE
+	help
+	  This option allow user to upgrade a workable firmware image if no
+	  firmware image available for boot.
+	  This requires booting system using mtkboardboot command.
+
+config MTK_UBI_SUPPORT
+	bool "Enable support for UBI-based images"
+	select MTD_UBI
+	select CMD_UBI
+	help
+	   Enable this option will allow bootmenu for mtd using UBI-based
+	   images for upgrading and booting.
+
+endif # MEDIATEK_BOOTMENU
+
+menuconfig MTK_SECURE_BOOT
+	bool "Enable secure boot framework"
+	select FIT_SIGNATURE
+	select RSA
+	select RSA_VERIFY
+	select ENV_IS_NOWHERE if !MTK_DUAL_BOOT
+	select CHAIN_OF_TRUST if !MTK_DUAL_BOOT
+	select IMAGE_FORCED_VERIFY
+	select FDT_NO_BOOTARGS_OVERRIDE
+	depends on ARCH_MEDIATEK
+	default n
+	help
+	  Enable this option will allow boards to verify Linux and Filesystem.
+
+if MTK_SECURE_BOOT
+
+config CHAIN_OF_TRUST
+	bool
+	default n
+
+config MTK_ANTI_ROLLBACK
+	bool "Enable MediaTek anti-rollback framework"
+	default n
+	help
+	  Enable this option will allow boards to verify Firmware Anti-rollback
+	  Version.
+
+config MTK_FSEK
+	bool "Enable MediaTek FS encryption key framework"
+	default n
+	help
+	  Enable this option will allow boards to decrypt rootfs-key and set
+	  roofs-key to kernel bootargs, and set a device-unique key in FDT
+
+choice
+	prompt "Device type for secure environment variables"
+	default MTK_SEC_ENV_MTD
+	depends on MTK_FSEK
+
+config MTK_SEC_ENV_MTD
+	bool "MTD(NOR/NAND/UBI)"
+	depends on MTK_BOOTMENU_MTD
+	help
+	This is intended for raw flashes (e.g. SPI-NOR and SPI-NAND).
+
+config MTK_SEC_ENV_MMC
+	bool "SD/eMMC"
+	depends on MTK_BOOTMENU_MMC
+	help
+	  This is intended SD and eMMC.
+endchoice
+
+endif # MTK_SECURE_BOOT
+
+menuconfig MTK_DUAL_BOOT
+	bool "Enable A/B System Updates"
+	help
+	  A/B system updates ensure a workable booting system remains on the
+	  flash device during an firmware upgrading.
+
+if MTK_DUAL_BOOT
+
+config MTK_DUAL_BOOT_IMAGE_ROOTFS_VERIFY
+	bool "Verify rootfs part"
+	default y
+	help
+	  Enable this option will force to verify the rootfs part of the image.
+	  The rootfs hash should be embedded into the FIT image.
+	  If no such hash found, verification will fail.
+
+config MTK_DUAL_BOOT_SLOT_1_KERNEL_NAME
+	string "Name for kernel of image slot 1"
+	default "kernel2"
+	help
+	  The partition/volume name for kernel of image slot 1
+
+config MTK_DUAL_BOOT_SLOT_1_ROOTFS_NAME
+	string "Name for rootfs of image slot 1"
+	default "rootfs2"
+	help
+	  The partition/volume name for rootfs of image slot 1
+
+config MTK_DUAL_BOOT_SHARED_ROOTFS_DATA
+	bool "Use shared rootfs_data for both images"
+	default y
+
+config MTK_DUAL_BOOT_ROOTFS_DATA_NAME
+	string "Name for rootfs_data of both image slots"
+	depends on MTK_DUAL_BOOT_SHARED_ROOTFS_DATA
+	default "rootfs_data"
+
+config MTK_DUAL_BOOT_ROOTFS_DATA_SIZE
+	int "Size of rootfs_data volume (MiB)"
+	range 1 128
+	default 8
+	depends on MTK_DUAL_BOOT_SHARED_ROOTFS_DATA
+	depends on MTD_UBI
+
+config MTK_DUAL_BOOT_RESERVE_ROOTFS_DATA
+	bool "Reserve rootfs_data during firmware upgrading"
+	default n
+	help
+	  Enable this option will make rootfs_data completely untouched
+	  during OpenWrt sysupgrade, even if 'keep settings' is deselected.
+
+endif # MTK_DUAL_BOOT
+
+if ARCH_MEDIATEK
+
+config MTK_BOARDINFO
+	bool "Enable mediatek boardinfo support"
+	default n
+	help
+	  Enable this option will allow mediatek boards to show extend
+	  information when boot-up.
+
+config MTK_FIP_SUPPORT
+	bool "Enable ATF FIP utilities"
+	select MTK_BOARDINFO
+	default n
+	help
+	  Enable this option will allow boards to use ATF related
+	  firmware image package (FIP) commands and APIs.
+
+config MTK_UPGRADE_BL2_VERIFY
+	bool "Verify bl2 image before upgrading"
+	select MTK_BOARDINFO
+	default n
+	help
+	  Enable this option will force to verify the BL2 image being
+	  upgraded when 'bl2_verify' node is configured in the device tree.
+	  Upgrading broken BL2 image and the image that is not suitable for
+	  the current flash type will be rejected.
+
+config MTK_UPGRADE_FIP_VERIFY
+	bool "Verify fip image before upgrading"
+	select MTK_FIP_SUPPORT
+	default n
+	help
+	  Enable this option will force to verify the FIP image being
+	  upgraded. Upgrading broken FIP image and the image that is not
+	  suitable for the current flash type will be rejected.
+
+endif # ARCH_MEDIATEK
+
+config MTK_UPGRADE_IMAGE_VERIFY
+	bool "Verify firmware image before upgrading"
+	select FIT
+	default y
+	help
+	  Enable this option will force to verify the image being upgraded.
+	  Upgrading UBI raw partition image and UBI hybrid image will be
+	  rejected.
+
+config MTK_UPGRADE_IMAGE_LEGACY_VERIFY
+	bool "Allow verifying legacy image"
+	depends on ARCH_MTMIPS
+	select LEGACY_IMAGE_FORMAT
+	default n
+	help
+	  Enable this option will allow legacy image be upgraded. Only kernel
+	  portion of the image can be verified.
+
+config MTK_UPGRADE_IMAGE_ROOTFS_VERIFY
+	bool "Verify rootfs part"
+	depends on MTK_UPGRADE_IMAGE_VERIFY
+	default y if MTK_DUAL_BOOT
+	default n
+	help
+	  Enable this option will force to verify the rootfs part of the image.
+	  The rootfs hash should be embedded into the FIT image.
+	  If no such hash found, verification will fail.
+
+config ENABLE_NAND_NMBM
+	bool "Enable NAND bad block mapping management"
+	default n
+	select MTD_DEVICE
+	select NMBM
+	select NMBM_MTD
+	help
+	  Select this if you want to use bad block management to handle
+	  bad blocks marked druing factory production, and to handle new
+	  bad blocks during use.
+	  Enabling this option will create a MTD translation layer on
+	  the original MTD of the NAND device.
+
+if ENABLE_NAND_NMBM
+
+config NMBM_LOWER_MTD
+	string "Lower MTD device name"
+	default "spi-nand0"
+	help
+	  The name of lower mtd device on which nmbm will be created
+
+config NMBM_MAX_RATIO
+	int "Default ratio for reserved block for management (N/16)"
+	range 1 8
+	default 1
+	help
+	  This option determines how many blocks at the high adress of NAND
+	  can be used for NMBM. For a large size NAND, 1/16 of total blocks
+	  are still too large for NMBM. For this situation please set
+	  CONFIG_NMBM_MAX_BLOCKS to a proper value to limit the maximum
+	  reserved blocks.
+
+config NMBM_MAX_BLOCKS
+	int "Maximum blocks allowed for reserved block for management"
+	range 32 2147483647
+	default 256
+	help
+	  This option is applied after NMBM_MAX_RATIO to ensure maximum
+	  blocks reserved block for NMBM will not exceed the value set by
+	  this option.
+
+endif # ENABLE_NAND_NMBM
+
+source "board/mediatek/common/customizations/Kconfig"
+
+endmenu
+
+endif # ARCH_MEDIATEK

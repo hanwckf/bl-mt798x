@@ -1,0 +1,88 @@
+config DM_RNG
+	bool "Driver support for Random Number Generator devices"
+	depends on DM
+	help
+	  Enable driver model for random number generator(rng) devices.
+	  This interface is used to initialise the rng device and to
+	  read the random seed from the device.
+
+if DM_RNG
+
+config RNG_MESON
+	bool "Amlogic Meson Random Number Generator support"
+	depends on ARCH_MESON
+	default y
+	help
+	  Enable support for hardware random number generator
+	  of Amlogic Meson SoCs.
+
+config RNG_SANDBOX
+	bool "Sandbox random number generator"
+	depends on SANDBOX
+	default y
+	help
+	  Enable random number generator for sandbox. This is an
+	  emulation of a rng device.
+
+config RNG_MSM
+	bool "Qualcomm SoCs Random Number Generator support"
+	depends on DM_RNG
+	help
+	  This driver provides support for the Random Number
+	  Generator hardware found on Qualcomm SoCs.
+
+config RNG_NPCM
+	bool "Nuvoton NPCM SoCs Random Number Generator support"
+	depends on DM_RNG
+	help
+	  Enable random number generator on NPCM SoCs.
+	  This unit can provide 750 to 1000 random bits per second
+
+config RNG_OPTEE
+	bool "OP-TEE based Random Number Generator support"
+	depends on DM_RNG && OPTEE
+	default y if OPTEE_SERVICE_DISCOVERY
+	help
+	  This driver provides support for the OP-TEE based Random Number
+	  Generator on ARM SoCs where hardware entropy sources are not
+	  accessible to normal world but reserved and used by the OP-TEE
+	  to avoid the weakness of a software PRNG.
+
+config RNG_STM32MP1
+	bool "Enable random number generator for STM32MP1"
+	depends on ARCH_STM32MP
+	help
+	  Enable STM32MP1 rng driver.
+
+config RNG_ROCKCHIP
+	bool "Enable random number generator for rockchip crypto rng"
+	depends on ARCH_ROCKCHIP && DM_RNG
+	help
+	  Enable random number generator for rockchip. This driver
+	  supports the rng module of crypto v1, crypto v2, and the
+	  trng module of the rk3588 series.
+
+config RNG_IPROC200
+	bool "Broadcom iProc RNG200 random number generator"
+	depends on DM_RNG
+	help
+	  Enable random number generator for RPI4.
+
+config RNG_SMCCC_TRNG
+	bool "Arm SMCCC TRNG interface"
+	depends on DM_RNG && ARM_PSCI_FW
+	default y if ARM_SMCCC_FEATURES
+	help
+	  Enable random number generator for platforms that support Arm
+	  SMCCC TRNG interface.
+
+config TPM_RNG
+	bool "Enable random number generator on TPM device"
+	depends on TPM
+	default y
+	help
+	  The TPM device has an inbuilt random number generator
+	  functionality. Enable random number generator on TPM
+	  devices.
+
+endif

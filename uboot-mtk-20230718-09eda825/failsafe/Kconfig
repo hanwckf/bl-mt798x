@@ -1,0 +1,11 @@
+#
+# Failsafe Web UI
+#
+
+config WEBUI_FAILSAFE
+	bool "Enable Failsafe Web UI"
+	select MTK_TCP
+	select MTK_HTTPD
+	default n
+	help
+	  Enable Web based failsafe UI

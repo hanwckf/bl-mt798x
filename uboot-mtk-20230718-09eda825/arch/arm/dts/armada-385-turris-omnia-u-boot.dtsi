@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (C) 2017 Marek Behún <kabel@kernel.org>
+ */
+
+/ {
+	aliases {
+		i2c0 = &i2c0;
+		i2c1 = &i2cmux;
+		spi0 = &spi0;
+	};
+};
+
+&i2c0 {
+	bootph-all;
+
+	i2cmux: i2cmux@70 {
+		bootph-all;
+
+		i2c@0 {
+			bootph-all;
+		};
+
+		i2c@1 {
+			bootph-all;
+		};
+
+		i2c@5 {
+			bootph-all;
+
+			crypto@64 {
+				bootph-all;
+			};
+		};
+	};
+};
+
+#ifdef CONFIG_ENV_IS_IN_SPI_FLASH
+&spi0 {
+	flash@0 {
+		partitions {
+			partition@0 {
+				reg = <0x0 CONFIG_ENV_OFFSET>;
+			};
+
+			partition@f0000 {
+				reg = <CONFIG_ENV_OFFSET CONFIG_ENV_SIZE>;
+				label = "u-boot-env";
+			};
+		};
+	};
+};
+#endif
+
+#include "mvebu-u-boot.dtsi"
