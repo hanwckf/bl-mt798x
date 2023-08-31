@@ -2879,4 +2879,10 @@ config CMD_MESON
 	default y
 	help
 	  Enable useful commands for the Meson Soc family developed by Amlogic Inc.
+
+config CMD_GL_BTN
+	bool "GL-iNet button check command"
+	depends on BUTTON
+	default n
+	select POLLER
 endmenu

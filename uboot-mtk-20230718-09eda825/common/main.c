@@ -61,6 +61,8 @@ void main_loop(void)
 			efi_launch_capsules();
 	}
 
+	run_command("glbtn", 0);
+
 	s = bootdelay_process();
 	if (cli_process_fdt(&s))
 		cli_secure_boot_cmd(s);
