@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0+
 
-#include <common.h>
 #include <command.h>
 #include <led.h>
 #include <poller.h>
+#include <time.h>
 
 #define MAX_LED_BLINK 5
 
@@ -24,7 +24,7 @@ static void led_blink_func(struct poller_struct *poller)
 		struct led_blink *led = &led_blinks[i];
 		if (!led->dev)
 			continue;
-		
+
 		if (led->next_event && now < led->next_event)
 			continue;
 

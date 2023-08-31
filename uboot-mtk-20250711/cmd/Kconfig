@@ -3120,7 +3120,7 @@ config CMD_SPAWN_NUM_JOBS
 
 config CMD_GL_BTN
 	bool "GL-iNet button check command"
-	depends on BUTTON
+	depends on BUTTON && LED
 	default n
 	select POLLER
 
