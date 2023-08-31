@@ -11,6 +11,7 @@
 #include <button.h>
 #include <dm.h>
 #include <dm/uclass-internal.h>
+#include <poller.h>
 
 int button_get_by_label(const char *label, struct udevice **devp)
 {
@@ -31,6 +32,8 @@ int button_get_by_label(const char *label, struct udevice **devp)
 enum button_state_t button_get_state(struct udevice *dev)
 {
 	struct button_ops *ops = button_get_ops(dev);
+
+	poller_call();
 
 	if (!ops->get_state)
 		return -ENOSYS;

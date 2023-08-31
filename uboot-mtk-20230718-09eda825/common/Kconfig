@@ -1183,3 +1183,7 @@ config SPL_BMP
 	depends on SPL_VIDEO
 	help
 	  Enable bmp functions to display bmp image and get bmp info at SPL.
+
+config POLLER
+	bool "generic polling infrastructure"
+	default n

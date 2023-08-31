@@ -22,6 +22,7 @@
 #include <watchdog.h>
 #include <asm/global_data.h>
 #include <linux/delay.h>
+#include <poller.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -602,6 +603,7 @@ int getchar(void)
 
 int tstc(void)
 {
+	poller_call();
 	if (IS_ENABLED(CONFIG_DISABLE_CONSOLE) && (gd->flags & GD_FLG_DISABLE_CONSOLE))
 		return 0;
 
