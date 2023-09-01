@@ -17,7 +17,7 @@
 
 	config {
 		bootcmd = "mtkboardboot";
-		blink_led = "red:system";
+		blink_led = "blue:system";
 		system_led = "green:system";
 	};
 
