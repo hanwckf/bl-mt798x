@@ -9,29 +9,33 @@ obj-y += index.o
 FILE_index.o := index.html
 FSPATH_index.o := index.html
 
-obj-y += upload.o
-FILE_upload.o := upload.html
-FSPATH_upload.o := upload.html
+obj-y += main.o
+FILE_main.o := main.js
+FSPATH_main.o := main.js
 
 obj-y += flashing.o
 FILE_flashing.o := flashing.html
 FSPATH_flashing.o := flashing.html
 
-obj-y += success.o
-FILE_success.o := success.html
-FSPATH_success.o := success.html
-
 obj-y += fail.o
 FILE_fail.o := fail.html
 FSPATH_fail.o := fail.html
 
-obj-y += validate_fail.o
-FILE_validate_fail.o := validate_fail.html
-FSPATH_validate_fail.o := validate_fail.html
-
 obj-y += 404.o
 FILE_404.o := 404.html
 FSPATH_404.o := 404.html
+
+obj-y += uboot.o
+FILE_uboot.o := uboot.html
+FSPATH_uboot.o := uboot.html
+
+obj-y += bl2.o
+FILE_bl2.o := bl2.html
+FSPATH_bl2.o := bl2.html
+
+obj-y += gpt.o
+FILE_gpt.o := gpt.html
+FSPATH_gpt.o := gpt.html
 
 obj-y += style.o
 FILE_style.o := style.css
@@ -58,5 +62,9 @@ $(obj)/%.o: $(src)/%.html FORCE
 	$(call if_changed_dep,as_o_html)
 
 $(obj)/%.o: $(src)/%.css FORCE
+	$(call cmd,force_checksrc)
+	$(call if_changed_dep,as_o_html)
+
+$(obj)/%.o: $(src)/%.js FORCE
 	$(call cmd,force_checksrc)
 	$(call if_changed_dep,as_o_html)

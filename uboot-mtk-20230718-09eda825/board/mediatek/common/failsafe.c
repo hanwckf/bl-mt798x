@@ -11,12 +11,25 @@
 #include <errno.h>
 #include <linux/string.h>
 #include <asm/global_data.h>
+#include <failsafe/fw_type.h>
 #include "upgrade_helper.h"
 #include "colored_print.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#define UPGRADE_PART		"fw"
+void led_control(const char *cmd, const char *name, const char *arg);
+
+const char *fw_to_part_name(failsafe_fw_t fw)
+{
+	switch (fw)
+	{
+		case FW_TYPE_GPT: return "gpt";
+		case FW_TYPE_BL2: return "bl2";
+		case FW_TYPE_FIP: return "fip";
+		case FW_TYPE_FW: return "fw";
+		default: return "err";
+	}
+}
 
 static const struct data_part_entry *find_part(const struct data_part_entry *parts,
 					       u32 num_parts, const char *abbr)
@@ -42,7 +55,7 @@ void *httpd_get_upload_buffer_ptr(size_t size)
 	return (void *)gd->ram_base + 0x4000000;
 }
 
-int failsafe_validate_image(const void *data, size_t size)
+int failsafe_validate_image(const void *data, size_t size, failsafe_fw_t fw)
 {
 	const struct data_part_entry *upgrade_parts, *dpe;
 	u32 num_parts;
@@ -54,7 +67,7 @@ int failsafe_validate_image(const void *data, size_t size)
 		return -ENOSYS;
 	}
 
-	dpe = find_part(upgrade_parts, num_parts, UPGRADE_PART);
+	dpe = find_part(upgrade_parts, num_parts, fw_to_part_name(fw));
 	if (!dpe)
 		return -ENODEV;
 
@@ -64,7 +77,7 @@ int failsafe_validate_image(const void *data, size_t size)
 	return 0;
 }
 
-int failsafe_write_image(const void *data, size_t size)
+int failsafe_write_image(const void *data, size_t size, failsafe_fw_t fw)
 {
 	const struct data_part_entry *upgrade_parts, *dpe;
 	u32 num_parts;
@@ -77,10 +90,12 @@ int failsafe_write_image(const void *data, size_t size)
 		return -ENOSYS;
 	}
 
-	dpe = find_part(upgrade_parts, num_parts, UPGRADE_PART);
+	dpe = find_part(upgrade_parts, num_parts, fw_to_part_name(fw));
 	if (!dpe)
 		return -ENODEV;
 
+	led_control("led", "system_led", "off");
+	led_control("ledblink", "blink_led", "100");
 	printf("\n");
 	cprintln(PROMPT, "*** Upgrading %s ***", dpe->name);
 	cprintln(PROMPT, "*** Data: %zd (0x%zx) bytes at 0x%08lx ***",
@@ -88,6 +103,8 @@ int failsafe_write_image(const void *data, size_t size)
 	printf("\n");
 
 	ret = dpe->write(dpe->priv, dpe, data, size);
+	led_control("ledblink", "blink_led", "0");
+	led_control("led", "system_led", "on");
 	if (ret)
 		return ret;
 

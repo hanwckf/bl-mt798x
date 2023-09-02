@@ -2,25 +2,25 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Firmware update</title>
+		<title>U-Boot update</title>
 		<link rel="stylesheet" href="/style.css">
-        <script src="/main.js"></script>
+		<script src="/main.js"></script>
 	</head>
 	<body onload="getversion()">
 		<div id="m">
-			<h1>FIRMWARE UPDATE</h1>
-			<p id="hint">You are going to update <strong>firmware</strong> on the device.<br>Please, choose file from your local hard drive and click <strong>Upload</strong> button.</p>
+			<h1>GPT UPDATE</h1>
+			<p id="hint">You are going to update <strong>GPT</strong> on the device.<br>Please, choose file from your local hard drive and click <strong>Upload</strong> button.</p>
 			<form id="form">
-                <input id="file" type="file" name="firmware">
-                <input type="button" value="Upload" onclick="upload('firmware')">
-            </form>
+				<input id="file" type="file" name="gpt">
+				<input type="button" value="Upload" onclick="upload('gpt')">
+			</form>
 			<div>
 				<div class="bar" id="bar" style="display: none; --percent: 0;"></div>
 			</div>
 			<div id="size" style="display: none;">Size: xxxx</div>
 			<div id="md5" style="display: none;">MD5: xxxx</div>
 			<div id="upgrade" style="display: none;">
-				<p>The firmware has been uploaded, please click "Update"</p>
+				<p>The GPT has been uploaded, please click "Update"</p>
 				<button class="button" onclick="location = '/flashing.html'">Update</button>
 			</div>
 			<div class="i w">
@@ -28,7 +28,8 @@
 				<ul>
 					<li>do not power off the device during update</li>
 					<li>if everything goes well, the device will restart</li>
-					<li>you can upload whatever you want, so be sure that you choose proper firmware image for your device</li>
+					<li>you can upload whatever you want, so be sure that you choose proper GPT for your device</li>
+					<li>updating U-Boot is a very dangerous operation and may damage your device!</li>
 				</ul>
 			</div>
 		</div>
