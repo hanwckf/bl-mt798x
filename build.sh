@@ -1,7 +1,8 @@
 #!/bin/sh
 
 TOOLCHAIN=aarch64-linux-gnu-
-UBOOT_DIR=uboot-mtk-20220606
+#UBOOT_DIR=uboot-mtk-20220606
+UBOOT_DIR=uboot-mtk-20230718-09eda825
 ATF_DIR=atf-20220606-637ba581b
 
 if [ -z "$SOC" ] || [ -z "$BOARD" ]; then
@@ -25,7 +26,8 @@ export CROSS_COMPILE=$TOOLCHAIN
 fixedparts=${FIXED_MTDPARTS:-1}
 multilayout=${MULTI_LAYOUT:-0}
 
-echo "Building for CPU: $SOC, BOARD: $BOARD, fixed-mtdparts: $fixedparts, multi-layout: $multilayout"
+echo "Building for: ${SOC}_${BOARD}, fixed-mtdparts: $fixedparts, multi-layout: $multilayout"
+echo "u-boot dir: $UBOOT_DIR"
 
 UBOOT_CFG="${SOC}_${BOARD}_defconfig"
 if [ "$multilayout" = "1" ]; then
