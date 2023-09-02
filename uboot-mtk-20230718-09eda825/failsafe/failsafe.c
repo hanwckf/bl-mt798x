@@ -15,6 +15,7 @@
 #include <net/mtk_tcp.h>
 #include <net/mtk_httpd.h>
 #include <u-boot/md5.h>
+#include <linux/stringify.h>
 #include <dm/ofnode.h>
 #include <vsprintf.h>
 #include <version_string.h>
