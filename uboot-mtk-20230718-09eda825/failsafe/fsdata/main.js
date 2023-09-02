@@ -34,6 +34,34 @@ function ajax(opt) {
     xmlhttp.send(opt.data);
 }
 
+function startup(){
+    getversion();
+    getmtdlayoutlist();
+}
+
+function getmtdlayoutlist() {
+    ajax({
+        url: '/getmtdlayout',
+        done: function(mtd_layout_list) {
+            if (mtd_layout_list == "error")
+                return;
+
+            var mtd_layout = mtd_layout_list.split(';');
+
+            document.getElementById('current_mtd_layout').innerHTML = "Current mtd layout: " + mtd_layout[0];
+
+            var e = document.getElementById('mtd_layout_label');
+
+            for (var i=1; i<mtd_layout.length; i++) {
+                if (mtd_layout[i].length > 0) {
+                    e.options.add(new Option(mtd_layout[i], mtd_layout[i]));
+                }
+            }
+            document.getElementById('mtd_layout').style.display = '';
+        }
+    })
+}
+
 function getversion() {
     ajax({
         url: '/version',
@@ -54,6 +82,12 @@ function upload(name) {
     var form = new FormData();
     form.append(name, file);
 
+    var mtd_layout_list = document.getElementById('mtd_layout_label');
+    if (mtd_layout_list && mtd_layout_list.options.length > 0) {
+        var mtd_idx = mtd_layout_list.selectedIndex;
+        form.append("mtd_layout", mtd_layout_list.options[mtd_idx].value);
+    }
+
     ajax({
         url: '/upload',
         data: form,
@@ -68,6 +102,11 @@ function upload(name) {
 
                 document.getElementById('md5').style.display = 'block';
                 document.getElementById('md5').innerHTML = 'MD5: ' + info[1];
+
+                if (info[2]) {
+                    document.getElementById('mtd').style.display = 'block';
+                    document.getElementById('mtd').innerHTML = 'MTD layout: ' + info[2];
+                }
 
                 document.getElementById('upgrade').style.display = 'block';
             }
