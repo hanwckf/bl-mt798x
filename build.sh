@@ -42,6 +42,7 @@ else
 	if [ "$fixedparts" = "1" ]; then
 		echo "Build u-boot with fixed-mtdparts!"
 		echo "CONFIG_MEDIATEK_UBI_FIXED_MTDPARTS=y" >> $UBOOT_DIR/.config
+		echo "CONFIG_MTK_FIXED_MTD_MTDPARTS=y" >> $UBOOT_DIR/.config
 	fi
 	make -C $UBOOT_DIR olddefconfig all
 	if [ -f "$UBOOT_DIR/u-boot.bin" ]; then
