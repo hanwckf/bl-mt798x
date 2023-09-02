@@ -156,6 +156,14 @@ config MTK_UBI_SUPPORT
 
 endif # MEDIATEK_BOOTMENU
 
+config MEDIATEK_MULTI_MTD_LAYOUT
+	bool "Enable multi mtd layout support"
+	select SYS_MTDPARTS_RUNTIME
+	select CMD_SHOW_MTD_LAYOUT
+	depends on !MTK_BOOTMENU_MMC
+	depends on !MTK_DUAL_BOOT
+	default n
+
 menuconfig MTK_SECURE_BOOT
 	bool "Enable secure boot framework"
 	select FIT_SIGNATURE

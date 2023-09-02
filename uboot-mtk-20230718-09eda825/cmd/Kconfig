@@ -2885,4 +2885,9 @@ config CMD_GL_BTN
 	depends on BUTTON
 	default n
 	select POLLER
+
+config CMD_SHOW_MTD_LAYOUT
+	bool "Show mtd layout command"
+	depends on OF_LIBFDT
+	default n
 endmenu
