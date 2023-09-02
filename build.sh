@@ -46,7 +46,8 @@ else
 		echo "CONFIG_MEDIATEK_UBI_FIXED_MTDPARTS=y" >> $UBOOT_DIR/.config
 		echo "CONFIG_MTK_FIXED_MTD_MTDPARTS=y" >> $UBOOT_DIR/.config
 	fi
-	make -C $UBOOT_DIR olddefconfig all
+	make -C $UBOOT_DIR olddefconfig
+	make -C $UBOOT_DIR -j $(nproc) all
 	if [ -f "$UBOOT_DIR/u-boot.bin" ]; then
 		cp -f $UBOOT_DIR/u-boot.bin $ATF_DIR/u-boot.bin
 		echo "u-boot build done!"
