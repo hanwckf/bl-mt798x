@@ -13,7 +13,7 @@ sudo apt install gcc-aarch64-linux-gnu build-essential flex bison libssl-dev
 
 ## Build
 ```
-Usage: SOC=[mt7981|mt7986] BOARD=<board name> FIXED_MTDPARTS=[1|0] MULTI_LAYOUT=[0|1] ./build.sh
+Usage: SOC=[mt7981|mt7986] BOARD=<board name> MULTI_LAYOUT=[0|1] ./build.sh
 eg: SOC=mt7981 BOARD=360t7 ./build.sh
 eg: SOC=mt7981 BOARD=wr30u MULTI_LAYOUT=1 ./build.sh
 eg: SOC=mt7986 BOARD=redmi_ax6000 MULTI_LAYOUT=1 ./build.sh
