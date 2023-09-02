@@ -26,21 +26,21 @@
 			label = "default";
 			// mtd layout for clt_r30b1 stock ubi or openwrt-stock/immortalwrt-stock firmware
 			mtdids = "nmbm0=nmbm0";
-			mtdparts = "nmbm0:1024k(BL2),512k(u-boot-env),2048k(Factory),2048k(FIP),64M(ubi),32M(data)";
+			mtdparts = "nmbm0:1024k(bl2),512k(u-boot-env),2048k(Factory),2048k(fip),64M(ubi),32M(data)";
 		};
 
 		layout@1 {
 			label = "immortalwrt-112m";
 			// mtd layout for immortalwrt/openwrt 112M ubi firmware
 			mtdids = "nmbm0=nmbm0";
-			mtdparts = "nmbm0:1024k(BL2),512k(u-boot-env),2048k(Factory),2048k(FIP),112M(ubi)";
+			mtdparts = "nmbm0:1024k(bl2),512k(u-boot-env),2048k(Factory),2048k(fip),112M(ubi)";
 		};
 
 		layout@2 {
 			label = "qwrt";
 			// mtd layout for lean qwrt
 			mtdids = "nmbm0=nmbm0";
-			mtdparts = "nmbm0:1024k(BL2),512k(u-boot-env),2048k(Factory),2048k(FIP),1024k(rsv0),110M(ubi)";
+			mtdparts = "nmbm0:1024k(bl2),512k(u-boot-env),2048k(Factory),2048k(fip),1024k(rsv0),110M(ubi)";
 		};
 	};
 
