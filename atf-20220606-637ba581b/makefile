@@ -102,19 +102,23 @@ endif
 ifeq ($(CONFIG_NEED_BL33),y)
 MAKE_ARGS += BL33=$(CONFIG_BL33)
 endif
+
 ifeq ($(CONFIG_AARCH32),y)
 MAKE_ARGS += ARCH=aarch32
 endif
+
+ifeq ($(CONFIG_NEED_BL2),y)
+TARGET_ARGS += bl2
+endif
+
 ifeq ($(CONFIG_NEED_FIP),y)
 TARGET_ARGS += bl31 fip
 else
-ifeq ($(CONFIG_TARGET_BL2),y)
-TARGET_ARGS += bl2
-endif
-ifeq ($(CONFIG_TARGET_BL31),y)
+ifeq ($(CONFIG_NEED_BL31),y)
 TARGET_ARGS += bl31
 endif
 endif
+
 endif
 
 PYTHON := $(shell which python3)

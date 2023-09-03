@@ -32,6 +32,9 @@ menu "Target"
 		config TARGET_BL31
 			bool "BL31"
 			depends on !NEED_SBC
+		config TARGET_FIP_NO_SEC_BOOT
+			bool "BL31 + FIP image without secure boot"
+			depends on !NEED_SBC
 		config TARGET_ALL_NO_SEC_BOOT
 			bool "BL2 + FIP image without secure boot"
 			depends on !NEED_SBC
@@ -234,14 +237,17 @@ config NEED_BL31
 	def_bool y if TARGET_BL31
 	def_bool y if TARGET_ALL_NO_SEC_BOOT
 	def_bool y if TARGET_ALL_HAS_SEC_BOOT
+	def_bool y if TARGET_FIP_NO_SEC_BOOT
 
 config NEED_BL33
 	def_bool y if TARGET_ALL_NO_SEC_BOOT
 	def_bool y if TARGET_ALL_HAS_SEC_BOOT
+	def_bool y if TARGET_FIP_NO_SEC_BOOT
 
 config NEED_FIP
 	def_bool y if TARGET_ALL_NO_SEC_BOOT
 	def_bool y if TARGET_ALL_HAS_SEC_BOOT
+	def_bool y if TARGET_FIP_NO_SEC_BOOT
 
 config NEED_MBEDTLS
 	def_bool y if TARGET_ALL_HAS_SEC_BOOT
