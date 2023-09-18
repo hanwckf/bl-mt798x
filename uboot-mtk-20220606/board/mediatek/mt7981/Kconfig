@@ -64,6 +64,7 @@ config MT7981_BOOTMENU_SNAND
 
 config MT7981_BOOTMENU_EMMC
 	bool "eMMC"
+	select SUPPORT_MTK_DUAL_BOOT
 
 config MT7981_BOOTMENU_SD
 	bool "SD"
