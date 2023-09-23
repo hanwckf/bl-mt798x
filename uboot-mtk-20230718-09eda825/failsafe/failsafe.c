@@ -406,8 +406,8 @@ static int do_httpd(struct cmd_tbl *cmdtp, int flag, int argc,
 	int ret;
 
 #ifdef CONFIG_NET_FORCE_IPADDR
-	net_ip = string_to_ip(__stringify(CONFIG_IPADDR));
-	net_netmask = string_to_ip(__stringify(CONFIG_NETMASK));
+	net_ip = string_to_ip(CONFIG_IPADDR);
+	net_netmask = string_to_ip(CONFIG_NETMASK);
 #endif
 	local_ip = ntohl(net_ip.s_addr);
 
