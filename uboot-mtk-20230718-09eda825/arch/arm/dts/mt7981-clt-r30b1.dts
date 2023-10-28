@@ -17,8 +17,8 @@
 
 	config {
 		bootcmd = "mtkboardboot";
-		blink_led = "green:network";
-		system_led = "blue:system";
+		blink_led = "red:system";
+		system_led = "green:system";
 	};
 
 	mtd-layout {
@@ -64,23 +64,40 @@
 		compatible = "gpio-leds";
 
 		led@0 {
-			label = "blue:system";
-			gpios = <&gpio 11 GPIO_ACTIVE_LOW>;
-		};
-
-		led@1 {
-			label = "green:system";
+			label = "red:power";
 			gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
 		};
 
+		system_led: led@1 {
+			label = "red:wan";
+			gpios = <&gpio 5 GPIO_ACTIVE_LOW>;
+		};
+
 		led@2 {
-			label = "blue:network";
-			gpios = <&gpio 13 GPIO_ACTIVE_LOW>;
+			label = "green:wan";
+			gpios = <&gpio 6 GPIO_ACTIVE_LOW>;
 		};
 
 		led@3 {
-			label = "green:network";
+			label = "green:system";
 			gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+			linux,default-trigger = "default-on";
+		};
+
+		led@4 {
+			label = "blue:internet";
+			gpios = <&gpio 11 GPIO_ACTIVE_LOW>;
+		};
+
+		led@5 {
+			label = "blue:mesh";
+			gpios = <&gpio 13 GPIO_ACTIVE_LOW>;
+		};
+
+		led@6 {
+			label = "green:wifi";
+			gpios = <&gpio 34 GPIO_ACTIVE_LOW>;
 		};
 	};
 
