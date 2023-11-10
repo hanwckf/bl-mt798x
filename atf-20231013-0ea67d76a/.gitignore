@@ -1,0 +1,55 @@
+# Ignore miscellaneous files
+cscope.*
+*.swp
+*.patch
+*~
+.project
+.cproject
+
+# Ignore build directory
+build/
+
+# Ignore build products from tools
+tools/**/*.o
+tools/**/*.d
+tools/renesas/rcar_layout_create/*.bin
+tools/renesas/rcar_layout_create/*.srec
+tools/renesas/rcar_layout_create/*.map
+tools/renesas/rcar_layout_create/*.elf
+tools/renesas/rzg_layout_create/*.bin
+tools/renesas/rzg_layout_create/*.srec
+tools/renesas/rzg_layout_create/*.map
+tools/renesas/rzg_layout_create/*.elf
+tools/fiptool/fiptool
+tools/fiptool/fiptool.exe
+tools/memory/memory/__pycache__/
+tools/cert_create/src/*.o
+tools/cert_create/src/**/*.o
+tools/cert_create/cert_create
+tools/cert_create/cert_create.exe
+tools/marvell/doimage/doimage
+tools/amlogic/doimage
+tools/stm32image/*.o
+tools/stm32image/stm32image
+tools/stm32image/stm32image.exe
+tools/sptool/__pycache__/
+tools/encrypt_fw/encrypt_fw
+tools/encrypt_fw/encrypt_fw.exe
+
+# GNU GLOBAL files
+GPATH
+GRTAGS
+GSYMS
+GTAGS
+
+# Ctags
+tags
+
+# Node.js
+node_modules/
+
+# common python virtual environment directories
+.env/
+env/
+.venv/
+venv/

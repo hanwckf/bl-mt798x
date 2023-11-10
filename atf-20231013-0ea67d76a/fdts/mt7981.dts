@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright (C) 2021, MediaTek Inc. All rights reserved.
+ */
+/dts-v1/;
+
+/ {
+	soc {
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		apmixedsys: apmixedsys@1001e000 {
+			compatible = "mediatek,mt7986-pll";
+			reg = <0x1001e000 0x1000>;
+			status = "okay";
+		};
+	};
+};

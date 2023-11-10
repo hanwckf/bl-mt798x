@@ -1,0 +1,47 @@
+{
+#atf partition
+	"tee1" : {
+		"start": 1024,
+		"end"  : 1535,
+		"uuid" : "{599953fb-4ac1-42c4-8cb4-e5e093801319}"
+	},
+
+#uboot partition
+	"lk" : {
+		"start": 1536,
+		"end"  : 2559,
+		"uuid" : "{c201b6db-17d0-4d07-b86e-c507ef61a24c}"
+	},
+
+#config partition
+	"nvram" : {
+		"start": 2560,
+		"end"  : 3583,
+		"uuid" : "{19a4763a-6b19-4a4b-a0c4-8cc34f4c2ab9}"
+	},
+
+	"factory" : {
+		"start": 3584,
+		"end"  : 4095,
+		"uuid" : "{8142c1b2-1697-41d9-b1bf-a88d76c7213f}"
+	},
+
+#kernel partition
+	"boot" : {
+		"start": 4096,
+		"end"  : 45055,
+		"uuid" : "{971f7556-ef1a-44cd-8b28-0cf8100b9c7e}"
+	}
+#recovery
+	"recovery" : {
+		"start": 45056,
+		"end"  : 65535,
+		"uuid" : "{a2d9849d-b56d-3c48-aead-dd5248ace11d}"
+	}
+#rootfs
+	"rootfs" : {
+		"start": 65536,
+		"end"  : 196607,
+		"uuid" : "{5e829e38-abfe-9a47-ac8a-9a5fc4f29581}"
+	}
+}

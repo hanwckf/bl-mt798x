@@ -1,0 +1,25 @@
+{
+	"fip": {
+		"start": 2048,
+		"end"  : 4095,
+		"uuid" : "{18de6587-4f17-4e08-a6c9-d9d3d424f4c5}"
+	},
+
+	"config" : {
+		"start": 6144,
+		"end"  : 7167,
+		"uuid" : "{19a4763a-6b19-4a4b-a0c4-8cc34f4c2ab9}"
+	},
+
+	"rf" : {
+		"start": 7168,
+		"end"  : 8191,
+		"uuid" : "{8142c1b2-1697-41d9-b1bf-a88d76c7213f}"
+	},
+
+	"kernel" : {
+		"start": 8192,
+		"end"  : 40959,
+		"uuid" : "{971f7556-ef1a-44cd-8b28-0cf8100b9c7e}"
+	}
+}
