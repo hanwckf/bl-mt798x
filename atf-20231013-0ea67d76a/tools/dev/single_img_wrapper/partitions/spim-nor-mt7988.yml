@@ -1,0 +1,19 @@
+# NOR flash layout(Panther/Cheetah):
+#      0x0~0x40000 : BL2,        256K
+#  0x40000~0x50000 : Uboot env,   64K
+#  0x50000~0x100000: RF,         704K
+# 0x100000~0x180000: FIP,        512K
+# 0x180000~        : firmware
+
+# NOR flash layout(Jaguar):
+#      0x0~0x40000 : BL2,        256K
+#  0x40000~0x50000 : Uboot env,   64K
+#  0x50000~0x250000: RF,        2048K
+# 0x250000~0x2d0000: FIP,        512K
+# 0x2d0000~        : firmware
+
+spim-nor:
+  bl2_start: 0x0
+  rf_start: 0x50000
+  fip_start: 0x250000
+  kernel_start: 0x2d0000

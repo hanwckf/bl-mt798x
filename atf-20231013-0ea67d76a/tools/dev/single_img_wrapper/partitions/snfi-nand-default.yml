@@ -1,0 +1,28 @@
+# Copyright (C) 2021-2022 SkyLake Huang
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+# NAND flash layout:
+#       0x0~0x100000: BL2,       1024K
+#  0x100000~0x180000: Uboot env,  512K
+#  0x180000~0x380000: RF,        2048K
+#  0x380000~0x580000: FIP,       2048K
+#  0x580000~        : firmware
+
+snfi-nand:
+  bl2_start: 0x0
+  rf_start: 0x180000
+  fip_start: 0x380000
+  kernel_start: 0x580000

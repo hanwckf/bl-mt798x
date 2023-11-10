@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright (C) STMicroelectronics 2022 - All Rights Reserved
+ * Author: Alexandre Torgue <alexandre.torgue@foss.st.com> for STMicroelectronics.
+ */
+
+#include "stm32mp13xa.dtsi"
+
+/ {
+	soc {
+		saes: saes@54005000 {
+			compatible = "st,stm32-saes";
+			reg = <0x54005000 0x400>;
+			clocks = <&rcc SAES_K>;
+			resets = <&rcc SAES_R>;
+			status = "disabled";
+		};
+
+		pka: pka@54006000 {
+			compatible = "st,stm32-pka64";
+			reg = <0x54006000 0x2000>;
+			clocks = <&rcc PKA>;
+			resets = <&rcc PKA_R>;
+			status = "disabled";
+		};
+	};
+};

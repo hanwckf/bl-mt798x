@@ -1,0 +1,122 @@
+// SPDX-License-Identifier: (GPL-2.0 or BSD-3-Clause)
+/*
+ * Copyright (c) 2019-2022, Arm Limited.
+ */
+
+#include "n1sdp-single-chip.dts"
+
+/ {
+	cpus {
+		cpu4@100000000 {
+			compatible = "arm,neoverse-n1";
+			reg = <0x1 0x0>;
+			device_type = "cpu";
+			enable-method = "psci";
+			numa-node-id = <1>;
+		};
+		cpu5@100000100 {
+			compatible = "arm,neoverse-n1";
+			reg = <0x1 0x00000100>;
+			device_type = "cpu";
+			enable-method = "psci";
+			numa-node-id = <1>;
+		};
+		cpu6@100010000 {
+			compatible = "arm,neoverse-n1";
+			reg = <0x1 0x00010000>;
+			device_type = "cpu";
+			enable-method = "psci";
+			numa-node-id = <1>;
+		};
+		cpu7@100010100 {
+			compatible = "arm,neoverse-n1";
+			reg = <0x1 0x00010100>;
+			device_type = "cpu";
+			enable-method = "psci";
+			numa-node-id = <1>;
+		};
+	};
+
+	/* Remote N1SDP board address is mapped at offset 4TB.
+	 * First DRAM Bank of remote N1SDP board is mapped at 4TB + 2GB.
+	 */
+	memory@40080000000 {
+		device_type = "memory";
+		reg = <0x00000400 0x80000000 0x0 0x80000000>,
+			<0x00000480 0x80000000 0x3 0x80000000>;
+		numa-node-id = <1>;
+	};
+
+	distance-map {
+		compatible = "numa-distance-map-v1";
+		distance-matrix =   <0 0 10>,
+				    <0 1 20>,
+				    <1 1 10>;
+	};
+
+	smmu_secondary_pcie: iommu@4004f400000 {
+		compatible = "arm,smmu-v3";
+		reg = <0x400 0x4f400000 0 0x40000>;
+		interrupts = <GIC_SPI 715 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 716 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 717 IRQ_TYPE_EDGE_RISING>;
+		interrupt-names = "eventq", "cmdq-sync", "gerror";
+		msi-parent = <&its2_secondary 0>;
+		#iommu-cells = <1>;
+		dma-coherent;
+	};
+
+	pcie_secondary_ctlr: pcie@40070000000 {
+		compatible = "arm,n1sdp-pcie";
+		device_type = "pci";
+		reg = <0x400 0x70000000 0 0x1200000>;
+		bus-range = <0 0xff>;
+		linux,pci-domain = <2>;
+		#address-cells = <3>;
+		#size-cells = <2>;
+		dma-coherent;
+		ranges = <0x01000000 0x00 0x00000000 0x400 0x75200000 0x00 0x00010000>,
+			 <0x02000000 0x00 0x71200000 0x400 0x71200000 0x00 0x04000000>,
+			 <0x42000000 0x09 0x00000000 0x409 0x00000000 0x20 0x00000000>;
+		#interrupt-cells = <1>;
+		interrupt-map-mask = <0 0 0 7>;
+		interrupt-map = <0 0 0 1 &gic 0 0 0 649 IRQ_TYPE_LEVEL_HIGH>,
+				<0 0 0 2 &gic 0 0 0 650 IRQ_TYPE_LEVEL_HIGH>,
+				<0 0 0 3 &gic 0 0 0 651 IRQ_TYPE_LEVEL_HIGH>,
+				<0 0 0 4 &gic 0 0 0 652 IRQ_TYPE_LEVEL_HIGH>;
+		msi-map = <0 &its_secondary_pcie 0 0x10000>;
+		iommu-map = <0 &smmu_secondary_pcie 0 0x10000>;
+		numa-node-id = <1>;
+		status = "okay";
+	};
+
+};
+
+&gic {
+	#redistributor-regions = <2>;
+	reg =   <0x0 0x30000000 0 0x10000>,	/* GICD */
+		<0x0 0x300c0000 0 0x80000>,	/* GICR */
+		<0x400 0x300c0000 0 0x80000>;	/* GICR */
+
+	its2_secondary: its@40030060000 {
+		compatible = "arm,gic-v3-its";
+		msi-controller;
+		#msi-cells = <1>;
+		reg = <0x400 0x30060000 0x0 0x20000>;
+	};
+
+	its_secondary_pcie: its@400300a0000 {
+		compatible = "arm,gic-v3-its";
+		msi-controller;
+		#msi-cells = <1>;
+		reg = <0x400 0x300a0000 0x0 0x20000>;
+	};
+};
+
+&pcie_ctlr {
+	numa-node-id = <0>;
+};
+
+&ccix_pcie_ctlr {
+	numa-node-id = <0>;
+};
