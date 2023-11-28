@@ -51,7 +51,7 @@ const char *get_mtd_layout_label(void);
 
 struct data_part_entry;
 
-#ifdef CONFIG_MT7981_BOOTMENU_EMMC
+#if defined(CONFIG_MT7981_BOOTMENU_EMMC) || defined(CONFIG_MT7986_BOOTMENU_EMMC)
 int write_gpt(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size);
 #endif
@@ -82,7 +82,7 @@ static int write_firmware_failsafe(size_t data_addr, uint32_t data_size)
 	led_control("ledblink", "blink_led", "100");
 
 	switch (fw_type) {
-#ifdef CONFIG_MT7981_BOOTMENU_EMMC
+#if defined(CONFIG_MT7981_BOOTMENU_EMMC) || defined(CONFIG_MT7986_BOOTMENU_EMMC)
 	case FW_TYPE_GPT:
 		r = write_gpt(NULL, NULL, (const void *)data_addr, data_size);
 		break;
@@ -445,7 +445,7 @@ int start_web_failsafe(void)
 	httpd_register_uri_handler(inst, "/", &index_handler, NULL);
 	httpd_register_uri_handler(inst, "/cgi-bin/luci", &index_handler, NULL);
 	httpd_register_uri_handler(inst, "/cgi-bin/luci/", &index_handler, NULL);
-#ifdef CONFIG_MT7981_BOOTMENU_EMMC
+#if defined(CONFIG_MT7981_BOOTMENU_EMMC) || defined(CONFIG_MT7986_BOOTMENU_EMMC)
         httpd_register_uri_handler(inst, "/gpt.html", &html_handler, NULL);
 #endif
 	httpd_register_uri_handler(inst, "/bl2.html", &html_handler, NULL);
