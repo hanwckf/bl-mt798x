@@ -88,7 +88,7 @@ static int erase_part(const char *part, loff_t offset, u64 size)
 			  size);
 }
 
-static int write_bl2(void *priv, const struct data_part_entry *dpe,
+int write_bl2(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
 	char cmd[64];
@@ -108,7 +108,7 @@ static int write_bl2(void *priv, const struct data_part_entry *dpe,
 	return ret;
 }
 
-static int write_fip(void *priv, const struct data_part_entry *dpe,
+int write_fip(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
 	return write_part(PART_FIP_NAME, data, size, true);
@@ -133,7 +133,7 @@ static int validate_firmware(void *priv, const struct data_part_entry *dpe,
 }
 #endif /* CONFIG_MTK_UPGRADE_IMAGE_VERIFY */
 
-static int write_firmware(void *priv, const struct data_part_entry *dpe,
+int write_firmware(void *priv, const struct data_part_entry *dpe,
 			  const void *data, size_t size)
 {
 	const char *kernel_part, *rootfs_part;
@@ -186,7 +186,7 @@ static int write_firmware(void *priv, const struct data_part_entry *dpe,
 	return ret;
 }
 
-static int write_gpt(void *priv, const struct data_part_entry *dpe,
+int write_gpt(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
 	return mmc_write_gpt(EMMC_DEV_INDEX, 0, GPT_MAX_SIZE, data, size);
