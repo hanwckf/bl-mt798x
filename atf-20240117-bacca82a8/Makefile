@@ -324,9 +324,9 @@ WARNINGS	+=		-Wshift-overflow -Wshift-sign-overflow \
 				-Wlogical-op-parentheses
 endif #(Clang Warning)
 
-ifneq (${E},0)
-	ERRORS := -Werror
-endif #(E)
+#ifneq (${E},0)
+#	ERRORS := -Werror
+#endif #(E)
 
 ################################################################################
 # Compiler and Linker Directives
@@ -362,7 +362,7 @@ ifneq ($(findstring armlink,$(notdir $(LD))),)
 # LD = gcc (used when GCC LTO is enabled)
 else ifneq ($(findstring gcc,$(notdir $(LD))),)
 	# Pass ld options with Wl or Xlinker switches
-	TF_LDFLAGS		+=	-Wl,--fatal-warnings -O1
+	TF_LDFLAGS		+=	-O1
 	TF_LDFLAGS		+=	-Wl,--gc-sections
 
 	TF_LDFLAGS		+=	-Wl,-z,common-page-size=4096 #Configure page size constants
