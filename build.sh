@@ -23,17 +23,27 @@ command -v ${TOOLCHAIN}gcc
 [ "$?" != "0" ] && { echo ${TOOLCHAIN}gcc not found!; exit 0; }
 export CROSS_COMPILE=$TOOLCHAIN
 
-# Build fixed-mtdparts by default
-fixedparts=${FIXED_MTDPARTS:-1}
-multilayout=${MULTI_LAYOUT:-0}
-
-echo "Building for: ${SOC}_${BOARD}, fixed-mtdparts: $fixedparts, multi-layout: $multilayout"
-echo "u-boot dir: $UBOOT_DIR"
-
 UBOOT_CFG="${SOC}_${BOARD}_defconfig"
-if [ "$multilayout" = "1" ]; then
-	UBOOT_CFG="${SOC}_${BOARD}_multi_layout_defconfig"
+ATF_CFG="${SOC}_${BOARD}_defconfig"
+if grep -q "CONFIG_FLASH_DEVICE_EMMC=y" $ATF_DIR/configs/$ATF_CFG ; then
+	# No fixed-mtdparts or multilayout for EMMC
+	fixedparts=0
+	multilayout=0
+	echo "Building for: ${SOC}_${BOARD}"
+	echo "u-boot dir: $UBOOT_DIR"
+	echo "atf dir: $ATF_DIR"
+else
+	# Build fixed-mtdparts by default for NAND
+	fixedparts=${FIXED_MTDPARTS:-1}
+	multilayout=${MULTI_LAYOUT:-0}
+	if [ "$multilayout" = "1" ]; then
+		UBOOT_CFG="${SOC}_${BOARD}_multi_layout_defconfig"
+	fi
+	echo "Building for: ${SOC}_${BOARD}, fixed-mtdparts: $fixedparts, multi-layout: $multilayout"
+	echo "u-boot dir: $UBOOT_DIR"
+	echo "atf dir: $ATF_DIR"
 fi
+
 
 if [ ! -f $UBOOT_DIR/configs/$UBOOT_CFG ]; then
 	echo "$UBOOT_DIR/configs/$UBOOT_CFG not found!"
@@ -58,7 +68,6 @@ else
 	fi
 fi
 
-ATF_CFG="${SOC}_${BOARD}_defconfig"
 if [ ! -f $ATF_DIR/configs/$ATF_CFG ]; then
 	echo "$ATF_DIR/configs/$ATF_CFG not found!"
 	exit 1
@@ -82,5 +91,16 @@ else
 	else
 		echo "fip build fail!"
 		exit 1
+	fi
+	if grep -q "CONFIG_TARGET_ALL_NO_SEC_BOOT=y" $ATF_DIR/configs/$ATF_CFG ; then
+		if [ -f "$ATF_DIR/build/${SOC}/release/bl2.img" ]; then
+			[ ! -d "./output" ] && mkdir -p output
+			BL2_NAME="${SOC}_${BOARD}-bl2"
+			cp -f $ATF_DIR/build/${SOC}/release/bl2.img output/${BL2_NAME}.bin
+			echo "$BL2_NAME build done"
+		else
+			echo "bl2 build fail!"
+			exit 1
+		fi
 	fi
 fi
