@@ -887,6 +887,7 @@ static const struct nand_ops spinand_ops = {
 
 static const struct spinand_manufacturer *spinand_manufacturers[] = {
 	&etron_spinand_manufacturer,
+	&foresee_spinand_manufacturer,
 	&fudan_spinand_manufacturer,
 	&gigadevice_spinand_manufacturer,
 	&macronix_spinand_manufacturer,
