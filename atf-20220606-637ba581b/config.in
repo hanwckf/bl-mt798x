@@ -142,15 +142,16 @@ menu "DRAM"
 		config DRAM_SIZE_512
 			bool "512MB"
 			depends on (PLAT_MT7981 && DRAM_DDR3) || \
-				   (PLAT_MT7986 && DRAM_DDR3)
+				   (PLAT_MT7986 && DRAM_DDR3) || \
+				   (PLAT_MT7981 && DRAM_DDR4) || \
+				   (PLAT_MT7986 && DRAM_DDR4)
 		config DRAM_SIZE_1024
 			bool "1GB"
 			depends on (PLAT_MT7981 && DRAM_DDR4) || \
 				   (PLAT_MT7986 && DRAM_DDR4)
 		config DRAM_SIZE_2048
 			bool "2GB"
-			depends on (PLAT_MT7981 && DRAM_DDR4) || \
-				   (PLAT_MT7986 && DRAM_DDR4)
+			depends on (PLAT_MT7986 && DRAM_DDR4)
 	endchoice
 	choice DDR3_FREQUENCY
 	bool "DDR3 frequency"

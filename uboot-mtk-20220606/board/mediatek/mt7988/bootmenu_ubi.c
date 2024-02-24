@@ -122,7 +122,7 @@ static const struct data_part_entry ubi_parts[] = {
 		.env_name = "bootfile.fip",
 		.write = write_fip,
 		.post_action = UPGRADE_ACTION_CUSTOM,
-		.do_post_action = erase_env,
+		//.do_post_action = erase_env,
 	},
 	{
 		.name = "Firmware",
