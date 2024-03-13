@@ -61,6 +61,14 @@ void main_loop(void)
 			efi_launch_capsules();
 	}
 
+	if (env_get("failsafe") != NULL) {
+		env_set("failsafe", NULL);
+		env_save();
+
+		led_control("led", "system_led", "on");
+		run_command("httpd", 0);
+	}
+
 	run_command("glbtn", 0);
 
 	s = bootdelay_process();
