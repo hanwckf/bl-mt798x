@@ -1,0 +1,9 @@
+# This description file is used for NOR+eMMC hybrid storage.
+# We boot preloader, atf, uboot from NOR and kernel from eMMC.
+{
+	"firmware": {
+		"start": 1024,
+		"end"  : 66559,
+		"uuid" : "{18de6587-4f17-4e08-a6c9-d9d3d424f4c5}"
+	}
+}

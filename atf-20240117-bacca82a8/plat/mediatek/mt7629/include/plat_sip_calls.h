@@ -1,0 +1,28 @@
+/*
+ * Copyright (c) 2023, MediaTek Inc. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#ifndef PLAT_SIP_CALLS_H
+#define PLAT_SIP_CALLS_H
+
+#include <stdint.h>
+
+struct mtk_sip_call_record;
+
+/*******************************************************************************
+ * Plat SiP function constants
+ ******************************************************************************/
+
+#define MTK_SIP_PWR_ON_MTCMOS		0x82000402
+#define MTK_SIP_PWR_OFF_MTCMOS		0x82000403
+#define MTK_SIP_PWR_MTCMOS_SUPPORT	0x82000404
+
+/*******************************************************************************
+ * Plat SiP function call records
+ ******************************************************************************/
+extern struct mtk_sip_call_record mtk_plat_sip_calls[];
+extern const uint32_t mtk_plat_sip_call_num;
+
+#endif /* PLAT_SIP_CALLS_H */
