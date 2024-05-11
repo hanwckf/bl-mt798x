@@ -1,0 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+/dts-v1/;
+#include "mt7981-ruijie-rg-x30e.dtsi"
+
+/ {
+	model = "mt7981-ruijie-rg-x30e-pro";
+	compatible = "mediatek,mt7981", "mediatek,mt7981-rfb";
+};
