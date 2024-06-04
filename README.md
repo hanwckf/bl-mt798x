@@ -20,18 +20,21 @@ eg: SOC=mt7981 BOARD=cmcc_rax3000m-emmc ./build.sh
 eg: SOC=mt7986 BOARD=redmi_ax6000 MULTI_LAYOUT=1 ./build.sh
 eg: SOC=mt7986 BOARD=jdcloud_re-cp-03 ./build.sh
 ```
-## Build for bpi r3
+## Build for bpi r3/r3mini
 Don't copy all code at one time!Remember to copy one line to compile.
 不要全部复制，先复制上面一条，生成好了显示fip build fail!了，再去atf目录复制对应的代码来生成bl2和fip镜像，懒得改了，将就用吧。
-
 ```
 SOC=mt7986a BOARD=bpir3_sd ./build.sh
 SOC=mt7986a BOARD=bpir3_emmc ./build.sh
 SOC=mt7986a BOARD=bpir3_snand ./build.sh
 SOC=mt7986a BOARD=bpir3_snand114 ./build.sh
 SOC=mt7986a BOARD=bpir3_nor ./build.sh
+SOC=mt7986a BOARD=bpir3mini_emmc ./build.sh
+SOC=mt7986a BOARD=bpir3mini_snand ./build.sh
+SOC=mt7986a BOARD=bpir3mini_snand110M ./build.sh
 ```
 This will shows 'fip build fail!',then move to atf root to build by yourself
+
 ```
 make -f Makefile PLAT=mt7986 CROSS_COMPILE=aarch64-linux-gnu- BOOT_DEVICE=sdmmc BL33=./u-boot.bin DRAM_USE_DDR4=1 all fip
 make -f Makefile PLAT=mt7986 CROSS_COMPILE=aarch64-linux-gnu- BOOT_DEVICE=emmc BL33=./u-boot.bin DRAM_USE_DDR4=1 all fip

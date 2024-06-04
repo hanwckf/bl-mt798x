@@ -1321,6 +1321,8 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += \
 	mt7986a-bpi-r3-sd.dtb \
 	mt7986a-bpi-r3-emmc.dtb \
 	mt7986a-bpi-r3-nand114.dtb \
+	mt7986a-bpi-r3-mini.dtb \
+	mt7986a-bpi-r3-mini-nand110.dtb \
 	mt7986a-rfb.dtb \
 	mt7986b-rfb.dtb \
 	mt7986a-sd-rfb.dtb \
