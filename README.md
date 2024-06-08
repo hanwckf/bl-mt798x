@@ -23,7 +23,6 @@ eg: SOC=mt7986 BOARD=bpi_r3-sd ./build.sh
 eg: SOC=mt7986 BOARD=bpi_r3-snand MULTI_LAYOUT=1 ./build.sh
 eg: SOC=mt7986 BOARD=bpi_r3mini_snand MULTI_LAYOUT=1 ./build.sh
 eg: SOC=mt7986 BOARD=bpi_r3mini-emmc ./build.sh
-
 ```
 
 ---
