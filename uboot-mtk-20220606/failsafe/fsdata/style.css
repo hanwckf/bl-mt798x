@@ -132,3 +132,54 @@ ul {
 	background: linear-gradient(to bottom, #0688fa 5%, #2dabf9 100%);
 	background-color: #0688fa;
 }
+
+#l {
+	height: 30px;
+	width: 30px;
+	margin: 0 auto 20px;
+	-webkit-animation: r 1s infinite linear;
+	-moz-animation: r 1s infinite linear;
+	-o-animation: r 1s infinite linear;
+	animation: r 1s infinite linear;
+	border-left: 7px solid #eaf1ff;
+	border-right: 7px solid #eaf1ff;
+	border-bottom: 7px solid #eaf1ff;
+	border-top: 7px solid #2450ad;
+	border-radius: 100%;
+}
+
+@-webkit-keyframes r {
+	from {
+		-webkit-transform: rotate(0deg);
+	}
+	to {
+		-webkit-transform: rotate(359deg);
+	}
+}
+
+@-moz-keyframes r {
+	from {
+		-moz-transform: rotate(0deg);
+	}
+	to {
+		-moz-transform: rotate(359deg);
+	}
+}
+
+@-o-keyframes r {
+	from {
+		-o-transform: rotate(0deg);
+	}
+	to {
+		-o-transform: rotate(359deg);
+	}
+}
+
+@keyframes r {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(359deg);
+	}
+}

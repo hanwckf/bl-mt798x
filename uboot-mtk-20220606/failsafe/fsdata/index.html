@@ -9,7 +9,10 @@
 	<body onload="startup()">
 		<div id="m">
 			<h1>FIRMWARE UPDATE</h1>
-			<p id="hint">You are going to update <strong>firmware</strong> on the device.<br>Please, choose file from your local hard drive and click <strong>Upload</strong> button.</p>
+			<p id="hint">
+				You are going to update <strong>firmware</strong> on the device.<br>
+				Please, choose file from your local hard drive and click <strong>Upload</strong> button.
+			</p>
 			<form id="form">
 				<div id="mtd_layout" style="display: none;">
 					<div id="current_mtd_layout"></div>
@@ -28,7 +31,7 @@
 			<div id="md5" style="display: none;">MD5: xxxx</div>
 			<div id="mtd" style="display: none;">MTD layout: xxxx</div>
 			<div id="upgrade" style="display: none;">
-				<p>The firmware has been uploaded, please click "Update"</p>
+				<p>If all information above is correct, click "Update".</p>
 				<button class="button" onclick="location = '/flashing.html'">Update</button>
 			</div>
 			<div class="i w">
