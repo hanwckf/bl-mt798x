@@ -7,7 +7,7 @@
 / {
 	#address-cells = <1>;
 	#size-cells = <1>;
-	model = "mt7986-tplink_tl-xdr608x";
+	model = "mt7986-tplink_tl-xtr8488";
 	compatible = "mediatek,mt7986", "mediatek,mt7986-rfb";
 
 	chosen {
@@ -21,29 +21,21 @@
 		system_led = "red:status";
 	};
 
-	memory@40000000 {
-		device_type = "memory";
-		reg = <0x40000000 0x20000000>;
-	};
-
 	gpio-keys {
 		compatible = "gpio-keys";
 
 		button-reset {
 			label = "reset";
-			linux,code = <KEY_RESTART>;
-			gpios = <&gpio 9 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio 15 GPIO_ACTIVE_LOW>;
 		};
 
 		button-mesh {
 			label = "mesh";
-			linux,code = <BTN_9>;
-			gpios = <&gpio 10 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio 16 GPIO_ACTIVE_LOW>;
 		};
 
 		button-turbo {
 			label = "turbo";
-			linux,code = <BTN_1>;
 			gpios = <&gpio 11 GPIO_ACTIVE_LOW>;
 		};
 	};
@@ -63,24 +55,20 @@
 
 		led-2 {
 			label = "green:turbo";
-			gpios = <&gpio 12 GPIO_ACTIVE_HIGH>;
+			gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
 		};
-	};
-
-	bl2_verify {
-		bl2_compatible = "spim-nand";
 	};
 };
 
 &eth {
 	status = "okay";
 	mediatek,gmac-id = <0>;
-	phy-mode = "2500base-x";
+	phy-mode = "sgmii";
 	mediatek,switch = "mt7531";
-	reset-gpios = <&gpio 5 GPIO_ACTIVE_HIGH>;
+	reset-gpios = <&gpio 6 GPIO_ACTIVE_HIGH>;
 
 	fixed-link {
-		speed = <2500>;
+		speed = <1000>;
 		full-duplex;
 	};
 };
@@ -122,7 +110,7 @@
 
 	spi_nand@0 {
 		compatible = "spi-nand";
-		reg = <1>;
+		reg = <0>;
 		spi-max-frequency = <52000000>;
 	};
 };
