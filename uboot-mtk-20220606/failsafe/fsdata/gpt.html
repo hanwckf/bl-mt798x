@@ -2,34 +2,34 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>U-Boot update</title>
+		<title>GPT 更新</title>
 		<link rel="stylesheet" href="/style.css">
 		<script src="/index.js"></script>
 	</head>
 	<body onload="getversion()">
 		<div id="m">
-			<h1>GPT UPDATE</h1>
-			<p id="hint">You are going to update <strong>GPT</strong> on the device.<br>Please, choose file from your local hard drive and click <strong>Upload</strong> button.</p>
+			<h1>GPT 更新</h1>
+			<p id="hint">您将在这台设备上更新 <strong>GPT</strong> <br>请从本地硬盘中选择文件，然后单击 <strong>更新</strong> 按钮.</p>
 			<form id="form">
 				<input id="file" type="file" name="gpt">
-				<input type="button" value="Upload" onclick="upload('gpt')">
+				<input type="button" value="上传" onclick="upload('gpt')">
 			</form>
 			<div>
 				<div class="bar" id="bar" style="display: none; --percent: 0;"></div>
 			</div>
-			<div id="size" style="display: none;">Size: xxxx</div>
+			<div id="size" style="display: none;">镜像大小: xxxx</div>
 			<div id="md5" style="display: none;">MD5: xxxx</div>
 			<div id="upgrade" style="display: none;">
-				<p>The GPT has been uploaded, please click "Update"</p>
+				<p>U-Boot 已上传，请点击"更新"</p>
 				<button class="button" onclick="location = '/flashing.html'">Update</button>
 			</div>
 			<div class="i w">
-				<strong>WARNINGS</strong>
+				<strong>警告</strong>
 				<ul>
-					<li>do not power off the device during update</li>
-					<li>if everything goes well, the device will restart</li>
-					<li>you can upload whatever you want, so be sure that you choose proper GPT for your device</li>
-					<li>updating U-Boot is a very dangerous operation and may damage your device!</li>
+					<li>更新期间不要关闭设备电源</li>
+					<li>如果一切顺利，设备将重新启动</li>
+					<li>你可以上传任何你想要的东西，所以一定要为你的设备选择合适的 U-Boot</li>
+					<li>更新U-Boot是一项非常危险的操作，可能会损坏您的设备!</li>
 				</ul>
 			</div>
 		</div>
