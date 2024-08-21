@@ -8,7 +8,7 @@
 ## Prepare
 
 ```
-sudo apt install gcc-aarch64-linux-gnu build-essential flex bison libssl-dev
+sudo apt install gcc-aarch64-linux-gnu build-essential flex bison libssl-dev device-tree-compiler
 ```
 
 ## Build
