@@ -820,6 +820,7 @@ static const struct nand_ops spinand_ops = {
 
 static const struct spinand_manufacturer *spinand_manufacturers[] = {
 	&gigadevice_spinand_manufacturer,
+	&gsto_spinand_manufacturer,
 	&macronix_spinand_manufacturer,
 	&micron_spinand_manufacturer,
 	&toshiba_spinand_manufacturer,
@@ -827,6 +828,8 @@ static const struct spinand_manufacturer *spinand_manufacturers[] = {
 	&foresee_spinand_manufacturer,
 	&etron_spinand_manufacturer,
 	&esmt_c8_spinand_manufacturer,
+	&fmsh_spinand_manufacturer,
+	&dosilicon_spinand_manufacturer,
 };
 
 static int spinand_manufacturer_match(struct spinand_device *spinand,
