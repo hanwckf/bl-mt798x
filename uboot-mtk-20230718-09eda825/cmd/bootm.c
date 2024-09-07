@@ -259,6 +259,67 @@ U_BOOT_CMD(
 /* iminfo - print header info for a requested image */
 /*******************************************************************/
 #if defined(CONFIG_CMD_IMI)
+#if defined(CONFIG_FIT)
+#define SECTOR_SHIFT 9
+static int image_totalsize(struct cmd_tbl *cmdtp, int flag, int argc,
+			   char *const argv[], short int in_blocks)
+{
+	ulong addr;
+	void *fit;
+	int bsize, tsize;
+	char buf[16];
+
+	if (argc >= 2)
+		addr = simple_strtoul(argv[1], NULL, 16);
+	else
+		addr = image_load_addr;
+
+	fit = (void *)map_sysmem(addr, 0);
+	tsize = fit_get_totalsize(fit);
+	unmap_sysmem(fit);
+	if (tsize == 0)
+		return 1;
+
+	bsize = (tsize >> SECTOR_SHIFT) + ((tsize & ((1 << SECTOR_SHIFT) - 1))?1:0);
+
+	if (!in_blocks)
+		snprintf(buf, sizeof(buf), "%x", tsize);
+	else
+		snprintf(buf, sizeof(buf), "%x", bsize);
+
+	if (argc >= 3)
+		return env_set(argv[2], buf);
+	else
+		printf("%s\n", buf);
+
+	return 0;
+}
+
+static int do_imsz(struct cmd_tbl *cmdtp, int flag, int argc,
+		     char *const argv[])
+{
+	return image_totalsize(cmdtp, flag, argc, argv, 0);
+}
+
+static int do_imszb(struct cmd_tbl *cmdtp, int flag, int argc,
+		     char *const argv[])
+{
+	return image_totalsize(cmdtp, flag, argc, argv, 1);
+}
+
+U_BOOT_CMD(
+	imsz,	CONFIG_SYS_MAXARGS,	1,	do_imsz,
+	"get image total size (in bytes)",
+	"addr [maxhdrlen] [varname]\n"
+);
+
+U_BOOT_CMD(
+	imszb,	CONFIG_SYS_MAXARGS,	1,	do_imszb,
+	"get image total size (in blocks)",
+	"addr [maxhdrlen] [varname]\n"
+);
+
+#endif
 static int do_iminfo(struct cmd_tbl *cmdtp, int flag, int argc,
 		     char *const argv[])
 {
