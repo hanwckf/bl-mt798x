@@ -1050,6 +1050,7 @@ int fit_parse_subimage(const char *spec, ulong addr_curr,
 		ulong *addr, const char **image_name);
 
 int fit_get_subimage_count(const void *fit, int images_noffset);
+size_t fit_get_totalsize(const void *fit);
 void fit_print_contents(const void *fit);
 void fit_image_print(const void *fit, int noffset, const char *p);
 

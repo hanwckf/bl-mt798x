@@ -2075,6 +2075,47 @@ static const char *fit_get_image_type_property(int type)
 	return "unknown";
 }
 
+size_t fit_get_totalsize(const void *fit)
+{
+	int ret, ndepth, noffset, images_noffset;
+	size_t data_size, hdrsize, img_total, max_size = 0;
+	const void *data;
+
+	ret = fdt_check_header(fit);
+	if (ret) {
+		debug("Wrong FIT format: not a flattened device tree (err=%d)\n",
+			  ret);
+		return 0;
+	}
+
+	hdrsize = fdt_totalsize(fit);
+
+	/* take care of simple FIT with internal images */
+	max_size = hdrsize;
+
+	images_noffset = fdt_path_offset(fit, FIT_IMAGES_PATH);
+	if (images_noffset < 0)
+		goto out;
+
+	for (ndepth = 0,
+	     noffset = fdt_next_node(fit, images_noffset, &ndepth);
+	     (noffset >= 0) && (ndepth > 0);
+	     noffset = fdt_next_node(fit, noffset, &ndepth)) {
+		if (ndepth == 1) {
+			ret = fit_image_get_data_and_size(fit, noffset, &data, &data_size);
+			if (ret)
+				goto out;
+
+			img_total = data_size + (data - fit);
+
+			max_size = (max_size > img_total) ? max_size : img_total;
+		}
+	}
+
+out:
+	return max_size;
+}
+
 int fit_image_load(struct bootm_headers *images, ulong addr,
 		   const char **fit_unamep, const char **fit_uname_configp,
 		   int arch, int ph_type, int bootstage_id,
