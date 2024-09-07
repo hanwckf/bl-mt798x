@@ -855,36 +855,11 @@ static void tcp_conn_check(struct tcp_conn *c)
 	}
 }
 
-static ulong tcp_timeout_ms = 0;
-
-void tcp_led_blink(void)
-{
-#ifdef CONFIG_WEBUI_FAILSAFE_ON_AUTOBOOT_FAIL
-#if CONFIG_FAILSAFE_LED_GPIO_NUMBER >= 0
-	static int value = 0;
-	int ret;
-	ret = gpio_request(CONFIG_FAILSAFE_LED_GPIO_NUMBER, "failsafe");
-	if (ret && ret != -EBUSY) {
-		printf("gpio: requesting pin %u failed\n", CONFIG_FAILSAFE_LED_GPIO_NUMBER);
-	}
-	gpio_direction_input(CONFIG_FAILSAFE_LED_GPIO_NUMBER);
-	gpio_direction_output(CONFIG_FAILSAFE_LED_GPIO_NUMBER, value);
-	value = !value;
-#endif
-#endif
-}
-
 void tcp_periodic_check(void)
 {
 	struct list_head *lh, *n;
 	struct tcp_conn *c;
 	int num = 0;
-
-	if(get_timer(0) - tcp_timeout_ms > CONFIG_SYS_HZ) {
-		tcp_timeout_ms = get_timer(0);
-		puts("T ");
-		tcp_led_blink();
-	}
 
 	list_for_each_safe(lh, n, &conn_head) {
 		c = list_entry(lh, struct tcp_conn, node);
