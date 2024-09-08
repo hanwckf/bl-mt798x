@@ -511,6 +511,50 @@ out:
 	return ret;
 }
 
+static int write_ubi_fit_image(const void *data, size_t size,
+			       struct mtd_info *mtd)
+{
+	int ret;
+
+	ret = mount_ubi(mtd);
+	if (ret)
+		return ret;
+
+	if (!find_ubi_volume("fit")) {
+		/* ubi is dirty, erase ubi and recreate volumes */
+		umount_ubi();
+		ret = mtd_erase_generic(mtd, 0, mtd->size);
+		if (ret)
+			return ret;
+
+		ret = mount_ubi(mtd);
+		if (ret)
+			return ret;
+
+		ret = create_ubi_volume("ubootenv", 0x100000, -1, false);
+		if (ret)
+			goto out;
+
+		ret = create_ubi_volume("ubootenv2", 0x100000, -1, false);
+		if (ret)
+			goto out;
+	}
+
+	/* Remove this volume first in case of no enough PEBs */
+	remove_ubi_volume("rootfs_data");
+
+	ret = update_ubi_volume("fit", -1, data, size);
+	if (ret)
+		goto out;
+
+	ret = create_ubi_volume("rootfs_data", 0, -1, true);
+
+out:
+	umount_ubi();
+
+	return ret;
+}
+
 static int boot_from_ubi(struct mtd_info *mtd)
 {
 	ulong data_load_addr;
@@ -528,6 +572,8 @@ static int boot_from_ubi(struct mtd_info *mtd)
 		return ret;
 
 	ret = read_ubi_volume("kernel", (void *)data_load_addr, 0);
+	if (ret == -ENODEV)
+		ret = read_ubi_volume("fit", (void *)data_load_addr, 0);
 	if (ret)
 		return ret;
 
@@ -576,6 +622,9 @@ int ubi_upgrade_image(const void *data, size_t size)
 							    mtd_kernel, mtd);
 		} else {
 			ret = parse_image_ram(data, size, mtd->erasesize, &ii);
+
+			if (ii.header_type == HEADER_FIT)
+				return write_ubi_fit_image(data, size, mtd);
 
 			if (!ret && ii.type == IMAGE_UBI2)
 				return mtd_update_generic(mtd, data, size);

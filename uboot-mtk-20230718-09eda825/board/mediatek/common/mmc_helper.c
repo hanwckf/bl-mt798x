@@ -36,6 +36,7 @@
  */
 #define ROOTDEV_OVERLAY_ALIGN	(64ULL * 1024ULL)
 
+#define PART_PRODUCTION_NAME	"production"
 #define PART_KERNEL_NAME	"kernel"
 #define PART_ROOTFS_NAME	"rootfs"
 
@@ -691,7 +692,16 @@ static int _boot_from_mmc(struct mmc *mmc, u64 offset)
 #endif
 #if defined(CONFIG_FIT)
 	case IMAGE_FORMAT_FIT:
-		size = fit_get_size((const void *)data_load_addr);
+		size = fit_get_totalsize((const void *)data_load_addr);
+		if (size <= 0x2000) {
+			/* Load FDT header into memory */
+			ret = _mmc_read(mmc, offset, (void *)data_load_addr, size);
+			if (ret)
+				return ret;
+
+			/* Read whole FIT image */
+			size = fit_get_totalsize((const void *)data_load_addr);
+		}
 		break;
 #endif
 	default:
@@ -965,10 +975,17 @@ static int mmc_dual_boot(u32 dev)
 
 int mmc_boot_image(u32 dev)
 {
+	int ret;
+
 	if (IS_ENABLED(CONFIG_MTK_DUAL_BOOT))
 		return mmc_dual_boot(dev);
 
-	return boot_from_mmc_partition(dev, 0, PART_KERNEL_NAME);
+	ret = boot_from_mmc_partition(dev, 0, PART_KERNEL_NAME);
+	if (ret == -ENOENT) {
+		return boot_from_mmc_partition(dev, 0, PART_PRODUCTION_NAME);
+	}
+
+	return ret;
 }
 
 int mmc_upgrade_image(u32 dev, const void *data, size_t size)
@@ -979,6 +996,20 @@ int mmc_upgrade_image(u32 dev, const void *data, size_t size)
 	loff_t rootfs_data_offs;
 	u32 slot;
 	int ret;
+
+	/* FIT image logic */
+	if (genimg_get_format(data) == IMAGE_FORMAT_FIT) {
+		ret = mmc_write_part(dev, 0, PART_PRODUCTION_NAME, data, size, true);
+		if (ret)
+			return ret;
+
+		/* Mark rootfs_data unavailable */
+		rootfs_data_offs = (size + ROOTDEV_OVERLAY_ALIGN - 1) &
+				   (~(ROOTDEV_OVERLAY_ALIGN - 1));
+		mmc_erase_part(dev, 0, PART_PRODUCTION_NAME, rootfs_data_offs, SZ_512K);
+
+		return ret;
+	}
 
 	if (IS_ENABLED(CONFIG_MTK_DUAL_BOOT)) {
 		slot = dual_boot_get_next_slot();

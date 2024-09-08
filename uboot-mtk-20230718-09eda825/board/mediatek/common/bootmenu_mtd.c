@@ -331,6 +331,7 @@ static int erase_env(void *priv, const struct data_part_entry *dpe,
 		return -EIO;
 
 	ubi_remove_vol(CONFIG_ENV_UBI_VOLUME);
+	create_ubi_volume(CONFIG_ENV_UBI_VOLUME, CONFIG_ENV_SIZE, UBI_VID_OFFSET, false);
 	ubi_exit();
 #else
 	struct mtd_info *mtd;

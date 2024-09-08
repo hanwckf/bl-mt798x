@@ -25,8 +25,12 @@
 int boot_from_mem(ulong data_load_addr)
 {
 	char cmd[64];
+	const char *bootconf = env_get("bootconf");
 
-	snprintf(cmd, sizeof(cmd), "bootm 0x%lx", data_load_addr);
+	if (bootconf && strlen(bootconf) > 0)
+		snprintf(cmd, sizeof(cmd), "bootm 0x%lx#%s", data_load_addr, bootconf);
+	else
+		snprintf(cmd, sizeof(cmd), "bootm 0x%lx", data_load_addr);
 
 	return run_command(cmd, 0);
 }
@@ -57,7 +61,16 @@ static int _boot_from_mmc(u32 dev, struct mmc *mmc, u64 offset)
 #endif
 #if defined(CONFIG_FIT)
 	case IMAGE_FORMAT_FIT:
-		size = fit_get_size((const void *)data_load_addr);
+		size = fit_get_totalsize((const void *)data_load_addr);
+		if (size <= 0x2000) {
+			/* Load FDT header into memory */
+			ret = _mmc_read(mmc, offset, (void *)data_load_addr, size);
+			if (ret)
+				return ret;
+
+			/* Read whole FIT image */
+			size = fit_get_totalsize((const void *)data_load_addr);
+		}
 		break;
 #endif
 	default:
