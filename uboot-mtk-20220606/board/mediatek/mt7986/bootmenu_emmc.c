@@ -7,6 +7,7 @@
 #include <asm/global_data.h>
 #include <command.h>
 #include <fdtdec.h>
+#include <image.h>
 #include <linux/sizes.h>
 #include <errno.h>
 #include <dm/ofnode.h>
@@ -37,6 +38,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define GPT_MAX_SIZE		(34 * 512)
 
 #define PART_FIP_NAME		"fip"
+#define PART_PRODUCTION_NAME	"production"
 #define PART_KERNEL_NAME	"kernel"
 #define PART_ROOTFS_NAME	"rootfs"
 
@@ -144,6 +146,20 @@ int write_firmware(void *priv, const struct data_part_entry *dpe,
 #ifdef CONFIG_MTK_DUAL_BOOT
 	u32 slot;
 #endif /* CONFIG_MTK_DUAL_BOOT */
+
+	/* FIT image logic */
+	if (genimg_get_format(data) == IMAGE_FORMAT_FIT) {
+		ret = write_part(PART_PRODUCTION_NAME, data, size, true);
+		if (ret)
+			return ret;
+
+		/* Mark rootfs_data unavailable */
+		rootfs_data_offs = (size + ROOTDEV_OVERLAY_ALIGN - 1) &
+				   (~(ROOTDEV_OVERLAY_ALIGN - 1));
+		erase_part(PART_PRODUCTION_NAME, rootfs_data_offs, SZ_512K);
+
+		return ret;
+	}
 
 	ret = parse_tar_image(data, size, &kernel_data, &kernel_size,
 			      &rootfs_data, &rootfs_size);
@@ -273,7 +289,13 @@ int board_boot_default(void)
 
 	return dual_boot_mmc(&mbd);
 #else
-	return boot_from_mmc_partition(EMMC_DEV_INDEX, 0, PART_KERNEL_NAME);
+	int ret;
+
+	ret = boot_from_mmc_partition(EMMC_DEV_INDEX, 0, PART_KERNEL_NAME);
+	if (ret == -ENODEV)
+		return boot_from_mmc_partition(EMMC_DEV_INDEX, 0, PART_PRODUCTION_NAME);
+
+	return ret;
 #endif /* CONFIG_MTK_DUAL_BOOT */
 }
 

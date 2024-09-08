@@ -29,6 +29,7 @@
 
 #define PART_UBI_NAME		"ubi"
 #define PART_FIRMWARE_NAME	"firmware"
+#define PART_FIT_NAME		"fit"
 #define PART_KERNEL_NAME	"kernel"
 #define PART_ROOTFS_NAME	"rootfs"
 #define PART_ROOTFS_DATA_NAME	"rootfs_data"
@@ -634,6 +635,48 @@ static int read_ubi_volume(const char *volume, void *buff, size_t size)
 	return ubi_volume_read((char *)volume, buff, size);
 }
 
+static int write_ubi_fit_image(const void *data, size_t size,
+			       struct mtd_info *mtd)
+{
+	int ret;
+
+	ret = mount_ubi(mtd, true);
+	if (ret)
+		return ret;
+
+	if (!ubi_find_volume(PART_FIT_NAME)) {
+		/* ubi is dirty, erase ubi and recreate volumes */
+		ubi_exit();
+		ret = mtd_erase_skip_bad(mtd, 0, size, mtd->size, NULL, NULL, true);
+		if (ret)
+			return ret;
+
+		ret = mount_ubi(mtd, true);
+		if (ret)
+			return ret;
+
+		ret = create_ubi_volume("ubootenv", 0x100000, -1, false);
+		if (ret)
+			goto out;
+
+		ret = create_ubi_volume("ubootenv2", 0x100000, -1, false);
+		if (ret)
+			goto out;
+	}
+
+	/* Remove this volume first in case of no enough PEBs */
+	remove_ubi_volume(PART_ROOTFS_DATA_NAME);
+
+	ret = update_ubi_volume(PART_FIT_NAME, -1, data, size);
+	if (ret)
+		goto out;
+
+	ret = create_ubi_volume(PART_ROOTFS_DATA_NAME, 0, -1, true);
+
+out:
+	return ret;
+}
+
 #ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
 static int write_ubi2_tar_image_separate(const void *data, size_t size,
 				struct mtd_info *mtd_kernel, struct mtd_info *mtd_rootfs)
@@ -988,6 +1031,8 @@ static int boot_from_ubi(struct mtd_info *mtd)
 		return ret;
 
 	ret = read_ubi_volume(PART_KERNEL_NAME, (void *)data_load_addr, 0);
+	if (ret == ENODEV)
+		ret = read_ubi_volume(PART_FIT_NAME, (void *)data_load_addr, 0);
 	if (ret)
 		return ret;
 
@@ -1066,6 +1111,9 @@ int mtd_upgrade_image(const void *data, size_t size)
 							    mtd_kernel, mtd);
 		} else {
 			ret = parse_image_ram(data, size, mtd->erasesize, &ii);
+
+			if (ii.header_type == HEADER_FIT)
+				return write_ubi_fit_image(data, size, mtd);
 
 			if (!ret && ii.type == IMAGE_UBI2 &&
 			    !IS_ENABLED(CONFIG_MTK_DUAL_BOOT))

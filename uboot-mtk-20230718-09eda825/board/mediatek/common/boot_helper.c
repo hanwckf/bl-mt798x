@@ -22,8 +22,12 @@
 int boot_from_mem(ulong data_load_addr)
 {
 	char cmd[64];
+	const char *bootconf = env_get("bootconf");
 
-	snprintf(cmd, sizeof(cmd), "bootm 0x%lx", data_load_addr);
+	if (bootconf && strlen(bootconf) > 0)
+		snprintf(cmd, sizeof(cmd), "bootm 0x%lx#%s", data_load_addr, bootconf);
+	else
+		snprintf(cmd, sizeof(cmd), "bootm 0x%lx", data_load_addr);
 
 	return run_command(cmd, 0);
 }

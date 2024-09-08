@@ -91,7 +91,7 @@ static int write_flash_image(void *priv, const struct data_part_entry *dpe,
 static int erase_env(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
-#if !defined(CONFIG_MTK_SECURE_BOOT) && !defined(CONFIG_ENV_IS_NOWHERE)
+#if !defined(CONFIG_MTK_SECURE_BOOT) && defined(CONFIG_ENV_IS_IN_MTD)
 	struct mtd_info *mtd;
 
 	ubi_probe_mtd_devices();
