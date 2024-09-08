@@ -20,6 +20,8 @@
 #include <vsprintf.h>
 #include <version_string.h>
 #include <failsafe/fw_type.h>
+
+#include "../board/mediatek/common/boot_helper.h"
 #include "fs.h"
 
 static u32 upload_data_id;
@@ -154,6 +156,14 @@ static void upload_handler(enum httpd_uri_handler_status status,
 		goto done;
 	}
 
+	fw = httpd_request_find_value(request, "initramfs");
+	if (fw) {
+		fw_type = FW_TYPE_INITRD;
+		if (fdt_check_header(fw->data))
+			goto fail;
+		goto done;
+	}
+
 fail:
 	response->data = "fail";
 	response->size = strlen(response->data);
@@ -248,8 +258,11 @@ static void result_handler(enum httpd_uri_handler_status status,
 				env_save();
 			}
 #endif
-			st->ret = failsafe_write_image(upload_data,
-						       upload_size, fw_type);
+			if (fw_type == FW_TYPE_INITRD)
+				st->ret = 0;
+			else
+				st->ret = failsafe_write_image(upload_data,
+							       upload_size, fw_type);
 		}
 
 		/* invalidate upload identifier */
@@ -377,21 +390,23 @@ int start_web_failsafe(void)
 	}
 
 	httpd_register_uri_handler(inst, "/", &index_handler, NULL);
+	httpd_register_uri_handler(inst, "/bl2.html", &html_handler, NULL);
+	httpd_register_uri_handler(inst, "/booting.html", &html_handler, NULL);
 	httpd_register_uri_handler(inst, "/cgi-bin/luci", &index_handler, NULL);
 	httpd_register_uri_handler(inst, "/cgi-bin/luci/", &index_handler, NULL);
-	httpd_register_uri_handler(inst, "/upload", &upload_handler, NULL);
 	httpd_register_uri_handler(inst, "/fail.html", &html_handler, NULL);
 	httpd_register_uri_handler(inst, "/flashing.html", &html_handler, NULL);
-	httpd_register_uri_handler(inst, "/uboot.html", &html_handler, NULL);
-	httpd_register_uri_handler(inst, "/bl2.html", &html_handler, NULL);
 	httpd_register_uri_handler(inst, "/getmtdlayout", &mtd_layout_handler, NULL);
 #ifdef CONFIG_MTK_BOOTMENU_MMC
 	httpd_register_uri_handler(inst, "/gpt.html", &html_handler, NULL);
 #endif
-	httpd_register_uri_handler(inst, "/version", &version_handler, NULL);
+	httpd_register_uri_handler(inst, "/initramfs.html", &html_handler, NULL);
+	httpd_register_uri_handler(inst, "/main.js", &js_handler, NULL);
 	httpd_register_uri_handler(inst, "/result", &result_handler, NULL);
 	httpd_register_uri_handler(inst, "/style.css", &style_handler, NULL);
-	httpd_register_uri_handler(inst, "/main.js", &js_handler, NULL);
+	httpd_register_uri_handler(inst, "/uboot.html", &html_handler, NULL);
+	httpd_register_uri_handler(inst, "/upload", &upload_handler, NULL);
+	httpd_register_uri_handler(inst, "/version", &version_handler, NULL);
 	httpd_register_uri_handler(inst, "", &not_found_handler, NULL);
 
 	net_loop(MTK_TCP);
@@ -419,8 +434,12 @@ static int do_httpd(struct cmd_tbl *cmdtp, int flag, int argc,
 
 	ret = start_web_failsafe();
 
-	if (upgrade_success)
-		do_reset(NULL, 0, 0, NULL);
+	if (upgrade_success) {
+		if (fw_type == FW_TYPE_INITRD)
+			boot_from_mem((ulong)upload_data);
+		else
+			do_reset(NULL, 0, 0, NULL);
+	}
 
 	return ret;
 }

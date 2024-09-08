@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Load initramfs</title>
+		<link rel="stylesheet" href="/style.css">
+		<script src="/main.js"></script>
+	</head>
+	<body onload="startup()">
+		<div id="m">
+			<h1>LOAD INITRAMFS</h1>
+			<p id="hint">
+				You are going to load <strong>initramfs</strong> on the device.<br>
+				Please, choose file from your local hard drive and click <strong>Upload</strong> button.
+			</p>
+			<form id="form">
+				<input id="file" type="file" name="initramfs">
+				<input type="button" value="Upload" onclick="upload('initramfs')">
+			</form>
+			<div>
+				<div class="bar" id="bar" style="display: none; --percent: 0;"></div>
+			</div>
+			<div id="size" style="display: none;">Size: xxxx</div>
+			<div id="md5" style="display: none;">MD5: xxxx</div>
+			<div id="upgrade" style="display: none;">
+				<p>If all information above is correct, click "Boot".</p>
+				<button class="button" onclick="location = '/booting.html'">Boot</button>
+			</div>
+			<div class="i w">
+				<strong>WARNINGS</strong>
+				<ul>
+					<li>if everything goes well, the device will boot into the initramfs</li>
+					<li>you can upload whatever you want, so be sure that you choose proper initramfs image for your device</li>
+				</ul>
+			</div>
+		</div>
+		<div id="version"></div>
+	</body>
+</html>

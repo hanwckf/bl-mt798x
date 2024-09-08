@@ -5,41 +5,49 @@
 # FILE_XXXX.o := YYYY.html <- actual html file to be embedded
 # FSPATH_XXXX.o := ZZZ/WWW.EXT <- virtual fs path to be used inside u-boot
 
-obj-y += index.o
-FILE_index.o := index.html
-FSPATH_index.o := index.html
-
-obj-y += main.o
-FILE_main.o := main.js
-FSPATH_main.o := main.js
-
-obj-y += flashing.o
-FILE_flashing.o := flashing.html
-FSPATH_flashing.o := flashing.html
-
-obj-y += fail.o
-FILE_fail.o := fail.html
-FSPATH_fail.o := fail.html
-
 obj-y += 404.o
 FILE_404.o := 404.html
 FSPATH_404.o := 404.html
-
-obj-y += uboot.o
-FILE_uboot.o := uboot.html
-FSPATH_uboot.o := uboot.html
 
 obj-y += bl2.o
 FILE_bl2.o := bl2.html
 FSPATH_bl2.o := bl2.html
 
+obj-y += booting.o
+FILE_booting.o := booting.html
+FSPATH_booting.o := booting.html
+
+obj-y += fail.o
+FILE_fail.o := fail.html
+FSPATH_fail.o := fail.html
+
+obj-y += flashing.o
+FILE_flashing.o := flashing.html
+FSPATH_flashing.o := flashing.html
+
 obj-y += gpt.o
 FILE_gpt.o := gpt.html
 FSPATH_gpt.o := gpt.html
 
+obj-y += index.o
+FILE_index.o := index.html
+FSPATH_index.o := index.html
+
+obj-y += initramfs.o
+FILE_initramfs.o := initramfs.html
+FSPATH_initramfs.o := initramfs.html
+
+obj-y += main.o
+FILE_main.o := main.js
+FSPATH_main.o := main.js
+
 obj-y += style.o
 FILE_style.o := style.css
 FSPATH_style.o := style.css
+
+obj-y += uboot.o
+FILE_uboot.o := uboot.html
+FSPATH_uboot.o := uboot.html
 
 # customized build rules
 strip_path = $(subst /,_,$(subst -,_,$(subst .,_,$(1))))
