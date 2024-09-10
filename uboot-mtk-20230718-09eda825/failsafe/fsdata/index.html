@@ -2,41 +2,41 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Firmware update</title>
+		<title>固件更新</title>
 		<link rel="stylesheet" href="/style.css">
         <script src="/main.js"></script>
 	</head>
 	<body onload="startup()">
 		<div id="m">
-			<h1>FIRMWARE UPDATE</h1>
-			<p id="hint">You are going to update <strong>firmware</strong> on the device.<br>Please, choose file from your local hard drive and click <strong>Upload</strong> button.</p>
+			<h1>固件更新</h1>
+			<p id="hint">您将在这台设备上更新 <strong>固件</strong> <br>请从本地硬盘中选择文件，然后单击 <strong>更新</strong> 按钮.</p>
 			<form id="form">
 				<div id="mtd_layout" style="display: none;">
 					<div id="current_mtd_layout"></div>
 					<br>
-					Choose mtd layout:	
+					选择mtd布局 :	
 					<select id="mtd_layout_label" name="mtd_layout_label"></select>
 					<br><br>
 				</div>
 				<input id="file" type="file" name="firmware">
-				<input type="button" value="Upload" onclick="upload('firmware')">
+				<input type="button" value="上传" onclick="upload('firmware')">
 			</form>
 			<div>
 				<div class="bar" id="bar" style="display: none; --percent: 0;"></div>
 			</div>
-			<div id="size" style="display: none;">Size: xxxx</div>
+			<div id="size" style="display: none;">镜像大小: xxxx</div>
 			<div id="md5" style="display: none;">MD5: xxxx</div>
-			<div id="mtd" style="display: none;">MTD layout: xxxx</div>
+			<div id="mtd" style="display: none;">MTD 布局: xxxx</div>
 			<div id="upgrade" style="display: none;">
-				<p>The firmware has been uploaded, please click "Update"</p>
-				<button class="button" onclick="location = '/flashing.html'">Update</button>
+				<p>固件 已上传，请点击"更新"</p>
+				<button class="button" onclick="location = '/flashing.html'">更新</button>
 			</div>
 			<div class="i w">
-				<strong>WARNINGS</strong>
+				<strong>警告</strong>
 				<ul>
-					<li>do not power off the device during update</li>
-					<li>if everything goes well, the device will restart</li>
-					<li>you can upload whatever you want, so be sure that you choose proper firmware image for your device</li>
+					<li>更新期间不要关闭设备电源</li>
+					<li>如果一切顺利，设备将重新启动</li>
+					<li>你可以上传任何你想要的东西，所以一定要为你的设备选择合适的固件映像</li>
 				</ul>
 			</div>
 		</div>
