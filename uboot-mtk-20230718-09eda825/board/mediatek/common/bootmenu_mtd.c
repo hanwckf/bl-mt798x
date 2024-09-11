@@ -24,6 +24,7 @@
 #else
  #define UBI_VID_OFFSET QUOTE(CONFIG_ENV_UBI_VID_OFFSET)
 #endif
+int env_ubi_erase(void);
 #endif /* CONFIG_ENV_IS_IN_UBI */
 
 static struct mtd_info *get_mtd_part(const char *partname)
@@ -330,8 +331,7 @@ static int erase_env(void *priv, const struct data_part_entry *dpe,
 	if (ubi_part(CONFIG_ENV_UBI_PART, UBI_VID_OFFSET))
 		return -EIO;
 
-	ubi_remove_vol(CONFIG_ENV_UBI_VOLUME);
-	create_ubi_volume(CONFIG_ENV_UBI_VOLUME, CONFIG_ENV_SIZE, UBI_VID_OFFSET, false);
+	env_ubi_erase();
 	ubi_exit();
 #else
 	struct mtd_info *mtd;
