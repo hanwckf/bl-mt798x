@@ -203,7 +203,7 @@ static int env_ubi_load(void)
 }
 #endif /* CONFIG_SYS_REDUNDAND_ENVIRONMENT */
 
-static int env_ubi_erase(void)
+int env_ubi_erase(void)
 {
 	ALLOC_CACHE_ALIGN_BUFFER(char, env_buf, CONFIG_ENV_SIZE);
 	int ret = 0;
