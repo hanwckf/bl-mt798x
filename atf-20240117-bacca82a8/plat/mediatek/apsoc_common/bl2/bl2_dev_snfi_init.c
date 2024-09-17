@@ -29,8 +29,10 @@ static int snfi_mtd_read_page(struct nand_device *nand, unsigned int page,
 	int ret;
 
 	ret = mtk_snand_read_page(snf, addr, (void *)buffer, NULL, false);
-	if (ret == -EBADMSG)
+	if (ret > 0) {
+		NOTICE("corrected %d bitflips while reading page %u\n", ret, page);
 		ret = 0;
+	}
 
 	return ret;
 }
