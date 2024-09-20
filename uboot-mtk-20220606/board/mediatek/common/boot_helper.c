@@ -24,7 +24,7 @@
 
 int boot_from_mem(ulong data_load_addr)
 {
-	char cmd[64];
+	char cmd[128];
 	const char *bootconf = env_get("bootconf");
 
 	if (bootconf && strlen(bootconf) > 0)
