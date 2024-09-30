@@ -62,15 +62,21 @@ void main_loop(void)
 			efi_launch_capsules();
 	}
 
+#ifdef CONFIG_HTTPD
 	if (env_get("failsafe") != NULL) {
 		env_set("failsafe", NULL);
 		env_save();
 
+#ifdef CONFIG_CMD_GL_BTN
 		led_control("led", "system_led", "on");
+#endif /* CONFIG_CMD_GL_BTN */
 		run_command("httpd", 0);
 	}
+#endif /* CONFIG_HTTPD */
 
+#ifdef CONFIG_CMD_GL_BTN
 	run_command("glbtn", 0);
+#endif
 
 	s = bootdelay_process();
 	if (cli_process_fdt(&s))
