@@ -13,13 +13,14 @@
 #include <command.h>
 #include <console.h>
 #include <env.h>
+#ifdef CONFIG_CMD_GL_BTN
+#include <glbtn.h>
+#endif
 #include <fdtdec.h>
 #include <init.h>
 #include <net.h>
 #include <version_string.h>
 #include <efi_loader.h>
-
-void led_control(const char *cmd, const char *name, const char *arg);
 
 static void run_preboot_environment_command(void)
 {

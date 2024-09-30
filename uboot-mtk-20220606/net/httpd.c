@@ -15,8 +15,9 @@
 #include <net/tcp.h>
 #include <net/httpd.h>
 #include <command.h>
-
-void led_control(const char *cmd, const char *name, const char *arg);
+#ifdef CONFIG_CMD_GL_BTN
+#include <glbtn.h>
+#endif
 
 struct httpd_instance {
 	struct list_head node;
