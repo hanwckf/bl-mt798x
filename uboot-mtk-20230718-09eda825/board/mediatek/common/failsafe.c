@@ -12,12 +12,13 @@
 #include <linux/string.h>
 #include <asm/global_data.h>
 #include <failsafe/fw_type.h>
+#ifdef CONFIG_CMD_GL_BTN
+#include <glbtn.h>
+#endif
 #include "upgrade_helper.h"
 #include "colored_print.h"
 
 DECLARE_GLOBAL_DATA_PTR;
-
-void led_control(const char *cmd, const char *name, const char *arg);
 
 const char *fw_to_part_name(failsafe_fw_t fw)
 {

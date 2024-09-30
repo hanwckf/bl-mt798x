@@ -12,6 +12,9 @@
 #include <malloc.h>
 #include <command.h>
 #include <env.h>
+#ifdef CONFIG_CMD_GL_BTN
+#include <glbtn.h>
+#endif
 #include <net/tcp.h>
 #include <net/httpd.h>
 #include <u-boot/md5.h>
@@ -21,8 +24,6 @@
 
 #include "../board/mediatek/common/boot_helper.h"
 #include "fs.h"
-
-void led_control(const char *cmd, const char *name, const char *arg);
 
 enum {
 	FW_TYPE_GPT,
