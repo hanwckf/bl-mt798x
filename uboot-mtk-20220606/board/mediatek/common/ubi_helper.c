@@ -520,28 +520,14 @@ static int write_ubi_fit_image(const void *data, size_t size,
 	if (ret)
 		return ret;
 
-	if (!find_ubi_volume("fit")) {
-		/* ubi is dirty, erase ubi and recreate volumes */
-		umount_ubi();
-		ret = mtd_erase_generic(mtd, 0, mtd->size);
-		if (ret)
-			return ret;
-
-		ret = mount_ubi(mtd);
-		if (ret)
-			return ret;
-
 #ifdef CONFIG_ENV_IS_IN_UBI
-		ret = create_ubi_volume(CONFIG_ENV_UBI_VOLUME, CONFIG_ENV_SIZE, -1, false);
-		if (ret)
-			goto out;
+	if (!find_ubi_volume(CONFIG_ENV_UBI_VOLUME))
+		create_ubi_volume(CONFIG_ENV_UBI_VOLUME, CONFIG_ENV_SIZE, -1, false);
+#endif
 #ifdef CONFIG_SYS_REDUNDAND_ENVIRONMENT
-		ret = create_ubi_volume(CONFIG_ENV_UBI_VOLUME_REDUND, CONFIG_ENV_SIZE, -1, false);
-		if (ret)
-			goto out;
+	if (!find_ubi_volume(CONFIG_ENV_UBI_VOLUME_REDUND))
+		create_ubi_volume(CONFIG_ENV_UBI_VOLUME_REDUND, CONFIG_ENV_SIZE, -1, false);
 #endif
-#endif
-	}
 
 	/* Remove this volume first in case of no enough PEBs */
 	remove_ubi_volume("rootfs_data");
