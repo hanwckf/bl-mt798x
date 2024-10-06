@@ -151,4 +151,11 @@ config MTK_BROM_HEADER_INFO
 
 source "board/mediatek/mt7629/Kconfig"
 
+config RESET_BUTTON_LABEL
+	string "Button to trigger factory reset"
+	default "reset"
+
+config RESET_BUTTON_SETTLE_DELAY
+	int "Delay to wait for button to settle"
+	default 0
 endif
