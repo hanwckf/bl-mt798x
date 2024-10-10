@@ -382,6 +382,11 @@ config NMBM_MAX_BLOCKS
 
 endif # ENABLE_NAND_NMBM
 
+config MEDIATEK_BOOTCONF
+	string "Default FIT image boot configuration"
+	help
+	  Set default booted FIT image configuration
+
 source "board/mediatek/common/customizations/Kconfig"
 
 endmenu
