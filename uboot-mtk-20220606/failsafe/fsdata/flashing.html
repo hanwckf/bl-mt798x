@@ -20,18 +20,8 @@
 						document.getElementById('title').innerHTML = 'UPDATE COMPLETED'
 						document.getElementById('info').innerHTML = 'Your device was successfully updated! Now rebooting...'
 					},
-					timeout: 30000
+					timeout: 180000
 				})
-
-				ajax('/result', function(response) {
-					if (response == 'failed') {
-						location = '/fail.html'
-						return
-					}
-
-					document.getElementById('title').innerHTML = 'UPDATE COMPLETED'
-					document.getElementById('info').innerHTML = 'Your device was successfully updated! Now rebooting...'
-				}, 30000)
 			}
 		</script>
 	</head>
