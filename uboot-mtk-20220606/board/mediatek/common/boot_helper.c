@@ -202,7 +202,7 @@ int boot_from_snor(struct spi_flash *snor, u32 offset)
 		if (size <= 0x2000) {
 			/* Load FDT header into memory */
 			ret = snor_read_generic(snor, offset, (void *)data_load_addr,
-					       snor->page_size);
+					       size);
 			if (ret)
 				return ret;
 
