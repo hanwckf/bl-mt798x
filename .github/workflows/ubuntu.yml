@@ -1,0 +1,55 @@
+name: Uboot Ubuntu CI Build
+run-name: Uboot - ${{ inputs.board }} (${{ inputs.soc }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      soc:
+        required: true
+        description: SOC/CPU Model
+        type: string
+        default: mt7981
+      board:
+        required: true
+        description: Router Model Name
+        type: string
+        default: ax3000t
+      multi-layout:
+        required: true
+        description: Enable Multiple Flash Layout Support
+        type: choice
+        default: '1'
+        options:
+          - '0'
+          - '1'
+      runs-on:
+        required: true
+        description: Runs on...
+        type: choice
+        default: ubuntu-latest
+        options:
+          - ubuntu-22.04
+          - ubuntu-24.04
+          - ubuntu-latest
+
+jobs:
+  ubuntu-build:
+    name: Build on ${{ inputs.runs-on }}
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get build dept.
+        run: |
+          sudo apt update
+          sudo apt install gcc-aarch64-linux-gnu build-essential flex bison libssl-dev
+      - name: Build it
+        run: |
+          ./build.sh
+        env:
+          SOC: ${{ inputs.soc }}
+          BOARD: ${{ inputs.board }}
+          MULTI_LAYOUT: ${{ inputs.multi-layout }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Uboot - ${{ inputs.board }} (${{ inputs.soc }})
+          path: output/*.bin
