@@ -10,6 +10,11 @@ config MEDIATEK_BOOTMENU
 	  Enable this option will allow boards to use a bootmenu containing
 	  features for easy upgrading/booting.
 
+config MEDIATEK_BOOTCONF
+	string "Default FIT image boot configuration"
+	help
+	  Set default booted FIT image configuration
+
 config MEDIATEK_BOOTMENU_COUNTDOWN
 	bool "Enable bootmenu countdown"
 	default y

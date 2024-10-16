@@ -22,6 +22,12 @@
 int boot_from_mem(ulong data_load_addr)
 {
 	char cmd[128];
+
+	#if defined(CONFIG_MEDIATEK_BOOTCONF)
+		if(strcmp(env_get("bootconf"),"") != 0)
+			env_set("bootconf", CONFIG_MEDIATEK_BOOTCONF);
+	#endif
+
 	const char *bootconf = env_get("bootconf");
 
 	if (bootconf && strlen(bootconf) > 0)
