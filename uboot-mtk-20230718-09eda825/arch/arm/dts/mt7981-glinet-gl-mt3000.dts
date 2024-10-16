@@ -11,7 +11,7 @@
 / {
 	#address-cells = <1>;
 	#size-cells = <1>;
-	model = "mt7981-rfb";
+	model = "mt7981-glinet_gl-mt3000";
 	compatible = "mediatek,mt7981", "mediatek,mt7981-rfb";
 	chosen {
 		stdout-path = &uart0;
@@ -20,43 +20,43 @@
 
 	config {
 		bootcmd = "mtkboardboot";
-
 		blink_led = "blue:run";
 		system_led = "white:system";
 		gpio_power_clr = <12>;
-
-		environment {
-			lu = "mtkupgrade fip uboot-gl-mt3000.bin";
-			lf = "mtkupgrade fw openwrt-gl-mt3000.bin";
-		};
 	};
 
-	gpio-keys-polled {
+	gpio-keys {
 		compatible = "gpio-keys";
 
-		power-button {
+		button-reset {
 			label = "reset";
+			linux,code = <KEY_RESTART>;
 			gpios = <&gpio 1 GPIO_ACTIVE_LOW>;
 		};
 	};
 
-	leds {
+	gpio-leds {
 		compatible = "gpio-leds";
 
-		led@0 {
+		led-0 {
 			label = "white:system";
 			gpios = <&gpio 30 GPIO_ACTIVE_LOW>;
 		};
 
-		led@1 {
+		led-1 {
 			label = "blue:run";
 			gpios = <&gpio 31 GPIO_ACTIVE_LOW>;
 		};
 	};
-};
 
-&uart0 {
-	status = "okay";
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0x40000000 0x20000000>;
+	};
+
+	bl2_verify {
+		bl2_compatible = "spim-nand";
+	};
 };
 
 &eth {
@@ -93,13 +93,6 @@
 			bias-pull-down = <MTK_PUPD_SET_R1R0_11>;
 		};
 	};
-
-	spic_pins: spi1-pins-func-1 {
-		mux {
-			function = "spi";
-			groups = "spi1_1";
-		};
-	};
 };
 
 &spi0 {
@@ -121,4 +114,12 @@
 		reg = <0>;
 		spi-max-frequency = <52000000>;
 	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&watchdog {
+	status = "disabled";
 };
