@@ -67,23 +67,4 @@ struct mmc_verify_data {
 int mmc_boot_verify(struct mmc_verify_data *vd);
 #endif /* CONFIG_MMC */
 
-#ifdef CONFIG_DM_SPI_FLASH
-struct snor_verify_data {
-	int bus;
-	int cs;
-	u32 firmware_offset;
-	u32 max_size;
-	void *load_ptr;
-
-	size_t kernel_size;
-	size_t padding_size;
-	size_t rootfs_size;
-
-	struct fit_hashes kernel_hashes;
-	struct fit_hashes rootfs_hashes;
-};
-
-int snor_boot_verify(struct snor_verify_data *vd);
-#endif /* CONFIG_DM_SPI_FLASH */
-
 #endif /* _VERIFY_HELPER_H_ */

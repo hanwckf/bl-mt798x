@@ -10,7 +10,6 @@
 #ifndef _UBI_HELPER_H_
 #define _UBI_HELPER_H_
 
-void ubi_probe_mtd_devices(void);
 int ubi_upgrade_image(const void *data, size_t size);
 int ubi_boot_image(void);
 

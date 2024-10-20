@@ -19,37 +19,36 @@ static int write_part(const char *partname, const void *data, size_t size,
 	struct mtd_info *mtd;
 	int ret;
 
-	ubi_probe_mtd_devices();
+	gen_mtd_probe_devices();
 
 	mtd = get_mtd_device_nm(partname);
 	if (IS_ERR(mtd)) {
 		cprintln(ERROR, "*** MTD partition '%s' not found! ***",
 			 partname);
+		put_mtd_device(mtd);
 		return -PTR_ERR(mtd);
 	}
 
+	ret = mtd_update_generic(mtd, data, size, verify);
+
 	put_mtd_device(mtd);
 
-	ret = mtd_erase_generic(mtd, 0, size);
-	if (ret)
-		return ret;
-
-	return mtd_write_generic(mtd, 0, 0, data, size, verify);
+	return ret;
 }
 
-static int write_bl2(void *priv, const struct data_part_entry *dpe,
+int write_bl2(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
 	return write_part("bl2", data, size, true);
 }
 
-static int write_fip(void *priv, const struct data_part_entry *dpe,
+int write_fip(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
 	return write_part("fip", data, size, true);
 }
 
-static int write_firmware(void *priv, const struct data_part_entry *dpe,
+int write_firmware(void *priv, const struct data_part_entry *dpe,
 			  const void *data, size_t size)
 {
 	int ret;
@@ -68,7 +67,7 @@ static int write_flash_image(void *priv, const struct data_part_entry *dpe,
 	struct mtd_info *mtd;
 	int ret;
 
-	ubi_probe_mtd_devices();
+	gen_mtd_probe_devices();
 
 #ifdef CONFIG_ENABLE_NAND_NMBM
 	mtd = get_mtd_device_nm("nmbm0");
@@ -79,37 +78,43 @@ static int write_flash_image(void *priv, const struct data_part_entry *dpe,
 	if (IS_ERR(mtd))
 		return -PTR_ERR(mtd);
 
+	ret = mtd_erase_skip_bad(mtd, 0, mtd->size, mtd->size, NULL, NULL,
+				false);
+	if (ret) {
+		put_mtd_device(mtd);
+		return ret;
+	}
+
+	ret = mtd_write_skip_bad(mtd, 0, size, mtd->size, NULL, data, true);
+
 	put_mtd_device(mtd);
 
-	ret = mtd_erase_generic(mtd, 0, size);
-	if (ret)
-		return ret;
-
-	return mtd_write_generic(mtd, 0, 0, data, size, true);
+	return ret;
 }
 
 static int erase_env(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
-#if !defined(CONFIG_ENV_IS_NOWHERE)
+	int ret = 0;
+#if !defined(CONFIG_MTK_SECURE_BOOT) && defined(CONFIG_ENV_IS_IN_MTD)
 	struct mtd_info *mtd;
 
-	ubi_probe_mtd_devices();
+	gen_mtd_probe_devices();
 
 	mtd = get_mtd_device_nm(CONFIG_ENV_MTD_NAME);
-
 	if (IS_ERR(mtd))
 		return -PTR_ERR(mtd);
 
-	put_mtd_device(mtd);
+	ret = mtd_erase_skip_bad(mtd, CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE,
+				mtd->size, NULL, "environment", false);
 
-	return mtd_erase_env(mtd, CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE);
-#else
-	return 0;
+	put_mtd_device(mtd);
 #endif
+
+	return ret;
 }
 
-static const struct data_part_entry snand_parts[] = {
+static const struct data_part_entry ubi_parts[] = {
 	{
 		.name = "ATF BL2",
 		.abbr = "bl2",
@@ -141,8 +146,8 @@ static const struct data_part_entry snand_parts[] = {
 
 void board_upgrade_data_parts(const struct data_part_entry **dpes, u32 *count)
 {
-	*dpes = snand_parts;
-	*count = ARRAY_SIZE(snand_parts);
+	*dpes = ubi_parts;
+	*count = ARRAY_SIZE(ubi_parts);
 }
 
 int board_boot_default(void)
@@ -150,7 +155,7 @@ int board_boot_default(void)
 	return ubi_boot_image();
 }
 
-static const struct bootmenu_entry snand_bootmenu_entries[] = {
+static const struct bootmenu_entry ubi_bootmenu_entries[] = {
 	{
 		.desc = "Startup system (Default)",
 		.cmd = "mtkboardboot"
@@ -179,6 +184,6 @@ static const struct bootmenu_entry snand_bootmenu_entries[] = {
 
 void board_bootmenu_entries(const struct bootmenu_entry **menu, u32 *count)
 {
-	*menu = snand_bootmenu_entries;
-	*count = ARRAY_SIZE(snand_bootmenu_entries);
+	*menu = ubi_bootmenu_entries;
+	*count = ARRAY_SIZE(ubi_bootmenu_entries);
 }
