@@ -4,13 +4,27 @@
  *
  * Author: Weijie Gao <weijie.gao@mediatek.com>
  */
-
+#include <asm/global_data.h>
 #include <command.h>
+#include <fdtdec.h>
+#include <image.h>
 #include <linux/sizes.h>
+#include <errno.h>
+#include <dm/ofnode.h>
 #include "upgrade_helper.h"
 #include "boot_helper.h"
 #include "autoboot_helper.h"
+#include "verify_helper.h"
 #include "colored_print.h"
+#include "untar.h"
+
+DECLARE_GLOBAL_DATA_PTR;
+
+/*
+ * Keep this value be up-to-date with definition in libfstools/rootdisk.c of
+ * fstools package
+ */
+#define ROOTDEV_OVERLAY_ALIGN	(64ULL * 1024ULL)
 
 #define EMMC_DEV_INDEX		(0)
 #define BOOTBUS_WIDTH		(2)
@@ -21,55 +35,62 @@
 #define PARTITION_ACCESS	(0)
 #define RESET_VALUE		(1) /* only 0, 1, 2 are valid */
 
-enum upgrade_part_type {
-	UPGRADE_PART_GPT,
-	UPGRADE_PART_FIP,
-	UPGRADE_PART_FW,
-};
+#define GPT_MAX_SIZE		(34 * 512)
 
-struct upgrade_part {
-	const char *name;
-	u64 offset;
-	size_t size;
-};
+#define PART_FIP_NAME		"fip"
+#define PART_PRODUCTION_NAME	"production"
+#define PART_KERNEL_NAME	"kernel"
+#define PART_ROOTFS_NAME	"rootfs"
 
-static const struct upgrade_part upgrade_parts[] = {
-	[UPGRADE_PART_GPT] = {
-		.offset = 0,
-		.size = 0x20000,
-	},
-	[UPGRADE_PART_FIP] = {
-		.name = "fip",
-		.offset = 0x100000,
-		.size = 0x200000,
-	},
-	[UPGRADE_PART_FW] = {
-		.name = "firmware",
-		.offset = 0x400000,
-		.size = 0x1400000,
-	},
-};
+#ifdef CONFIG_MTK_DUAL_BOOT
+#include "dual_boot.h"
 
-static int write_part(enum upgrade_part_type pt, const void *data, size_t size,
+struct mmc_boot_slot dual_boot_slots[DUAL_BOOT_MAX_SLOTS] = {
+	{
+		.kernel = PART_KERNEL_NAME,
+		.rootfs = PART_ROOTFS_NAME,
+	},
+	{
+		.kernel = CONFIG_MTK_DUAL_BOOT_SLOT_1_KERNEL_NAME,
+		.rootfs = CONFIG_MTK_DUAL_BOOT_SLOT_1_ROOTFS_NAME,
+	}
+};
+#endif /* CONFIG_MTK_DUAL_BOOT */
+
+static int write_part(const char *part, const void *data, size_t size,
 		      bool verify)
 {
-	const struct upgrade_part *part = &upgrade_parts[pt];
-	int ret;
-
-	if (part->name) {
-		ret = mmc_write_part(EMMC_DEV_INDEX, 0, part->name, data, size,
-				     verify);
-		if (ret != -ENODEV)
-			return ret;
-
-		cprintln(CAUTION, "*** Fallback to fixed offset ***");
-	}
-
-	return mmc_write_generic(EMMC_DEV_INDEX, 0, part->offset, part->size,
-				 data, size, verify);
+	return mmc_write_part(EMMC_DEV_INDEX, 0, part, data, size, verify);
 }
 
-static int write_bl2(void *priv, const struct data_part_entry *dpe,
+static int erase_part(const char *part, loff_t offset, u64 size)
+{
+	struct disk_partition dpart;
+	struct mmc *mmc;
+	u64 part_size;
+	int ret;
+
+	mmc = _mmc_get_dev(EMMC_DEV_INDEX, 0, false);
+	if (!mmc)
+		return -ENODEV;
+
+	ret = _mmc_find_part(mmc, part, &dpart);
+	if (ret)
+		return ret;
+
+	part_size = (u64)dpart.size * dpart.blksz;
+
+	if (offset >= part_size)
+		return -EINVAL;
+
+	if (!size || offset + size > part_size)
+		size = part_size - offset;
+
+	return _mmc_erase(mmc, (u64)dpart.start * dpart.blksz + offset, 0,
+			  size);
+}
+
+int write_bl2(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
 	char cmd[64];
@@ -89,24 +110,99 @@ static int write_bl2(void *priv, const struct data_part_entry *dpe,
 	return ret;
 }
 
-static int write_fip(void *priv, const struct data_part_entry *dpe,
+int write_fip(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
-	return write_part(UPGRADE_PART_FIP, data, size, true);
+	return write_part(PART_FIP_NAME, data, size, true);
 }
 
-static int write_firmware(void *priv, const struct data_part_entry *dpe,
+#ifdef CONFIG_MTK_UPGRADE_IMAGE_VERIFY
+static int validate_firmware(void *priv, const struct data_part_entry *dpe,
+			     const void *data, size_t size)
+{
+	struct owrt_image_info ii;
+	bool ret, verify_rootfs;
+
+	verify_rootfs = CONFIG_IS_ENABLED(MTK_UPGRADE_IMAGE_ROOTFS_VERIFY);
+
+	ret = verify_image_ram(data, size, SZ_512K, verify_rootfs, &ii, NULL,
+			       NULL);
+	if (ret)
+		return 0;
+
+	cprintln(ERROR, "*** Firmware integrity verification failed ***");
+	return -EBADMSG;
+}
+#endif /* CONFIG_MTK_UPGRADE_IMAGE_VERIFY */
+
+int write_firmware(void *priv, const struct data_part_entry *dpe,
 			  const void *data, size_t size)
 {
-	return write_part(UPGRADE_PART_FW, data, size, true);
+	const char *kernel_part, *rootfs_part;
+	const void *kernel_data, *rootfs_data;
+	size_t kernel_size, rootfs_size;
+	loff_t rootfs_data_offs;
+	int ret = 0;
+#ifdef CONFIG_MTK_DUAL_BOOT
+	u32 slot;
+#endif /* CONFIG_MTK_DUAL_BOOT */
+
+	/* FIT image logic */
+	if (genimg_get_format(data) == IMAGE_FORMAT_FIT) {
+		ret = write_part(PART_PRODUCTION_NAME, data, size, true);
+		if (ret)
+			return ret;
+
+		/* Mark rootfs_data unavailable */
+		rootfs_data_offs = (size + ROOTDEV_OVERLAY_ALIGN - 1) &
+				   (~(ROOTDEV_OVERLAY_ALIGN - 1));
+		erase_part(PART_PRODUCTION_NAME, rootfs_data_offs, SZ_512K);
+
+		return ret;
+	}
+
+	ret = parse_tar_image(data, size, &kernel_data, &kernel_size,
+			      &rootfs_data, &rootfs_size);
+	if (ret)
+		return ret;
+
+#ifdef CONFIG_MTK_DUAL_BOOT
+	slot = dual_boot_get_next_slot();
+	printf("Upgrading image slot %u ...\n", slot);
+
+	kernel_part = dual_boot_slots[slot].kernel;
+	rootfs_part = dual_boot_slots[slot].rootfs;
+#else
+	kernel_part = PART_KERNEL_NAME;
+	rootfs_part = PART_ROOTFS_NAME;
+#endif /* CONFIG_MTK_DUAL_BOOT */
+
+	ret = write_part(rootfs_part, rootfs_data, rootfs_size, true);
+	if (ret)
+		return ret;
+
+	/* Mark rootfs_data unavailable */
+	rootfs_data_offs = (rootfs_size + ROOTDEV_OVERLAY_ALIGN - 1) &
+			   (~(ROOTDEV_OVERLAY_ALIGN - 1));
+	erase_part(PART_ROOTFS_NAME, rootfs_data_offs, SZ_512K);
+
+	ret = write_part(kernel_part, kernel_data, kernel_size, true);
+	if (ret)
+		return ret;
+
+#ifdef CONFIG_MTK_DUAL_BOOT
+	ret = dual_boot_set_current_slot(slot);
+	if (ret)
+		printf("Error: failed to save new image slot to env\n");
+#endif /* CONFIG_MTK_DUAL_BOOT */
+
+	return ret;
 }
 
-static int write_gpt(void *priv, const struct data_part_entry *dpe,
+int write_gpt(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
-	const struct upgrade_part *part = &upgrade_parts[UPGRADE_PART_GPT];
-
-	return mmc_write_gpt(EMMC_DEV_INDEX, 0, part->size, data, size);
+	return mmc_write_gpt(EMMC_DEV_INDEX, 0, GPT_MAX_SIZE, data, size);
 }
 
 static int write_flash_image(void *priv, const struct data_part_entry *dpe,
@@ -118,9 +214,16 @@ static int write_flash_image(void *priv, const struct data_part_entry *dpe,
 static int erase_env(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
-#if !defined(CONFIG_ENV_IS_NOWHERE)
-	return mmc_erase_env_generic(EMMC_DEV_INDEX, 0, CONFIG_ENV_OFFSET,
-				     CONFIG_ENV_SIZE);
+#if !defined(CONFIG_MTK_SECURE_BOOT) && !defined(CONFIG_ENV_IS_NOWHERE) && \
+    !defined(CONFIG_MTK_DUAL_BOOT)
+	const char *env_part_name =
+		ofnode_conf_read_str("u-boot,mmc-env-partition");
+
+	if (!env_part_name)
+		return 0;
+
+	return mmc_erase_env_part(EMMC_DEV_INDEX, 0, env_part_name,
+				  CONFIG_ENV_SIZE);
 #else
 	return 0;
 #endif
@@ -146,6 +249,9 @@ static const struct data_part_entry emmc_parts[] = {
 		.abbr = "fw",
 		.env_name = "bootfile",
 		.post_action = UPGRADE_ACTION_BOOT,
+#ifdef CONFIG_MTK_UPGRADE_IMAGE_VERIFY
+		.validate = validate_firmware,
+#endif /* CONFIG_MTK_UPGRADE_IMAGE_VERIFY */
 		.write = write_firmware,
 	},
 	{
@@ -170,11 +276,27 @@ void board_upgrade_data_parts(const struct data_part_entry **dpes, u32 *count)
 
 int board_boot_default(void)
 {
-	const struct upgrade_part *part = &upgrade_parts[UPGRADE_PART_FW];
+#ifdef CONFIG_MTK_DUAL_BOOT
+	struct mmc_boot_data mbd = { 0 };
 
-	boot_from_mmc_partition(EMMC_DEV_INDEX, 0, part->name);
+	mbd.dev = EMMC_DEV_INDEX;
+	mbd.boot_slots = dual_boot_slots;
+	mbd.env_part = ofnode_conf_read_str("u-boot,mmc-env-partition");
+	mbd.load_ptr = (void *)0x40000000;
+#ifdef CONFIG_MTK_DUAL_BOOT_SHARED_ROOTFS_DATA
+	mbd.rootfs_data_part = CONFIG_MTK_DUAL_BOOT_ROOTFS_DATA_NAME;
+#endif
 
-	return boot_from_mmc_generic(EMMC_DEV_INDEX, 0, part->offset);
+	return dual_boot_mmc(&mbd);
+#else
+	int ret;
+
+	ret = boot_from_mmc_partition(EMMC_DEV_INDEX, 0, PART_KERNEL_NAME);
+	if (ret == -ENODEV)
+		return boot_from_mmc_partition(EMMC_DEV_INDEX, 0, PART_PRODUCTION_NAME);
+
+	return ret;
+#endif /* CONFIG_MTK_DUAL_BOOT */
 }
 
 static const struct bootmenu_entry emmc_bootmenu_entries[] = {
