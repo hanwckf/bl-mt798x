@@ -23,50 +23,6 @@
 #include "colored_print.h"
 #include "untar.h"
 
-void ubi_probe_mtd_devices(void)
-{
-#ifdef CONFIG_MEDIATEK_UBI_FIXED_MTDPARTS
-	const char *mtdids = NULL, *mtdparts = NULL;
-
-#if defined(CONFIG_SYS_MTDPARTS_RUNTIME)
-	board_mtdparts_default(&mtdids, &mtdparts);
-#else
-#if defined(MTDIDS_DEFAULT)
-	mtdids = MTDIDS_DEFAULT;
-#elif defined(CONFIG_MTDIDS_DEFAULT)
-	mtdids = CONFIG_MTDIDS_DEFAULT;
-#endif
-
-#if defined(MTDPARTS_DEFAULT)
-	mtdparts = MTDPARTS_DEFAULT;
-#elif defined(CONFIG_MTDPARTS_DEFAULT)
-	mtdparts = CONFIG_MTDPARTS_DEFAULT;
-#endif
-#endif
-
-	if (mtdids)
-		env_set("mtdids", mtdids);
-
-	if (mtdparts)
-		env_set("mtdparts", mtdparts);
-#endif
-
-	mtd_probe_devices();
-}
-
-static int mtd_update_generic(struct mtd_info *mtd, const void *data,
-			      size_t size)
-{
-	int ret;
-
-	/* Write ubi part to kernel MTD partition */
-	ret = mtd_erase_generic(mtd, 0, size);
-	if (ret)
-		return ret;
-
-	return mtd_write_generic(mtd, 0, 0, data, size, true);
-}
-
 static int write_ubi1_image(const void *data, size_t size,
 			    struct mtd_info *mtd_kernel,
 			    struct mtd_info *mtd_ubi,
@@ -80,13 +36,13 @@ static int write_ubi1_image(const void *data, size_t size,
 	}
 
 	/* Write kernel part to kernel MTD partition */
-	ret = mtd_update_generic(mtd_kernel, data, mtd_kernel->size);
+	ret = mtd_update_generic(mtd_kernel, data, mtd_kernel->size, true);
 	if (ret)
 		return ret;
 
 	/* Write ubi part to kernel MTD partition */
 	return mtd_update_generic(mtd_ubi, data + mtd_kernel->size,
-				  ii->ubi_size + ii->marker_size);
+				  ii->ubi_size + ii->marker_size, true);
 }
 
 static int mount_ubi(struct mtd_info *mtd)
@@ -109,7 +65,8 @@ static int mount_ubi(struct mtd_info *mtd)
 
 		ubi_mtd_param_parse(mtd->name, NULL);
 
-		ret = mtd_erase_generic(mtd, 0, mtd->size);
+		ret = mtd_erase_skip_bad(mtd, 0, mtd->size, mtd->size, NULL, NULL,
+					 false);
 		if (ret)
 			return ret;
 
@@ -410,7 +367,7 @@ static int write_ubi1_tar_image(const void *data, size_t size,
 		return ret;
 
 	/* Write kernel part to kernel MTD partition */
-	ret = mtd_update_generic(mtd_kernel, kernel_data, kernel_size);
+	ret = mtd_update_generic(mtd_kernel, kernel_data, kernel_size, true);
 	if (ret)
 		return ret;
 
@@ -523,7 +480,7 @@ static int write_ubi_fit_image(const void *data, size_t size,
 	if (!find_ubi_volume("fit")) {
 		/* ubi is dirty, erase ubi and recreate volumes */
 		umount_ubi();
-		ret = mtd_erase_generic(mtd, 0, mtd->size);
+		ret = mtd_erase_skip_bad(mtd, 0, size, mtd->size, NULL, NULL, true);
 		if (ret)
 			return ret;
 
@@ -595,7 +552,7 @@ int ubi_upgrade_image(const void *data, size_t size)
 	const char *ubi_rootfs_part;
 #endif
 
-	ubi_probe_mtd_devices();
+	gen_mtd_probe_devices();
 
 	mtd_kernel = get_mtd_device_nm("kernel");
 	if (!IS_ERR_OR_NULL(mtd_kernel))
@@ -630,7 +587,7 @@ int ubi_upgrade_image(const void *data, size_t size)
 				return write_ubi_fit_image(data, size, mtd);
 
 			if (!ret && ii.type == IMAGE_UBI2)
-				return mtd_update_generic(mtd, data, size);
+				return mtd_update_generic(mtd, data, size, true);
 
 			if (!ret && ii.type == IMAGE_TAR) {
 #ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
@@ -659,7 +616,7 @@ int ubi_upgrade_image(const void *data, size_t size)
 
 		ret = parse_image_ram(data, size, mtd->erasesize, &ii);
 		if (!ret && (ii.type == IMAGE_RAW || ii.type == IMAGE_UBI1))
-			return mtd_update_generic(mtd, data, size);
+			return mtd_update_generic(mtd, data, size, true);
 	}
 
 	return -ENOTSUPP;
@@ -670,7 +627,7 @@ int ubi_boot_image(void)
 	struct mtd_info *mtd, *mtd_kernel;
 	const char *ubi_boot_part = "ubi";
 
-	ubi_probe_mtd_devices();
+	gen_mtd_probe_devices();
 
 	mtd_kernel = get_mtd_device_nm("kernel");
 	if (!IS_ERR_OR_NULL(mtd_kernel))

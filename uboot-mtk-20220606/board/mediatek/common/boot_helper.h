@@ -29,11 +29,6 @@ int boot_from_mmc_partition(u32 dev, int part, const char *part_name);
 int boot_from_mtd(struct mtd_info *mtd, u64 offset);
 #endif
 
-#ifdef CONFIG_DM_SPI_FLASH
-#include <spi_flash.h>
-int boot_from_snor(struct spi_flash *snor, u32 offset);
-#endif
-
 struct bootarg {
 	const char *key;
 	const char *value;

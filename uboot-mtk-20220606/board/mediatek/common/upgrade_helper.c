@@ -13,6 +13,7 @@
 #include <part.h>
 #include <part_efi.h>
 #include <spi.h>
+#include <mtd.h>
 #include <linux/bitops.h>
 #include <linux/sizes.h>
 #include <linux/types.h>
@@ -28,7 +29,7 @@
 /* 16K for max NAND page size + oob size */
 static u8 scratch_buffer[SZ_16K];
 
-static int check_data_size(u64 total_size, u64 offset, size_t max_size,
+int check_data_size(u64 total_size, u64 offset, size_t max_size,
 			   size_t size, bool write)
 {
 	if (offset + size > total_size) {
@@ -51,7 +52,7 @@ abort:
 	return -EINVAL;
 }
 
-static bool verify_data(const u8 *orig, const u8 *rdback, u64 offset,
+bool verify_data(const u8 *orig, const u8 *rdback, u64 offset,
 			size_t size)
 {
 	bool passed = true;
@@ -563,11 +564,43 @@ int mmc_write_gpt(u32 dev, int part, size_t max_size, const void *data,
 #endif /* CONFIG_GENERIC_MMC */
 
 #ifdef CONFIG_MTD
-static int _mtd_erase_generic(struct mtd_info *mtd, u64 offset, u64 size,
-			      const char *name)
+void gen_mtd_probe_devices(void)
 {
+#ifdef CONFIG_MEDIATEK_UBI_FIXED_MTDPARTS
+	const char *mtdids = NULL, *mtdparts = NULL;
+
+#if defined(CONFIG_SYS_MTDPARTS_RUNTIME)
+	board_mtdparts_default(&mtdids, &mtdparts);
+#else
+#if defined(MTDIDS_DEFAULT)
+	mtdids = MTDIDS_DEFAULT;
+#elif defined(CONFIG_MTDIDS_DEFAULT)
+	mtdids = CONFIG_MTDIDS_DEFAULT;
+#endif
+
+#if defined(MTDPARTS_DEFAULT)
+	mtdparts = MTDPARTS_DEFAULT;
+#elif defined(CONFIG_MTDPARTS_DEFAULT)
+	mtdparts = CONFIG_MTDPARTS_DEFAULT;
+#endif
+#endif
+
+	if (mtdids)
+		env_set("mtdids", mtdids);
+
+	if (mtdparts)
+		env_set("mtdparts", mtdparts);
+#endif
+
+	mtd_probe_devices();
+}
+
+int mtd_erase_skip_bad(struct mtd_info *mtd, u64 offset, u64 size,
+		       u64 maxsize, u64 *erasedsize, const char *name,
+		       bool fullerase)
+{
+	u64 start, end, len, limit;
 	struct erase_info ei;
-	u64 start, end;
 	int ret;
 
 	if (!mtd)
@@ -579,32 +612,73 @@ static int _mtd_erase_generic(struct mtd_info *mtd, u64 offset, u64 size,
 	if (offset >= mtd->size) {
 		printf("\n");
 		cprintln(ERROR, "*** Erase offset pasts flash size! ***");
-		return -EINVAL;
+		return -ERANGE;
 	}
 
-	if (offset + size > mtd->size) {
+	if (size > mtd->size - offset) {
 		printf("\n");
 		cprintln(ERROR, "*** Erase size pasts flash size! ***");
-		return -EINVAL;
+		return -ERANGE;
 	}
 
-	start = offset & (~(u64)mtd->erasesize_mask);
-	end = (start + size + mtd->erasesize_mask) &
-	      (~(u64)mtd->erasesize_mask);
+	if (maxsize < size)
+		maxsize = size;
 
-	printf("Erasing%s%s from 0x%llx to 0x%llx, size 0x%llx ... ",
-	       name ? " " : "", name ? name : "", start, end - 1, end - start);
+	if (maxsize > mtd->size - offset)
+		maxsize = mtd->size - offset;
+
+	limit = (offset + maxsize + mtd->erasesize_mask) &
+		(~(u64)mtd->erasesize_mask);
+	end = (offset + size + mtd->erasesize_mask) &
+	      (~(u64)mtd->erasesize_mask);
+	start = offset & (~(u64)mtd->erasesize_mask);
+	len = end - start;
+
+	printf("Erasing '%s' from 0x%llx, size 0x%llx ... ",
+	       name ? name : mtd->name, mtd->offset + start, len);
 
 	memset(&ei, 0, sizeof(ei));
 
 	ei.mtd = mtd;
-	ei.addr = start;
-	ei.len = end - start;
 
-	ret = mtd_erase(mtd, &ei);
-	if (ret) {
-		printf("Fail\n");
-		return ret;
+	if (erasedsize)
+		*erasedsize = 0;
+
+	while (len && start < limit) {
+		ret = mtd_block_isbad(mtd, start);
+		if (ret < 0) {
+			printf("Failed to check bad block at 0x%llx\n",
+			       mtd->offset + start);
+			return ret;
+		}
+
+		if (ret) {
+			printf("Skipped bad block at 0x%llx\n",
+			       mtd->offset + start);
+			start += mtd->erasesize;
+			continue;
+		}
+
+		ei.addr = start;
+		ei.len = mtd->erasesize;
+
+		ret = mtd_erase(mtd, &ei);
+		if (ret) {
+			printf("Failed at 0x%llx, err = %d\n",
+			       mtd->offset + start, ret);
+			return ret;
+		}
+
+		len -= mtd->erasesize;
+		start += mtd->erasesize;
+
+		if (erasedsize)
+			*erasedsize += mtd->erasesize;
+	}
+
+	if (len && fullerase) {
+		printf("No enough blocks erased\n");
+		return -ENODATA;
 	}
 
 	printf("OK\n");
@@ -612,91 +686,79 @@ static int _mtd_erase_generic(struct mtd_info *mtd, u64 offset, u64 size,
 	return 0;
 }
 
-int mtd_erase_generic(struct mtd_info *mtd, u64 offset, u64 size)
+static int mtd_validate_block(struct mtd_info *mtd, u64 addr, size_t size,
+			      const void *data)
 {
-	return _mtd_erase_generic(mtd, offset, size, NULL);
-}
-
-int mtd_write_generic(struct mtd_info *mtd, u64 offset, u64 max_size,
-		      const void *data, size_t size, bool verify)
-{
-	size_t size_left, chksz;
 	struct mtd_oob_ops ops;
-	u64 verify_offset;
+	size_t col, chksz;
 	int ret;
 
-	if (!mtd)
-		return -EINVAL;
+	static u8 *vbuff_ptr = NULL;
+	static size_t vbuff_sz = 0;
 
-	if (!size)
-		return 0;
+	if (mtd->writesize > vbuff_sz) {
+		if (!vbuff_ptr) {
+			vbuff_ptr = malloc(mtd->writesize);
+		} else {
+			u8 *tptr = realloc(vbuff_ptr, mtd->writesize);
+			if (tptr) {
+				vbuff_ptr = tptr;
+			} else {
+				free(vbuff_ptr);
+				vbuff_ptr = NULL;
+			}
+		}
 
-	if (check_data_size(mtd->size, offset, max_size, size, true))
-		return -EINVAL;
+		if (!vbuff_ptr) {
+			cprintln(ERROR,
+				 "*** Insufficient memory for verifying! ***");
+			return -ENOMEM;
+		}
 
-	printf("Writing from 0x%lx to 0x%llx, size 0x%zx ... ", (ulong)data,
-	       offset, size);
+		vbuff_sz = mtd->writesize;
+	}
 
 	memset(&ops, 0, sizeof(ops));
 
-	ops.mode = MTD_OPS_AUTO_OOB;
-	ops.datbuf = (void *)data;
-	ops.len = size;
+	while (size) {
+		col = addr & mtd->writesize_mask;
 
-	ret = mtd_write_oob(mtd, offset, &ops);
-	if (ret) {
-		printf("Fail\n");
-		return ret;
-	}
-
-	printf("OK\n");
-
-	if (!verify)
-		return 0;
-
-	printf("Verifying from 0x%llx to 0x%llx, size 0x%zx ... ", offset,
-	       offset + size - 1, size);
-
-	size_left = size;
-	verify_offset = 0;
-
-	while (size_left) {
-		chksz = min(sizeof(scratch_buffer), size_left);
-
-		if (chksz > mtd->writesize)
-			chksz &= ~(size_t)(mtd->writesize - 1);
-
-		memset(&ops, 0, sizeof(ops));
+		chksz = mtd->writesize - col;
+		if (chksz > size)
+			chksz = size;
 
 		ops.mode = MTD_OPS_AUTO_OOB;
-		ops.datbuf = scratch_buffer;
+		ops.datbuf = vbuff_ptr;
 		ops.len = chksz;
 		ops.retlen = 0;
 
-		ret = mtd_read_oob(mtd, offset + verify_offset, &ops);
-		if (ret < 0 && ret != -EUCLEAN) {
-			printf("Fail (ret = %d)\n", ret);
-			cprintln(ERROR, "*** Only 0x%zx read! ***",
-				 size - size_left + ops.retlen);
-			return -EIO;
+		ret = mtd_read_oob(mtd, addr, &ops);
+		if (ret && ret != -EUCLEAN) {
+			printf("Failed to read at 0x%llx, err = %d\n",
+			       mtd->offset + addr, ret);
+			return ret;
 		}
 
-		if (!verify_data(data + verify_offset, scratch_buffer,
-				 offset + verify_offset, chksz))
-			return -EIO;
+		if (!verify_data(data, vbuff_ptr, mtd->offset + addr, chksz))
+			return -EBADMSG;
 
-		verify_offset += chksz;
-		size_left -= chksz;
+		size -= chksz;
+		addr += chksz;
+		data = (char *)data + chksz;
 	}
-
-	printf("OK\n");
 
 	return 0;
 }
 
-int mtd_read_generic(struct mtd_info *mtd, u64 offset, void *data, size_t size)
+int mtd_write_skip_bad(struct mtd_info *mtd, u64 offset, size_t size,
+		       u64 maxsize, size_t *writtensize, const void *data,
+		       bool verify)
 {
 	struct mtd_oob_ops ops;
+	bool checkbad = true;
+	size_t len, chksz;
+	u64 addr, limit;
+	u32 blockoff;
 	int ret;
 
 	if (!mtd)
@@ -705,158 +767,91 @@ int mtd_read_generic(struct mtd_info *mtd, u64 offset, void *data, size_t size)
 	if (!size)
 		return 0;
 
-	if (check_data_size(mtd->size, offset, 0, size, false))
+	if (offset >= mtd->size) {
+		printf("\n");
+		cprintln(ERROR, "*** Write offset pasts flash size! ***");
+		return -ERANGE;
+	}
+
+	if (maxsize < size)
+		maxsize = size;
+
+	if (maxsize > mtd->size - offset)
+		maxsize = mtd->size - offset;
+
+	if (check_data_size(mtd->size, offset, maxsize, size, true))
 		return -EINVAL;
 
-	printf("Reading from 0x%llx to 0x%lx, size 0x%zx ... ", offset,
-	       (ulong)data, size);
+	printf("Writing '%s' from 0x%lx to 0x%llx, size 0x%zx ... ", mtd->name,
+	       (ulong)data, mtd->offset + offset, size);
+
+	limit = offset + maxsize;
+	addr = offset;
+	len = size;
 
 	memset(&ops, 0, sizeof(ops));
 
-	ops.mode = MTD_OPS_AUTO_OOB;
-	ops.datbuf = (void *)data;
-	ops.len = size;
+	if (writtensize)
+		*writtensize = 0;
 
-	ret = mtd_read_oob(mtd, offset, &ops);
-	if (ret < 0 && ret != -EUCLEAN) {
-		printf("Fail (ret = %d)\n", ret);
-		return ret;
-	}
+	while (len && addr < limit) {
+		if (checkbad || !(addr & mtd->erasesize_mask)) {
+			ret = mtd_block_isbad(mtd, addr);
+			if (ret < 0) {
+				printf("Failed to check bad block at 0x%llx\n",
+				       mtd->offset + addr);
+				return ret;
+			}
 
-	printf("OK\n");
+			if (ret) {
+				printf("Skipped bad block at 0x%llx\n",
+				       mtd->offset + addr);
+				addr += mtd->erasesize;
+				checkbad = true;
+				continue;
+			}
 
-	return 0;
-}
-
-int mtd_erase_env(struct mtd_info *mtd, u64 offset, u64 size)
-{
-	return _mtd_erase_generic(mtd, offset, size, "environment");
-}
-#endif
-
-#ifdef CONFIG_DM_SPI_FLASH
-struct spi_flash *snor_get_dev(int bus, int cs)
-{
-	struct udevice *new, *bus_dev;
-	int ret;
-
-	/* Remove the old device, otherwise probe will just be a nop */
-	ret = spi_find_bus_and_cs(bus, cs, &bus_dev, &new);
-	if (!ret)
-		device_remove(new, DM_REMOVE_NORMAL);
-
-	ret = spi_flash_probe_bus_cs(bus, cs, &new);
-	if (!ret)
-		return dev_get_uclass_priv(new);
-
-	cprintln(ERROR,
-		 "*** Failed to initialize SPI-NOR at %u:%u (error %d) ***",
-		 bus, cs, ret);
-
-	return NULL;
-}
-
-static int _snor_erase_generic(struct spi_flash *snor, u32 offset, u32 size,
-			       const char *name)
-{
-	u32 start, end, erasesize_mask;
-	int ret;
-
-	if (!snor)
-		return -EINVAL;
-
-	if (!size)
-		return 0;
-
-	if (offset >= snor->size) {
-		printf("\n");
-		cprintln(ERROR, "*** Erase offset pasts flash size! ***");
-		return -EINVAL;
-	}
-
-	if (offset + size > snor->size) {
-		printf("\n");
-		cprintln(ERROR, "*** Erase size pasts flash size! ***");
-		return -EINVAL;
-	}
-
-	erasesize_mask = (1 << (ffs(snor->erase_size) - 1)) - 1;
-
-	start = offset & (~erasesize_mask);
-	end = (start + size + erasesize_mask) & (~erasesize_mask);
-
-	printf("Erasing%s%s from 0x%x to 0x%x, size 0x%x ... ",
-	       name ? " " : "", name ? name : "", start, end - 1, end - start);
-
-	ret = spi_flash_erase(snor, start, end - start);
-	if (ret) {
-		printf("Fail\n");
-		return ret;
-	}
-
-	printf("OK\n");
-
-	return 0;
-}
-
-int snor_erase_generic(struct spi_flash *snor, u32 offset, u32 size)
-{
-	return _snor_erase_generic(snor, offset, size, NULL);
-}
-
-int snor_write_generic(struct spi_flash *snor, u32 offset, u32 max_size,
-		       const void *data, size_t size, bool verify)
-{
-	size_t size_left, chksz;
-	u32 verify_offset;
-	int ret;
-
-	if (!snor)
-		return -EINVAL;
-
-	if (!size)
-		return 0;
-
-	if (check_data_size(snor->size, offset, max_size, size, true))
-		return -EINVAL;
-
-	printf("Writing from 0x%lx to 0x%x, size 0x%zx ... ", (ulong)data,
-	       offset, size);
-
-	ret = spi_flash_write(snor, offset, size, data);
-	if (ret) {
-		printf("Fail\n");
-		return ret;
-	}
-
-	printf("OK\n");
-
-	if (!verify)
-		return 0;
-
-	printf("Verifying from 0x%x to 0x%zx, size 0x%zx ... ", offset,
-	       offset + size - 1, size);
-
-	size_left = size;
-	verify_offset = 0;
-
-	while (size_left) {
-		chksz = min(sizeof(scratch_buffer), size_left);
-
-		ret = spi_flash_read(snor, offset + verify_offset, chksz,
-				     scratch_buffer);
-		if (ret) {
-			printf("Fail\n");
-			cprintln(ERROR, "*** Failed to read SPI-NOR! ***");
-			return -EIO;
+			checkbad = false;
 		}
 
-		if (!verify_data(data + verify_offset, scratch_buffer,
-				 offset + verify_offset, chksz))
-			return -EIO;
+		blockoff = addr & mtd->erasesize_mask;
 
-		verify_offset += chksz;
-		size_left -= chksz;
+		chksz = mtd->erasesize - blockoff;
+		if (chksz > len)
+			chksz = len;
+
+		if (addr + chksz > limit)
+			chksz = limit - addr;
+
+		ops.mode = MTD_OPS_AUTO_OOB;
+		ops.datbuf = (void *)data;
+		ops.len = chksz;
+		ops.retlen = 0;
+
+		ret = mtd_write_oob(mtd, addr, &ops);
+		if (ret) {
+			printf("Failed at 0x%llx, err = %d\n",
+			       mtd->offset + addr, ret);
+			return ret;
+		}
+
+		if (verify) {
+			ret = mtd_validate_block(mtd, addr, chksz, data);
+			if (ret)
+				return ret;
+		}
+
+		addr += ops.retlen;
+		len -= ops.retlen;
+		data += ops.retlen;
+
+		if (writtensize)
+			*writtensize += ops.retlen;
+	}
+
+	if (len) {
+		printf("Incomplete write\n");
+		return -ENODATA;
 	}
 
 	printf("OK\n");
@@ -864,27 +859,101 @@ int snor_write_generic(struct spi_flash *snor, u32 offset, u32 max_size,
 	return 0;
 }
 
-int snor_read_generic(struct spi_flash *snor, u32 offset, void *data,
-		      size_t size)
+int mtd_read_skip_bad(struct mtd_info *mtd, u64 offset, size_t size,
+		      u64 maxsize, size_t *readsize, void *data)
 {
+	struct mtd_oob_ops ops;
+	bool checkbad = true;
+	size_t len, chksz;
+	u64 addr, limit;
+	u32 blockoff;
 	int ret;
 
-	if (!snor)
+	if (!mtd)
 		return -EINVAL;
 
 	if (!size)
 		return 0;
 
-	if (check_data_size(snor->size, offset, 0, size, false))
+	if (offset >= mtd->size) {
+		printf("\n");
+		cprintln(ERROR, "*** Read offset pasts flash size! ***");
+		return -ERANGE;
+	}
+
+	if (maxsize < size)
+		maxsize = size;
+
+	if (maxsize > mtd->size - offset)
+		maxsize = mtd->size - offset;
+
+	if (check_data_size(mtd->size, offset, maxsize, size, false))
 		return -EINVAL;
 
-	printf("Reading from 0x%x to 0x%lx, size 0x%zx ... ", offset,
-	       (ulong)data, size);
+	printf("Reading '%s' from 0x%llx to 0x%lx, size 0x%zx ... ", mtd->name,
+	       mtd->offset + offset, (ulong)data, size);
 
-	ret = spi_flash_read(snor, offset, size, data);
-	if (ret) {
-		printf("Fail\n");
-		return ret;
+	limit = offset + maxsize;
+	addr = offset;
+	len = size;
+
+	memset(&ops, 0, sizeof(ops));
+
+	if (readsize)
+		*readsize = 0;
+
+	while (len && addr < limit) {
+		if (checkbad || !(addr & mtd->erasesize_mask)) {
+			ret = mtd_block_isbad(mtd, addr);
+			if (ret < 0) {
+				printf("Failed to check bad block at 0x%llx\n",
+				       mtd->offset + addr);
+				return ret;
+			}
+
+			if (ret) {
+				printf("Skipped bad block at 0x%llx\n",
+				       mtd->offset + addr);
+				addr += mtd->erasesize;
+				checkbad = true;
+				continue;
+			}
+
+			checkbad = false;
+		}
+
+		blockoff = addr & mtd->erasesize_mask;
+
+		chksz = mtd->erasesize - blockoff;
+		if (chksz > len)
+			chksz = len;
+
+		if (addr + chksz > limit)
+			chksz = limit - addr;
+
+		ops.mode = MTD_OPS_AUTO_OOB;
+		ops.datbuf = data;
+		ops.len = chksz;
+		ops.retlen = 0;
+
+		ret = mtd_read_oob(mtd, addr, &ops);
+		if (ret && ret != -EUCLEAN) {
+			printf("Failed at 0x%llx, err = %d\n",
+			       mtd->offset + addr, ret);
+			return ret;
+		}
+
+		addr += ops.retlen;
+		len -= ops.retlen;
+		data += ops.retlen;
+
+		if (readsize)
+			*readsize += ops.retlen;
+	}
+
+	if (len) {
+		printf("Incomplete read\n");
+		return -ENODATA;
 	}
 
 	printf("OK\n");
@@ -892,8 +961,15 @@ int snor_read_generic(struct spi_flash *snor, u32 offset, void *data,
 	return 0;
 }
 
-int snor_erase_env(struct spi_flash *snor, u32 offset, u32 size)
+int mtd_update_generic(struct mtd_info *mtd, const void *data, size_t size,
+		       bool verify)
 {
-	return _snor_erase_generic(snor, offset, size, "environment");
+	int ret;
+
+	ret = mtd_erase_skip_bad(mtd, 0, size, mtd->size, NULL, NULL, true);
+	if (ret)
+		return ret;
+
+	return mtd_write_skip_bad(mtd, 0, size, mtd->size, NULL, data, verify);
 }
 #endif

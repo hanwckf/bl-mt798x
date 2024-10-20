@@ -5,113 +5,115 @@
  * Author: Weijie Gao <weijie.gao@mediatek.com>
  */
 
+#include <linux/mtd/mtd.h>
 #include <command.h>
 #include <linux/sizes.h>
+#include <mtd.h>
 #include "upgrade_helper.h"
 #include "boot_helper.h"
 #include "autoboot_helper.h"
 #include "colored_print.h"
 
-enum upgrade_part_type {
-	UPGRADE_PART_BL,
-	UPGRADE_PART_FW,
-};
-
-struct upgrade_part {
-	u32 offset;
-	size_t size;
-};
-
-static const struct upgrade_part upgrade_parts[] = {
-	[UPGRADE_PART_BL] = {
-		.offset = 0,
-		.size = 0x60000,
-	},
-	[UPGRADE_PART_FW] = {
-		.offset = 0xb0000,
-		.size = 0xf20000,
-	},
-};
-
-static inline struct spi_flash *board_get_snor_dev(void)
-{
-	return snor_get_dev(CONFIG_SF_DEFAULT_BUS, CONFIG_SF_DEFAULT_CS);
-}
-
-static int write_part(enum upgrade_part_type pt, const void *data, size_t size,
+static int write_part(const char *partname, const void *data, size_t size,
 		      bool verify)
 {
-	const struct upgrade_part *part = &upgrade_parts[pt];
-	struct spi_flash *snor;
+	struct mtd_info *mtd;
 	int ret;
 
-	snor = board_get_snor_dev();
-	if (!snor)
-		return -ENODEV;
+	gen_mtd_probe_devices();
 
-	ret = snor_erase_generic(snor, part->offset, size);
-	if (ret)
-		return ret;
+	mtd = get_mtd_device_nm(partname);
+	if (IS_ERR(mtd)) {
+		cprintln(ERROR, "*** MTD partition '%s' not found! ***",
+			 partname);
+		return -PTR_ERR(mtd);
+	}
 
-	ret = snor_write_generic(snor, part->offset, part->size, data, size,
-				 verify);
+	ret = mtd_update_generic(mtd, data, size, verify);
+
+	put_mtd_device(mtd);
 
 	return ret;
 }
 
-static int write_bl(void *priv, const struct data_part_entry *dpe,
-		    const void *data, size_t size)
+int write_bl2(void *priv, const struct data_part_entry *dpe,
+		     const void *data, size_t size)
 {
-	return write_part(UPGRADE_PART_BL, data, size, true);
+	return write_part("bl2", data, size, true);
 }
 
-static int write_firmware(void *priv, const struct data_part_entry *dpe,
+int write_fip(void *priv, const struct data_part_entry *dpe,
+		     const void *data, size_t size)
+{
+	return write_part("fip", data, size, true);
+}
+
+int write_firmware(void *priv, const struct data_part_entry *dpe,
 			  const void *data, size_t size)
 {
-	return write_part(UPGRADE_PART_FW, data, size, false);
+	return write_part("firmware", data, size, false);
 }
 
 static int write_flash_image(void *priv, const struct data_part_entry *dpe,
 			     const void *data, size_t size)
 {
-	struct spi_flash *snor;
+	struct mtd_info *mtd;
 	int ret;
 
-	snor = board_get_snor_dev();
-	if (!snor)
-		return -ENODEV;
+	mtd = get_mtd_device(NULL, 0);
+	if (IS_ERR(mtd))
+		return -PTR_ERR(mtd);
 
-	ret = snor_erase_generic(snor, 0, size);
-	if (ret)
+	ret = mtd_erase_skip_bad(mtd, 0, mtd->size, mtd->size, NULL, NULL,
+				 false);
+	if (ret) {
+		put_mtd_device(mtd);
 		return ret;
+	}
 
-	return snor_write_generic(snor, 0, 0, data, size, false);
+	ret = mtd_write_skip_bad(mtd, 0, size, mtd->size, NULL, data, true);
+
+	put_mtd_device(mtd);
+
+	return ret;
 }
 
 static int erase_env(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
-#if !defined(CONFIG_ENV_IS_NOWHERE)
-	struct spi_flash *snor;
+	int ret = 0;
+#if defined(CONFIG_ENV_IS_IN_MTD)
+	struct mtd_info *mtd;
 
-	snor = board_get_snor_dev();
-	if (!snor)
-		return -ENODEV;
+	gen_mtd_probe_devices();
 
-	return snor_erase_env(snor, CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE);
-#else
-	return 0;
+	mtd = get_mtd_device_nm(CONFIG_ENV_MTD_NAME);
+	if (IS_ERR(mtd))
+		return -PTR_ERR(mtd);
+
+	ret = mtd_erase_skip_bad(mtd, CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE,
+				mtd->size, NULL, "environment", false);
+
+	put_mtd_device(mtd);
 #endif
+
+	return ret;
 }
 
 static const struct data_part_entry snor_parts[] = {
 	{
-		.name = "Bootloader",
-		.abbr = "bl",
-		.env_name = "bootfile.bl",
-		.write = write_bl,
+		.name = "ATF BL2",
+		.abbr = "bl2",
+		.env_name = "bootfile.bl2",
+		.write = write_bl2,
+	},
+	{
+		.name = "ATF FIP",
+		.abbr = "fip",
+		.env_name = "bootfile.fip",
+		.write = write_fip,
 		.post_action = UPGRADE_ACTION_CUSTOM,
-		.do_post_action = erase_env,
+		//.do_post_action = erase_env,
 	},
 	{
 		.name = "Firmware",
@@ -136,12 +138,18 @@ void board_upgrade_data_parts(const struct data_part_entry **dpes, u32 *count)
 
 int board_boot_default(void)
 {
-	const struct upgrade_part *part = &upgrade_parts[UPGRADE_PART_FW];
-	char cmd[64];
+	struct mtd_info *mtd;
 
-	sprintf(cmd, "bootm 0x%lx", 0x30000000 + (ulong)part->offset);
+	gen_mtd_probe_devices();
 
-	return run_command(cmd, 0);
+	mtd = get_mtd_device_nm("firmware");
+	if (!IS_ERR_OR_NULL(mtd)) {
+		put_mtd_device(mtd);
+
+		return boot_from_mtd(mtd, 0);
+	}
+
+	return -ENODEV;
 }
 
 static const struct bootmenu_entry snor_bootmenu_entries[] = {
@@ -154,8 +162,12 @@ static const struct bootmenu_entry snor_bootmenu_entries[] = {
 		.cmd = "mtkupgrade fw"
 	},
 	{
-		.desc = "Upgrade bootloader",
-		.cmd = "mtkupgrade bl"
+		.desc = "Upgrade ATF BL2",
+		.cmd = "mtkupgrade bl2"
+	},
+	{
+		.desc = "Upgrade ATF FIP",
+		.cmd = "mtkupgrade fip"
 	},
 	{
 		.desc = "Upgrade single image",

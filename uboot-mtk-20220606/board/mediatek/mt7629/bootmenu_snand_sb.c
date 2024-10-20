@@ -7,121 +7,79 @@
 
 #include <linux/mtd/mtd.h>
 #include <linux/sizes.h>
+#include <mtd.h>
 #include "upgrade_helper.h"
 #include "boot_helper.h"
 #include "autoboot_helper.h"
 #include "colored_print.h"
 
-#include <nmbm/nmbm.h>
-#include <nmbm/nmbm-mtd.h>
 
-enum upgrade_part_type {
-	UPGRADE_PART_BL2,
-	UPGRADE_PART_FIP,
-	UPGRADE_PART_FW,
-};
-
-struct upgrade_part {
-	u64 offset;
-	size_t size;
-};
-
-static const struct upgrade_part upgrade_parts[] = {
-	[UPGRADE_PART_BL2] = {
-		.offset = 0,
-		.size = 0x80000,
-	},
-	[UPGRADE_PART_FIP] = {
-		.offset = 0x80000,
-		.size = 0x200000,
-	},
-	[UPGRADE_PART_FW] = {
-		.offset = 0x400000,
-		.size = 0x1400000,
-	},
-};
-
-/*
- * layout: 512k(bl2),2048k(fip),512k(config),1024k(factory),-(firmware)
- */
-
-static struct mtd_info *board_get_mtd_device(void)
-{
-	struct mtd_info *mtd;
-
-#ifdef CONFIG_ENABLE_NAND_NMBM
-	mtd = nmbm_mtd_get_upper_by_index(0);
-
-	if (mtd)
-		mtd = get_mtd_device(mtd, -1);
-
-	if (!mtd)
-		cprintln(ERROR, "*** NMBM MTD device %u not found! ***", 0);
-#else
-	mtd = get_mtd_device(NULL, 0);
-
-	if (!mtd)
-		cprintln(ERROR, "*** NAND MTD device %u not found! ***", 0);
-#endif
-
-	return mtd;
-}
-
-static int write_part(enum upgrade_part_type pt, const void *data, size_t size,
+static int write_part(const char *partname, const void *data, size_t size,
 		      bool verify)
 {
-	const struct upgrade_part *part = &upgrade_parts[pt];
 	struct mtd_info *mtd;
 	int ret;
 
-	mtd = board_get_mtd_device();
-	if (!mtd)
-		return -ENODEV;
+	gen_mtd_probe_devices();
 
-	ret = mtd_erase_generic(mtd, part->offset, size);
-	if (ret)
-		return ret;
+	mtd = get_mtd_device_nm(partname);
+	if (IS_ERR(mtd)) {
+		cprintln(ERROR, "*** MTD partition '%s' not found! ***",
+			 partname);
+		put_mtd_device(mtd);
+		return -PTR_ERR(mtd);
+	}
 
-	ret = mtd_write_generic(mtd, part->offset, part->size, data, size,
-				verify);
+	ret = mtd_update_generic(mtd, data, size, verify);
 
 	put_mtd_device(mtd);
 
 	return ret;
 }
 
-static int write_bl2(void *priv, const struct data_part_entry *dpe,
+int write_bl2(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
-	return write_part(UPGRADE_PART_BL2, data, size, true);
+	return write_part("bl2", data, size, true);
 }
 
-static int write_fip(void *priv, const struct data_part_entry *dpe,
+int write_fip(void *priv, const struct data_part_entry *dpe,
 		     const void *data, size_t size)
 {
-	return write_part(UPGRADE_PART_FIP, data, size, true);
+	return write_part("fip", data, size, true);
 }
 
-static int write_firmware(void *priv, const struct data_part_entry *dpe,
+int write_firmware(void *priv, const struct data_part_entry *dpe,
 			  const void *data, size_t size)
 {
-	return write_part(UPGRADE_PART_FW, data, size, true);
+	return write_part("firmware", data, size, true);
 }
 
 static int write_flash_image(void *priv, const struct data_part_entry *dpe,
 			     const void *data, size_t size)
 {
-	struct mtd_info *mtd = board_get_mtd_device();
+	struct mtd_info *mtd;
 	int ret;
 
-	if (!mtd)
-		return -ENODEV;
+	gen_mtd_probe_devices();
 
-	ret = mtd_erase_generic(mtd, 0, size);
-	if (ret)
+#ifdef CONFIG_ENABLE_NAND_NMBM
+	mtd = get_mtd_device_nm("nmbm0");
+#else
+	mtd = get_mtd_device(NULL, 0);
+#endif
+
+	if (IS_ERR(mtd))
+		return -PTR_ERR(mtd);
+
+	ret = mtd_erase_skip_bad(mtd, 0, mtd->size, mtd->size, NULL, NULL,
+				false);
+	if (ret) {
+		put_mtd_device(mtd);
 		return ret;
+	}
 
-	ret = mtd_write_generic(mtd, 0, 0, data, size, true);
+	ret = mtd_write_skip_bad(mtd, 0, size, mtd->size, NULL, data, true);
 
 	put_mtd_device(mtd);
 
@@ -165,18 +123,18 @@ void board_upgrade_data_parts(const struct data_part_entry **dpes, u32 *count)
 
 int board_boot_default(void)
 {
-	const struct upgrade_part *part = &upgrade_parts[UPGRADE_PART_FW];
-	struct mtd_info *mtd = board_get_mtd_device();
-	int ret;
+	struct mtd_info *mtd;
 
-	if (!mtd)
-		return -ENODEV;
+	gen_mtd_probe_devices();
 
-	ret = boot_from_mtd(mtd, part->offset);
+	mtd = get_mtd_device_nm("firmware");
+	if (!IS_ERR_OR_NULL(mtd)) {
+		put_mtd_device(mtd);
 
-	put_mtd_device(mtd);
+		return boot_from_mtd(mtd, 0);
+	}
 
-	return ret;
+	return -ENODEV;
 }
 
 static const struct bootmenu_entry snand_bootmenu_entries[] = {

@@ -72,22 +72,21 @@ int mmc_write_gpt(u32 dev, int part, size_t max_size, const void *data,
 
 #ifdef CONFIG_MTD
 #include <linux/mtd/mtd.h>
-int mtd_erase_generic(struct mtd_info *mtd, u64 offset, u64 size);
-int mtd_write_generic(struct mtd_info *mtd, u64 offset, u64 max_size,
-		      const void *data, size_t size, bool verify);
-int mtd_read_generic(struct mtd_info *mtd, u64 offset, void *data, size_t size);
-int mtd_erase_env(struct mtd_info *mtd, u64 offset, u64 size);
+void gen_mtd_probe_devices(void);
+int mtd_erase_skip_bad(struct mtd_info *mtd, u64 offset, u64 size,
+		       u64 maxsize, u64 *erasedsize, const char *name,
+		       bool fullerase);
+int mtd_write_skip_bad(struct mtd_info *mtd, u64 offset, size_t size,
+		       u64 maxsize, size_t *writtensize, const void *data,
+		       bool verify);
+int mtd_read_skip_bad(struct mtd_info *mtd, u64 offset, size_t size,
+		      u64 maxsize, size_t *readsize, void *data);
+int mtd_update_generic(struct mtd_info *mtd, const void *data, size_t size,
+		       bool verify);
 #endif
 
-#ifdef CONFIG_DM_SPI_FLASH
-#include <spi_flash.h>
-struct spi_flash *snor_get_dev(int bus, int cs);
-int snor_erase_generic(struct spi_flash *snor, u32 offset, u32 size);
-int snor_write_generic(struct spi_flash *snor, u32 offset, u32 max_size,
-		       const void *data, size_t size, bool verify);
-int snor_read_generic(struct spi_flash *snor, u32 offset, void *data,
-		      size_t size);
-int snor_erase_env(struct spi_flash *snor, u32 offset, u32 size);
-#endif
+int check_data_size(u64 total_size, u64 offset, size_t max_size, size_t size,
+		    bool write);
+bool verify_data(const u8 *orig, const u8 *rdback, u64 offset, size_t size);
 
 #endif /* _UPGRADE_HELPER_H_ */
