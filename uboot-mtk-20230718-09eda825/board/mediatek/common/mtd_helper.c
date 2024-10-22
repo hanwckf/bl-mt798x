@@ -657,7 +657,7 @@ static int write_ubi_fit_image(const void *data, size_t size,
 	if (!ubi_find_volume(PART_FIT_NAME)) {
 		/* ubi is dirty, erase ubi and recreate volumes */
 		ubi_exit();
-		ret = mtd_erase_skip_bad(mtd, 0, size, mtd->size, NULL, NULL, true);
+		ret = mtd_erase_skip_bad(mtd, 0, mtd->size, mtd->size, NULL, NULL, false);
 		if (ret)
 			return ret;
 
@@ -674,8 +674,8 @@ static int write_ubi_fit_image(const void *data, size_t size,
 		ret = create_ubi_volume(CONFIG_ENV_UBI_VOLUME_REDUND, CONFIG_ENV_SIZE, UBI_VOL_NUM_AUTO, false);
 		if (ret)
 			goto out;
-#endif
-#endif
+#endif /* CONFIG_SYS_REDUNDAND_ENVIRONMENT */
+#endif /* CONFIG_ENV_IS_IN_UBI */
 	}
 
 	/* Remove this volume first in case of no enough PEBs */
