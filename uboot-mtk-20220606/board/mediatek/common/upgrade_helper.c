@@ -14,6 +14,7 @@
 #include <part_efi.h>
 #include <spi.h>
 #include <mtd.h>
+#include <env.h>
 #include <linux/bitops.h>
 #include <linux/sizes.h>
 #include <linux/types.h>
