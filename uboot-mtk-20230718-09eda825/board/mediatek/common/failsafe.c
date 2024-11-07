@@ -95,8 +95,10 @@ int failsafe_write_image(const void *data, size_t size, failsafe_fw_t fw)
 	if (!dpe)
 		return -ENODEV;
 
+#ifdef CONFIG_CMD_GL_BTN
 	led_control("led", "system_led", "off");
 	led_control("ledblink", "blink_led", "100");
+#endif
 	printf("\n");
 	cprintln(PROMPT, "*** Upgrading %s ***", dpe->name);
 	cprintln(PROMPT, "*** Data: %zd (0x%zx) bytes at 0x%08lx ***",
@@ -104,8 +106,10 @@ int failsafe_write_image(const void *data, size_t size, failsafe_fw_t fw)
 	printf("\n");
 
 	ret = dpe->write(dpe->priv, dpe, data, size);
+#ifdef CONFIG_CMD_GL_BTN
 	led_control("ledblink", "blink_led", "0");
 	led_control("led", "system_led", "on");
+#endif
 	if (ret)
 		return ret;
 
