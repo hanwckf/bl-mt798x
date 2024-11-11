@@ -40,6 +40,11 @@
 #define MT753X_DFL_SMI_ADDR	31
 #define MT753X_SMI_ADDR_MASK	0x1f
 
+#define AN8855_NUM_PHYS			5
+#define AN8855_NUM_PORTS		6
+#define AN8855_DFL_SMI_ADDR		0x1
+#define AN8855_SMI_ADDR_MASK	0x1f
+
 #define MT753X_PHY_ADDR(base, addr) \
 	(((base) + (addr)) & 0x1f)
 
@@ -179,7 +184,8 @@ struct pdma_txdesc {
 enum mtk_switch {
 	SW_NONE,
 	SW_MT7530,
-	SW_MT7531
+	SW_MT7531,
+	SW_AN8855,
 };
 
 enum mtk_soc {
@@ -453,6 +459,43 @@ static int mt753x_reg_write(struct mtk_eth_priv *priv, u32 reg, u32 data)
 	return mtk_mii_write(priv, priv->mt753x_smi_addr, 0x10, data >> 16);
 }
 
+static int an8855_reg_read(struct mtk_eth_priv *priv, u32 reg)
+{
+	int low_word, high_word;
+
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x1f, 0x4);
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x10, 0x0);
+
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x15, ((reg >> 16) & 0xFFFF));
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x16, (reg & 0xFFFF));
+
+	/* Read low word */
+	low_word = mtk_mii_read(priv, priv->mt753x_smi_addr, 0x18);
+
+	/* Read high word */
+	high_word = mtk_mii_read(priv, priv->mt753x_smi_addr, 0x17);
+
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x1f, 0x0);
+
+	return ((u32)high_word << 16) | (low_word & 0xffff);
+}
+
+static int an8855_reg_write(struct mtk_eth_priv *priv, u32 reg, u32 data)
+{
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x1f, 0x4);
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x10, 0x0);
+
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x11, ((reg >> 16) & 0xFFFF));
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x12, (reg & 0xFFFF));
+
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x13, ((data >> 16) & 0xFFFF));
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x14, (data & 0xFFFF));
+
+	mtk_mii_write(priv, priv->mt753x_smi_addr, 0x1f, 0x0);
+
+	return 0;
+}
+
 static void mt753x_reg_rmw(struct mtk_eth_priv *priv, u32 reg, u32 clr,
 			   u32 set)
 {
@@ -568,6 +611,58 @@ static int mt7531_mmd_ind_write(struct mtk_eth_priv *priv, u8 addr, u8 devad,
 			     MDIO_ST_C45);
 }
 
+static int an8855_mii_read(struct mtk_eth_priv *priv, u8 phy, u8 reg)
+{
+	int val;
+
+	if (phy < AN8855_NUM_PHYS)
+		phy = (priv->mt753x_phy_base + phy) & AN8855_SMI_ADDR_MASK;
+
+	val = mtk_mii_read(priv, phy, reg);
+
+	return val;
+}
+
+static int an8855_mii_write(struct mtk_eth_priv *priv, u8 phy, u8 reg,
+				u16 val)
+{
+	if (phy < AN8855_NUM_PHYS)
+		phy = (priv->mt753x_phy_base + phy) & AN8855_SMI_ADDR_MASK;
+
+	mtk_mii_write(priv, phy, reg, val);
+
+	return 0;
+}
+
+static int an8855_mmd_read(struct mtk_eth_priv *priv, u8 addr, u8 devad, u16 reg)
+{
+	int val;
+
+	if (addr < AN8855_NUM_PHYS)
+		addr = (priv->mt753x_phy_base + addr) & AN8855_SMI_ADDR_MASK;
+
+	mtk_mii_write(priv, addr, 0xd, devad);
+	mtk_mii_write(priv, addr, 0xe, reg);
+	mtk_mii_write(priv, addr, 0xd, devad | (0x4000));
+	val = mtk_mii_read(priv, addr, 0xe);
+
+	return val;
+}
+
+static int an8855_mmd_write(struct mtk_eth_priv *priv, u8 addr, u8 devad,
+				u16 reg, u16 val)
+{
+	if (addr < AN8855_NUM_PHYS)
+		addr = (priv->mt753x_phy_base + addr) & AN8855_SMI_ADDR_MASK;
+
+	mtk_mii_write(priv, addr, 0xd, devad);
+	mtk_mii_write(priv, addr, 0xe, reg);
+	mtk_mii_write(priv, addr, 0xd, devad | (0x4000));
+	mtk_mii_write(priv, addr, 0xe, val);
+
+	return 0;
+}
+
 static int mtk_mdio_read(struct mii_dev *bus, int addr, int devad, int reg)
 {
 	struct mtk_eth_priv *priv = bus->priv;
@@ -611,6 +706,12 @@ static int mtk_mdio_register(struct udevice *dev)
 		priv->mii_write = mt7531_mii_ind_write;
 		priv->mmd_read = mt7531_mmd_ind_read;
 		priv->mmd_write = mt7531_mmd_ind_write;
+		break;
+	case SW_AN8855:
+		priv->mii_read = an8855_mii_read;
+		priv->mii_write = an8855_mii_write;
+		priv->mmd_read = an8855_mmd_read;
+		priv->mmd_write = an8855_mmd_write;
 		break;
 	default:
 		priv->mii_read = mtk_mii_read;
@@ -993,6 +1094,859 @@ static int mt7531_setup(struct mtk_eth_priv *priv)
 	return 0;
 }
 
+static int an8855_set_port_rmii(struct mtk_eth_priv *priv)
+{
+	an8855_reg_write(priv, RG_P5MUX_MODE, 0x301);
+	an8855_reg_write(priv, RG_FORCE_CKDIR_SEL, 0x101);
+	an8855_reg_write(priv, RG_SWITCH_MODE, 0x101);
+	an8855_reg_write(priv, RG_FORCE_MAC5_SB, 0x1010101);
+	an8855_reg_write(priv, CSR_RMII, 0x420102);
+	an8855_reg_write(priv, RG_RGMII_TXCK_C, 0x1100910);
+	return 0;
+}
+
+static int an8855_set_port_rgmii(struct mtk_eth_priv *priv)
+{
+	an8855_reg_write(priv, RG_FORCE_MAC5_SB, 0x20101);
+	return 0;
+}
+
+static int an8855_sgmii_setup(struct mtk_eth_priv *priv, int force)
+{
+	u32 val = 0;
+
+	/* TX FIR - improve TX EYE */
+	val = an8855_reg_read(priv, INTF_CTRL_10);
+	val &= ~(0x3f << 16);
+	val |= BIT(21);
+	val &= ~(0x1f << 24);
+	val |= BIT(29);
+	an8855_reg_write(priv, INTF_CTRL_10, val);
+
+	val = an8855_reg_read(priv, INTF_CTRL_11);
+	val &= ~(0x3f);
+	val |= (0xd << 0);
+	val |= BIT(6);
+	an8855_reg_write(priv, INTF_CTRL_11, val);
+
+	/* RX CDR - improve RX Jitter Tolerance */
+	val = an8855_reg_read(priv, RG_QP_CDR_LPF_BOT_LIM);
+	val &= ~(0x7 << 24);
+	val |= (0x6 << 24);
+	val &= ~(0x7 << 20);
+	val |= (0x6 << 20);
+	an8855_reg_write(priv, RG_QP_CDR_LPF_BOT_LIM, val);
+
+	/* PMA Init */
+	/* PLL */
+	val = an8855_reg_read(priv, QP_DIG_MODE_CTRL_1);
+	val &= ~BITS(2, 3);
+	an8855_reg_write(priv, QP_DIG_MODE_CTRL_1, val);
+
+	/* PLL - LPF */
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val &= ~(0x3 << 0);
+	val |= (0x1 << 0);
+	val &= ~(0x7 << 2);
+	val |= (0x5 << 2);
+	val &= ~BITS(6, 7);
+	val &= ~(0x7 << 8);
+	val |= (0x3 << 8);
+	val |= BIT(29);
+	val &= ~BITS(12, 13);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	/* PLL - ICO */
+	val = an8855_reg_read(priv, PLL_CTRL_4);
+	val |= BIT(2);
+	an8855_reg_write(priv, PLL_CTRL_4, val);
+
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val &= ~BIT(14);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	/* PLL - CHP */
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val &= ~(0xf << 16);
+	val |= (0x4 << 16);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	/* PLL - PFD */
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val &= ~(0x3 << 20);
+	val |= (0x1 << 20);
+	val &= ~(0x3 << 24);
+	val |= (0x1 << 24);
+	val &= ~BIT(26);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	/* PLL - POSTDIV */
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val |= BIT(22);
+	val &= ~BIT(27);
+	val &= ~BIT(28);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	/* PLL - SDM */
+	val = an8855_reg_read(priv, PLL_CTRL_4);
+	val &= ~BITS(3, 4);
+	an8855_reg_write(priv, PLL_CTRL_4, val);
+
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val &= ~BIT(30);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	val = an8855_reg_read(priv, SS_LCPLL_PWCTL_SETTING_2);
+	val &= ~(0x3 << 16);
+	val |= (0x1 << 16);
+	an8855_reg_write(priv, SS_LCPLL_PWCTL_SETTING_2, val);
+
+	an8855_reg_write(priv, SS_LCPLL_TDC_FLT_2, 0x48000000);
+	an8855_reg_write(priv, SS_LCPLL_TDC_PCW_1, 0x48000000);
+
+	val = an8855_reg_read(priv, SS_LCPLL_TDC_FLT_5);
+	val &= ~BIT(24);
+	an8855_reg_write(priv, SS_LCPLL_TDC_FLT_5, val);
+
+	val = an8855_reg_read(priv, PLL_CK_CTRL_0);
+	val &= ~BIT(8);
+	an8855_reg_write(priv, PLL_CK_CTRL_0, val);
+
+	/* PLL - SS */
+	val = an8855_reg_read(priv, PLL_CTRL_3);
+	val &= ~BITS(0, 15);
+	an8855_reg_write(priv, PLL_CTRL_3, val);
+
+	val = an8855_reg_read(priv, PLL_CTRL_4);
+	val &= ~BITS(0, 1);
+	an8855_reg_write(priv, PLL_CTRL_4, val);
+
+	val = an8855_reg_read(priv, PLL_CTRL_3);
+	val &= ~BITS(16, 31);
+	an8855_reg_write(priv, PLL_CTRL_3, val);
+
+	/* PLL - TDC */
+	val = an8855_reg_read(priv, PLL_CK_CTRL_0);
+	val &= ~BIT(9);
+	an8855_reg_write(priv, PLL_CK_CTRL_0, val);
+
+	val = an8855_reg_read(priv, RG_QP_PLL_SDM_ORD);
+	val |= BIT(3);
+	val |= BIT(4);
+	an8855_reg_write(priv, RG_QP_PLL_SDM_ORD, val);
+
+	val = an8855_reg_read(priv, RG_QP_RX_DAC_EN);
+	val &= ~(0x3 << 16);
+	val |= (0x2 << 16);
+	an8855_reg_write(priv, RG_QP_RX_DAC_EN, val);
+
+	/* PLL - TCL Disable (only for Co-SIM) */
+	val = an8855_reg_read(priv, PON_RXFEDIG_CTRL_0);
+	val &= ~BIT(12);
+	an8855_reg_write(priv, PON_RXFEDIG_CTRL_0, val);
+
+	/* TX Init */
+	val = an8855_reg_read(priv, RG_QP_TX_MODE_16B_EN);
+	val &= ~BIT(0);
+	val &= ~BITS(16, 31);
+	an8855_reg_write(priv, RG_QP_TX_MODE_16B_EN, val);
+
+	/* RX Init */
+	val = an8855_reg_read(priv, RG_QP_RXAFE_RESERVE);
+	val |= BIT(11);
+	an8855_reg_write(priv, RG_QP_RXAFE_RESERVE, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_LPF_MJV_LIM);
+	val &= ~(0x3 << 4);
+	val |= (0x2 << 4);
+	an8855_reg_write(priv, RG_QP_CDR_LPF_MJV_LIM, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_LPF_SETVALUE);
+	val &= ~(0xf << 25);
+	val |= (0x1 << 25);
+	val &= ~(0x7 << 29);
+	val |= (0x6 << 29);
+	an8855_reg_write(priv, RG_QP_CDR_LPF_SETVALUE, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_PR_CKREF_DIV1);
+	val &= ~(0x1f << 8);
+	val |= (0xc << 8);
+	an8855_reg_write(priv, RG_QP_CDR_PR_CKREF_DIV1, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_PR_KBAND_DIV_PCIE);
+	val &= ~(0x3f << 0);
+	val |= (0x19 << 0);
+	val &= ~BIT(6);
+	an8855_reg_write(priv, RG_QP_CDR_PR_KBAND_DIV_PCIE, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_FORCE_IBANDLPF_R_OFF);
+	val &= ~(0x7f << 6);
+	val |= (0x21 << 6);
+	val &= ~(0x3 << 16);
+	val |= (0x2 << 16);
+	val &= ~BIT(13);
+	an8855_reg_write(priv, RG_QP_CDR_FORCE_IBANDLPF_R_OFF, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_PR_KBAND_DIV_PCIE);
+	val &= ~BIT(30);
+	an8855_reg_write(priv, RG_QP_CDR_PR_KBAND_DIV_PCIE, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_PR_CKREF_DIV1);
+	val &= ~(0x7 << 24);
+	val |= (0x4 << 24);
+	an8855_reg_write(priv, RG_QP_CDR_PR_CKREF_DIV1, val);
+
+	/* PMA (For HW Mode) */
+	val = an8855_reg_read(priv, RX_CTRL_26);
+	val |= BIT(23);
+	val &= ~BIT(24);
+		val |= BIT(26);
+
+	an8855_reg_write(priv, RX_CTRL_26, val);
+
+	val = an8855_reg_read(priv, RX_DLY_0);
+	val &= ~(0xff << 0);
+	val |= (0x6f << 0);
+	val |= BITS(8, 13);
+	an8855_reg_write(priv, RX_DLY_0, val);
+
+	val = an8855_reg_read(priv, RX_CTRL_42);
+	val &= ~(0x1fff << 0);
+	val |= (0x150 << 0);
+	an8855_reg_write(priv, RX_CTRL_42, val);
+
+	val = an8855_reg_read(priv, RX_CTRL_2);
+	val &= ~(0x1fff << 16);
+	val |= (0x150 << 16);
+	an8855_reg_write(priv, RX_CTRL_2, val);
+
+	val = an8855_reg_read(priv, PON_RXFEDIG_CTRL_9);
+	val &= ~(0x7 << 0);
+	val |= (0x1 << 0);
+	an8855_reg_write(priv, PON_RXFEDIG_CTRL_9, val);
+
+	val = an8855_reg_read(priv, RX_CTRL_8);
+	val &= ~(0xfff << 16);
+	val |= (0x200 << 16);
+	val &= ~(0x7fff << 0);
+	val |= (0xfff << 0);
+	an8855_reg_write(priv, RX_CTRL_8, val);
+
+	/* Frequency memter */
+	val = an8855_reg_read(priv, RX_CTRL_5);
+	val &= ~(0xfffff << 10);
+	val |= (0x28 << 10);
+	an8855_reg_write(priv, RX_CTRL_5, val);
+
+	val = an8855_reg_read(priv, RX_CTRL_6);
+	val &= ~(0xfffff << 0);
+	val |= (0x64 << 0);
+	an8855_reg_write(priv, RX_CTRL_6, val);
+
+	val = an8855_reg_read(priv, RX_CTRL_7);
+	val &= ~(0xfffff << 0);
+	val |= (0x2710 << 0);
+	an8855_reg_write(priv, RX_CTRL_7, val);
+
+	val = an8855_reg_read(priv, PLL_CTRL_0);
+	val |= BIT(0);
+	an8855_reg_write(priv, PLL_CTRL_0, val);
+
+	if (force) {
+		/* PCS Init */
+		val = an8855_reg_read(priv, QP_DIG_MODE_CTRL_0);
+		val &= ~BIT(0);
+		val &= ~BITS(4, 5);
+		an8855_reg_write(priv, QP_DIG_MODE_CTRL_0, val);
+
+		val = an8855_reg_read(priv, RG_HSGMII_PCS_CTROL_1);
+		val &= ~BIT(30);
+		an8855_reg_write(priv, RG_HSGMII_PCS_CTROL_1, val);
+
+		/* Rate Adaption - GMII path config. */
+		val = an8855_reg_read(priv, RG_AN_SGMII_MODE_FORCE);
+		val |= BIT(0);
+		val &= ~BITS(4, 5);
+		an8855_reg_write(priv, RG_AN_SGMII_MODE_FORCE, val);
+
+		val = an8855_reg_read(priv, SGMII_STS_CTRL_0);
+		val |= BIT(2);
+		val &= ~(0x3 << 4);
+		val |= (0x2 << 4);
+		an8855_reg_write(priv, SGMII_STS_CTRL_0, val);
+
+		val = an8855_reg_read(priv, SGMII_REG_AN0);
+		val &= ~BIT(12);
+		an8855_reg_write(priv, SGMII_REG_AN0, val);
+
+		val = an8855_reg_read(priv, PHY_RX_FORCE_CTRL_0);
+		val |= BIT(4);
+		an8855_reg_write(priv, PHY_RX_FORCE_CTRL_0, val);
+
+		val = an8855_reg_read(priv, RATE_ADP_P0_CTRL_0);
+		val &= ~BITS(0, 3);
+		val |= BIT(28);
+		an8855_reg_write(priv, RATE_ADP_P0_CTRL_0, val);
+
+		val = an8855_reg_read(priv, RG_RATE_ADAPT_CTRL_0);
+		val |= BIT(0);
+		val |= BIT(4);
+		val |= BITS(26, 27);
+		an8855_reg_write(priv, RG_RATE_ADAPT_CTRL_0, val);
+	} else {
+		/* PCS Init */
+		val = an8855_reg_read(priv, RG_HSGMII_PCS_CTROL_1);
+		val &= ~BIT(30);
+		an8855_reg_write(priv, RG_HSGMII_PCS_CTROL_1, val);
+
+		/* Set AN Ability - Interrupt */
+		val = an8855_reg_read(priv, SGMII_REG_AN_FORCE_CL37);
+		val |= BIT(0);
+		an8855_reg_write(priv, SGMII_REG_AN_FORCE_CL37, val);
+
+		val = an8855_reg_read(priv, SGMII_REG_AN_13);
+		val &= ~(0x3f << 0);
+		val |= (0xb << 0);
+		val |= BIT(8);
+		an8855_reg_write(priv, SGMII_REG_AN_13, val);
+
+		/* Rate Adaption - GMII path config. */
+		val = an8855_reg_read(priv, SGMII_REG_AN0);
+		val |= BIT(12);
+		an8855_reg_write(priv, SGMII_REG_AN0, val);
+
+		val = an8855_reg_read(priv, MII_RA_AN_ENABLE);
+		val |= BIT(0);
+		an8855_reg_write(priv, MII_RA_AN_ENABLE, val);
+
+		val = an8855_reg_read(priv, RATE_ADP_P0_CTRL_0);
+		val |= BIT(28);
+		an8855_reg_write(priv, RATE_ADP_P0_CTRL_0, val);
+
+		val = an8855_reg_read(priv, RG_RATE_ADAPT_CTRL_0);
+		val |= BIT(0);
+		val |= BIT(4);
+		val |= BITS(26, 27);
+		an8855_reg_write(priv, RG_RATE_ADAPT_CTRL_0, val);
+
+		/* Only for Co-SIM */
+
+		/* AN Speed up (Only for Co-SIM) */
+
+		/* Restart AN */
+		val = an8855_reg_read(priv, SGMII_REG_AN0);
+		val |= BIT(9);
+		an8855_reg_write(priv, SGMII_REG_AN0, val);
+	}
+
+	/* bypass flow control to MAC */
+	an8855_reg_write(priv, MSG_RX_LIK_STS_0, 0x01010107);
+	an8855_reg_write(priv, MSG_RX_LIK_STS_2, 0x00000EEF);
+
+	return 0;
+}
+
+static int an8855_set_hsgmii_mode(struct mtk_eth_priv *priv)
+{
+	u32 val = 0;
+
+	/* TX FIR - improve TX EYE */
+	val = an8855_reg_read(priv, INTF_CTRL_10);
+	val &= ~(0x3f << 16);
+	val |= BIT(21);
+	val &= ~(0x1f << 24);
+	val |= (0x4 << 24);
+	val |= BIT(29);
+	an8855_reg_write(priv, INTF_CTRL_10, val);
+
+	val = an8855_reg_read(priv, INTF_CTRL_11);
+	val &= ~(0x3f);
+	val |= BIT(6);
+	an8855_reg_write(priv, INTF_CTRL_11, val);
+
+	/* RX CDR - improve RX Jitter Tolerance */
+	val = an8855_reg_read(priv, RG_QP_CDR_LPF_BOT_LIM);
+	val &= ~(0x7 << 24);
+	val |= (0x5 << 24);
+	val &= ~(0x7 << 20);
+	val |= (0x5 << 20);
+	an8855_reg_write(priv, RG_QP_CDR_LPF_BOT_LIM, val);
+
+	/* PLL */
+	val = an8855_reg_read(priv, QP_DIG_MODE_CTRL_1);
+	val &= ~(0x3 << 2);
+	val |= (0x1 << 2);
+	an8855_reg_write(priv, QP_DIG_MODE_CTRL_1, val);
+
+	/* PLL - LPF */
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val &= ~(0x3 << 0);
+	val |= (0x1 << 0);
+	val &= ~(0x7 << 2);
+	val |= (0x5 << 2);
+	val &= ~BITS(6, 7);
+	val &= ~(0x7 << 8);
+	val |= (0x3 << 8);
+	val |= BIT(29);
+	val &= ~BITS(12, 13);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	/* PLL - ICO */
+	val = an8855_reg_read(priv, PLL_CTRL_4);
+	val |= BIT(2);
+	an8855_reg_write(priv, PLL_CTRL_4, val);
+
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val &= ~BIT(14);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	/* PLL - CHP */
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val &= ~(0xf << 16);
+	val |= (0x6 << 16);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	/* PLL - PFD */
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val &= ~(0x3 << 20);
+	val |= (0x1 << 20);
+	val &= ~(0x3 << 24);
+	val |= (0x1 << 24);
+	val &= ~BIT(26);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	/* PLL - POSTDIV */
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val |= BIT(22);
+	val &= ~BIT(27);
+	val &= ~BIT(28);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	/* PLL - SDM */
+	val = an8855_reg_read(priv, PLL_CTRL_4);
+	val &= ~BITS(3, 4);
+	an8855_reg_write(priv, PLL_CTRL_4, val);
+
+	val = an8855_reg_read(priv, PLL_CTRL_2);
+	val &= ~BIT(30);
+	an8855_reg_write(priv, PLL_CTRL_2, val);
+
+	val = an8855_reg_read(priv, SS_LCPLL_PWCTL_SETTING_2);
+	val &= ~(0x3 << 16);
+	val |= (0x1 << 16);
+	an8855_reg_write(priv, SS_LCPLL_PWCTL_SETTING_2, val);
+
+	an8855_reg_write(priv, SS_LCPLL_TDC_FLT_2, 0x7a000000);
+	an8855_reg_write(priv, SS_LCPLL_TDC_PCW_1, 0x7a000000);
+
+	val = an8855_reg_read(priv, SS_LCPLL_TDC_FLT_5);
+	val &= ~BIT(24);
+	an8855_reg_write(priv, SS_LCPLL_TDC_FLT_5, val);
+
+	val = an8855_reg_read(priv, PLL_CK_CTRL_0);
+	val &= ~BIT(8);
+	an8855_reg_write(priv, PLL_CK_CTRL_0, val);
+
+	/* PLL - SS */
+	val = an8855_reg_read(priv, PLL_CTRL_3);
+	val &= ~BITS(0, 15);
+	an8855_reg_write(priv, PLL_CTRL_3, val);
+
+	val = an8855_reg_read(priv, PLL_CTRL_4);
+	val &= ~BITS(0, 1);
+	an8855_reg_write(priv, PLL_CTRL_4, val);
+
+	val = an8855_reg_read(priv, PLL_CTRL_3);
+	val &= ~BITS(16, 31);
+	an8855_reg_write(priv, PLL_CTRL_3, val);
+
+	/* PLL - TDC */
+	val = an8855_reg_read(priv, PLL_CK_CTRL_0);
+	val &= ~BIT(9);
+	an8855_reg_write(priv, PLL_CK_CTRL_0, val);
+
+	val = an8855_reg_read(priv, RG_QP_PLL_SDM_ORD);
+	val |= BIT(3);
+	val |= BIT(4);
+	an8855_reg_write(priv, RG_QP_PLL_SDM_ORD, val);
+
+	val = an8855_reg_read(priv, RG_QP_RX_DAC_EN);
+	val &= ~(0x3 << 16);
+	val |= (0x2 << 16);
+	an8855_reg_write(priv, RG_QP_RX_DAC_EN, val);
+
+	/* TCL Disable (only for Co-SIM) */
+	val = an8855_reg_read(priv, PON_RXFEDIG_CTRL_0);
+	val &= ~BIT(12);
+	an8855_reg_write(priv, PON_RXFEDIG_CTRL_0, val);
+
+	/* TX Init */
+	val = an8855_reg_read(priv, RG_QP_TX_MODE_16B_EN);
+	val &= ~BIT(0);
+	val &= ~(0xffff << 16);
+	val |= (0x4 << 16);
+	an8855_reg_write(priv, RG_QP_TX_MODE_16B_EN, val);
+
+	/* RX Control */
+	val = an8855_reg_read(priv, RG_QP_RXAFE_RESERVE);
+	val |= BIT(11);
+	an8855_reg_write(priv, RG_QP_RXAFE_RESERVE, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_LPF_MJV_LIM);
+	val &= ~(0x3 << 4);
+	val |= (0x1 << 4);
+	an8855_reg_write(priv, RG_QP_CDR_LPF_MJV_LIM, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_LPF_SETVALUE);
+	val &= ~(0xf << 25);
+	val |= (0x1 << 25);
+	val &= ~(0x7 << 29);
+	val |= (0x6 << 29);
+	an8855_reg_write(priv, RG_QP_CDR_LPF_SETVALUE, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_PR_CKREF_DIV1);
+	val &= ~(0x1f << 8);
+	val |= (0xf << 8);
+	an8855_reg_write(priv, RG_QP_CDR_PR_CKREF_DIV1, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_PR_KBAND_DIV_PCIE);
+	val &= ~(0x3f << 0);
+	val |= (0x19 << 0);
+	val &= ~BIT(6);
+	an8855_reg_write(priv, RG_QP_CDR_PR_KBAND_DIV_PCIE, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_FORCE_IBANDLPF_R_OFF);
+	val &= ~(0x7f << 6);
+	val |= (0x21 << 6);
+	val &= ~(0x3 << 16);
+	val |= (0x2 << 16);
+	val &= ~BIT(13);
+	an8855_reg_write(priv, RG_QP_CDR_FORCE_IBANDLPF_R_OFF, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_PR_KBAND_DIV_PCIE);
+	val &= ~BIT(30);
+	an8855_reg_write(priv, RG_QP_CDR_PR_KBAND_DIV_PCIE, val);
+
+	val = an8855_reg_read(priv, RG_QP_CDR_PR_CKREF_DIV1);
+	val &= ~(0x7 << 24);
+	val |= (0x4 << 24);
+	an8855_reg_write(priv, RG_QP_CDR_PR_CKREF_DIV1, val);
+
+	/* PMA (For HW Mode) */
+	val = an8855_reg_read(priv, RX_CTRL_26);
+	val |= BIT(23);
+	val &= ~BIT(24);
+	val |= BIT(26);
+	an8855_reg_write(priv, RX_CTRL_26, val);
+
+	val = an8855_reg_read(priv, RX_DLY_0);
+	val &= ~(0xff << 0);
+	val |= (0x6f << 0);
+	val |= BITS(8, 13);
+	an8855_reg_write(priv, RX_DLY_0, val);
+
+	val = an8855_reg_read(priv, RX_CTRL_42);
+	val &= ~(0x1fff << 0);
+	val |= (0x150 << 0);
+	an8855_reg_write(priv, RX_CTRL_42, val);
+
+	val = an8855_reg_read(priv, RX_CTRL_2);
+	val &= ~(0x1fff << 16);
+	val |= (0x150 << 16);
+	an8855_reg_write(priv, RX_CTRL_2, val);
+
+	val = an8855_reg_read(priv, PON_RXFEDIG_CTRL_9);
+	val &= ~(0x7 << 0);
+	val |= (0x1 << 0);
+	an8855_reg_write(priv, PON_RXFEDIG_CTRL_9, val);
+
+	val = an8855_reg_read(priv, RX_CTRL_8);
+	val &= ~(0xfff << 16);
+	val |= (0x200 << 16);
+	val &= ~(0x7fff << 0);
+	val |= (0xfff << 0);
+	an8855_reg_write(priv, RX_CTRL_8, val);
+
+	/* Frequency memter */
+	val = an8855_reg_read(priv, RX_CTRL_5);
+	val &= ~(0xfffff << 10);
+	val |= (0x10 << 10);
+	an8855_reg_write(priv, RX_CTRL_5, val);
+
+	val = an8855_reg_read(priv, RX_CTRL_6);
+	val &= ~(0xfffff << 0);
+	val |= (0x64 << 0);
+	an8855_reg_write(priv, RX_CTRL_6, val);
+
+	val = an8855_reg_read(priv, RX_CTRL_7);
+	val &= ~(0xfffff << 0);
+	val |= (0x2710 << 0);
+	an8855_reg_write(priv, RX_CTRL_7, val);
+
+	val = an8855_reg_read(priv, PLL_CTRL_0);
+	val |= BIT(0);
+	an8855_reg_write(priv, PLL_CTRL_0, val);
+
+	/* PCS Init */
+	val = an8855_reg_read(priv, RG_HSGMII_PCS_CTROL_1);
+	val &= ~BIT(30);
+	an8855_reg_write(priv, RG_HSGMII_PCS_CTROL_1, val);
+
+	/* Rate Adaption */
+	val = an8855_reg_read(priv, RATE_ADP_P0_CTRL_0);
+	val &= ~BIT(31);
+	an8855_reg_write(priv, RATE_ADP_P0_CTRL_0, val);
+
+	val = an8855_reg_read(priv, RG_RATE_ADAPT_CTRL_0);
+	val |= BIT(0);
+	val |= BIT(4);
+	val |= BITS(26, 27);
+	an8855_reg_write(priv, RG_RATE_ADAPT_CTRL_0, val);
+
+	/* Disable AN */
+	val = an8855_reg_read(priv, SGMII_REG_AN0);
+	val &= ~BIT(12);
+	an8855_reg_write(priv, SGMII_REG_AN0, val);
+
+	/* Force Speed */
+	val = an8855_reg_read(priv, SGMII_STS_CTRL_0);
+	val |= BIT(2);
+	val |= BITS(4, 5);
+	an8855_reg_write(priv, SGMII_STS_CTRL_0, val);
+
+	/* bypass flow control to MAC */
+	an8855_reg_write(priv, MSG_RX_LIK_STS_0, 0x01010107);
+	an8855_reg_write(priv, MSG_RX_LIK_STS_2, 0x00000EEF);
+
+	return 0;
+}
+
+static int an8855_mac_p5_setup(struct mtk_eth_priv *priv)
+{
+	u32 pmcr;
+
+	pmcr = an8855_reg_read(priv, AN8855_PMCR(5));
+
+	switch (priv->phy_interface) {
+		case PHY_INTERFACE_MODE_RMII:
+			pmcr &= ~AN8855_FORCE_SPD;
+			pmcr |= AN8855_PMCR_DEFAULT | (SPEED_100M << 28);
+			an8855_set_port_rmii(priv);
+			break;
+		case PHY_INTERFACE_MODE_RGMII:
+			pmcr &= ~AN8855_FORCE_SPD;
+			pmcr |= AN8855_PMCR_DEFAULT | (SPEED_1000M << 28);
+			an8855_set_port_rgmii(priv);
+			break;
+		case PHY_INTERFACE_MODE_SGMII:
+#if 0
+			debug("AN8855 SGMII mode\n");
+			if (priv->force_mode) {
+				pmcr &= ~AN8855_FORCE_SPD;
+				pmcr |= AN8855_PMCR_DEFAULT | (SPEED_1000M << 28);
+				an8855_sgmii_setup(priv, 1);
+			} else {
+				an8855_sgmii_setup(priv, 0);
+			}
+			break;
+#endif
+		case PHY_INTERFACE_MODE_2500BASEX:
+			debug("AN8855 2500base-x/hsgmii mode\n");
+			pmcr &= ~AN8855_FORCE_SPD;
+			pmcr |= AN8855_PMCR_DEFAULT | (SPEED_2500M << 28);
+			an8855_set_hsgmii_mode(priv);
+			break;
+		default:
+			break;
+	}
+
+	if (priv->force_mode)
+		an8855_reg_write(priv, AN8855_PMCR(5), pmcr);	
+
+	return 0;
+}
+
+const u8 r50ohm_table[] = {
+	127, 127, 127, 127, 127, 127, 127, 127, 127, 127,
+	127, 127, 127, 127, 127, 127, 127, 126, 122, 117,
+	112, 109, 104, 101,  97,  94,  90,  88,  84,  80,
+	78,  74,  72,  68,  66,  64,  61,  58,  56,  53,
+	51,  48,  47,  44,  42,  40,  38,  36,  34,  32,
+	31,  28,  27,  24,  24,  22,  20,  18,  16,  16,
+	14,  12,  11,   9
+};
+
+static u8 shift_check(u8 base)
+{
+	u8 i;
+	u32 sz = sizeof(r50ohm_table)/sizeof(u8);
+
+	for (i = 0; i < sz; ++i)
+		if (r50ohm_table[i] == base)
+			break;
+
+	if (i < 8 || i >= sz)
+		return 25; /* index of 94 */
+
+	return (i - 8);
+}
+
+static u8 get_shift_val(u8 idx)
+{
+	return r50ohm_table[idx];
+}
+
+static void an8855_phy_setting(struct mtk_eth_priv *priv)
+{
+	int i, j;
+	u32 val;
+	u8 shift_sel = 0, rsel_tx_a = 0, rsel_tx_b = 0;
+	u8 rsel_tx_c = 0, rsel_tx_d = 0;
+	u16 cl45_data = 0;
+
+	/* Release power down */
+	an8855_reg_write(priv, RG_GPHY_AFE_PWD, 0x0);
+
+	for (i = 0; i < AN8855_NUM_PHYS; i++) {
+		/* Enable HW auto downshift */
+		priv->mii_write(priv, i, 0x1f, 0x1);
+		val = priv->mii_read(priv, i, PHY_EXT_REG_14);
+		val |= PHY_EN_DOWN_SHFIT;
+		priv->mii_write(priv, i, PHY_EXT_REG_14, val);
+		priv->mii_write(priv, i, 0x1f, 0x0);
+
+		/* Enable Asymmetric Pause Capability */
+		val = priv->mii_read(priv, i, MII_ADVERTISE);
+		val |= ADVERTISE_PAUSE_ASYM;
+		priv->mii_write(priv, i, MII_ADVERTISE, val);
+	}
+
+#if 1
+	// enable ext surge
+	for (i = 0; i < AN8855_NUM_PHYS; i++) {
+		/* Read data */
+		for (j = 0; j < AN8855_WORD_SIZE; j++) {
+			val = an8855_reg_read(priv, AN8855_EFUSE_DATA0 +
+				(AN8855_WORD_SIZE * (3 + j + (4 * i))));
+
+			shift_sel = shift_check((val & 0x7f000000) >> 24);
+			switch (j) {
+			case 0:
+				rsel_tx_a = get_shift_val(shift_sel);
+				break;
+			case 1:
+				rsel_tx_b = get_shift_val(shift_sel);
+				break;
+			case 2:
+				rsel_tx_c = get_shift_val(shift_sel);
+				break;
+			case 3:
+				rsel_tx_d = get_shift_val(shift_sel);
+				break;
+			default:
+				continue;
+			}
+		}
+		cl45_data = priv->mmd_read(priv, i, PHY_DEV1E, 0x174);
+		cl45_data &= ~(0x7f7f);
+		cl45_data |= (rsel_tx_a << 8);
+		cl45_data |= rsel_tx_b;
+		priv->mmd_write(priv, i, PHY_DEV1E, 0x174, cl45_data);
+		cl45_data = priv->mmd_read(priv, i, PHY_DEV1E, 0x175);
+		cl45_data &= ~(0x7f7f);
+		cl45_data |= (rsel_tx_c << 8);
+		cl45_data |= rsel_tx_d;
+		priv->mmd_write(priv, i, PHY_DEV1E, 0x175, cl45_data);
+	}
+#endif
+}
+
+static int an8855_setup(struct mtk_eth_priv *priv)
+{
+	int i;
+	u32 val;
+	u32 id = 0;
+	u32 rev = 0;
+
+	id = an8855_reg_read(priv, AN8855_CHIP_ID);
+	rev = an8855_reg_read(priv, AN8855_CHIP_REV);
+
+	debug("AN8855 ID=%x, REV=%x\n", id, rev);
+
+	priv->mt753x_phy_base = priv->mt753x_smi_addr & AN8855_SMI_ADDR_MASK;
+
+	/* Force MAC link down before reset */
+	an8855_reg_write(priv, AN8855_PMCR(5), AN8855_FORCE_MODE);
+
+	/* Switch soft reset */
+	an8855_reg_write(priv, AN8855_SYS_CTRL, AN8855_SW_SYS_RST);
+
+	mdelay(200);
+
+	for (i = 0; i < AN8855_NUM_PHYS; i++) {
+		val = priv->mii_read(priv, i, MII_BMCR);
+		val |= BMCR_ISOLATE;
+		priv->mii_write(priv, i, MII_BMCR, val);
+	}
+
+	/* AN8855H need to setup before switch init */
+	val = an8855_reg_read(priv, AN8855_PKG_SEL);
+	if ((val & 0x7) == PAG_SEL_AN8855H) {
+		/* MCU NOP CMD */
+		an8855_reg_write(priv, RG_GDMP_RAM, 0x846);
+		an8855_reg_write(priv, RG_GDMP_RAM + 4, 0x4a);
+
+		/* Enable MCU */
+		val = an8855_reg_read(priv, RG_CLK_CPU_ICG);
+		an8855_reg_write(priv, RG_CLK_CPU_ICG, val | MCU_ENABLE);
+		udelay(2000);
+
+		/* Disable MCU watchdog */
+		val = an8855_reg_read(priv, RG_TIMER_CTL);
+		an8855_reg_write(priv, RG_TIMER_CTL, (val & (~WDOG_ENABLE)));
+	}
+
+	/* Adjust to reduce noise */
+	for (i = 0; i < AN8855_NUM_PHYS; i++) {
+		priv->mmd_write(priv, i, 0x1e, PHY_TX_PAIR_DLY_SEL_GBE, 0x4040);
+		priv->mmd_write(priv, i, 0x1e, PHY_RXADC_CTRL, 0x1010);
+		priv->mmd_write(priv, i, 0x1e, PHY_RXADC_REV_0, 0x100);
+		priv->mmd_write(priv, i, 0x1e, PHY_RXADC_REV_1, 0x100);
+	}
+
+	/* Setup SERDES port 5 */
+	an8855_mac_p5_setup(priv);
+
+	/* Global mac control settings */
+	val = an8855_reg_read(priv, AN8855_GMACCR);
+	val |= (15 << 4) | MAC_RX_PKT_LEN_JUMBO;
+	an8855_reg_write(priv, AN8855_GMACCR, val);
+
+	val = an8855_reg_read(priv, AN8855_CKGCR);
+	val &= ~(CKG_LNKDN_GLB_STOP | CKG_LNKDN_PORT_STOP);
+	an8855_reg_write(priv, AN8855_CKGCR, val);
+
+	mdelay(200);
+
+	for (i = 0; i < AN8855_NUM_PHYS; i++) {
+		val = priv->mii_read(priv, i, MII_BMCR);
+		val &= ~BMCR_ISOLATE;
+		priv->mii_write(priv, i, MII_BMCR, val);
+	}
+
+	an8855_phy_setting(priv);
+
+	/* Disable EEE */
+	for (i = 0; i < AN8855_NUM_PHYS; i++)
+		priv->mmd_write(priv, i, PHY_DEV07, PHY_DEV07_REG_03C, 0);
+
+	/* PHY restart AN */
+	for (i = 0; i < AN8855_NUM_PHYS; i++)
+		priv->mii_write(priv, i, MII_BMCR, 0x1240);
+
+	return 0;
+}
+
 int mt753x_switch_init(struct mtk_eth_priv *priv)
 {
 	int ret;
@@ -1016,19 +1970,32 @@ int mt753x_switch_init(struct mtk_eth_priv *priv)
 		return ret;
 
 	/* Set port isolation */
-	for (i = 0; i < MT753X_NUM_PORTS; i++) {
-		/* Set port matrix mode */
-		if (i != 6)
-			mt753x_reg_write(priv, PCR_REG(i),
-					 (0x40 << PORT_MATRIX_S));
-		else
-			mt753x_reg_write(priv, PCR_REG(i),
-					 (0x3f << PORT_MATRIX_S));
+	if (priv->sw == SW_AN8855) {
+		for (i = 0; i < AN8855_NUM_PORTS; i++) {
+			if (i == 5)
+				an8855_reg_write(priv, AN8855_PORTMATRIX(i), 0x1f);
+			else
+				an8855_reg_write(priv, AN8855_PORTMATRIX(i), BIT(5));
 
-		/* Set port mode to user port */
-		mt753x_reg_write(priv, PVC_REG(i),
-				 (0x8100 << STAG_VPID_S) |
-				 (VLAN_ATTR_USER << VLAN_ATTR_S));
+			an8855_reg_write(priv, AN8855_PVC(i), 
+					(0x8100 << STAG_VPID_S) |
+					(VLAN_ATTR_USER << VLAN_ATTR_S));
+		}
+	} else {
+		for (i = 0; i < MT753X_NUM_PORTS; i++) {
+			/* Set port matrix mode */
+			if (i != 6)
+				mt753x_reg_write(priv, PCR_REG(i),
+						(0x40 << PORT_MATRIX_S));
+			else
+				mt753x_reg_write(priv, PCR_REG(i),
+						(0x3f << PORT_MATRIX_S));
+
+			/* Set port mode to user port */
+			mt753x_reg_write(priv, PVC_REG(i),
+					(0x8100 << STAG_VPID_S) |
+					(VLAN_ATTR_USER << VLAN_ATTR_S));
+		}
 	}
 
 	return 0;
@@ -1563,6 +2530,10 @@ static int mtk_eth_of_to_plat(struct udevice *dev)
 			priv->sw = SW_MT7531;
 			priv->switch_init = mt7531_setup;
 			priv->mt753x_smi_addr = MT753X_DFL_SMI_ADDR;
+		} else if (!strcmp(str, "an8855")) {
+			priv->sw = SW_AN8855;
+			priv->switch_init = an8855_setup;
+			priv->mt753x_smi_addr = AN8855_DFL_SMI_ADDR;
 		} else {
 			printf("error: unsupported switch\n");
 			return -EINVAL;
