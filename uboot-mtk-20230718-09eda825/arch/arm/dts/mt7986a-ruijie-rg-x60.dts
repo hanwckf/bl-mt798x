@@ -19,7 +19,10 @@
 		bootcmd = "mtkboardboot";
 		blink_led = "red:status";
 		system_led = "green:status";
-		u-boot,mmc-env-partition = "u-boot-env";
+
+		environment {
+			bootconf = "config@ruijie_x60_gsw_en8811h_phy";
+		};
 	};
 
 	memory@40000000 {
