@@ -7,6 +7,7 @@ case ${sys} in
 Linux-i*86)
 	exec ${bin_dir}/bromimage-linux-i686 "$@"
 	;;
+Linux-aarch64 |\
 Linux-x86_64)
 	exec ${bin_dir}/bromimage-linux-x86_64 "$@"
 	;;
