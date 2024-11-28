@@ -91,7 +91,7 @@ menu "Target"
 		bool "Enable NAND mapping block management"
 		depends on FLASH_DEVICE_SNFI_SNAND || FLASH_DEVICE_SPIM_NAND
 		default y if PLAT_MT7622 || PLAT_MT7629 || \
-			     PLAT_MT7981 || PLAT_MT7986
+			     PLAT_MT7981 || PLAT_MT7986 || PLAT_MT7988
 	config SPIM_NAND_TYPE
 		string "nand flash type"
 		depends on FLASH_DEVICE_SPIM_NAND
@@ -107,11 +107,13 @@ menu "DRAM"
 			depends on PLAT_MT7622 || \
 				   PLAT_MT7629 || \
 				   PLAT_MT7981 || \
-				   PLAT_MT7986
+				   PLAT_MT7986 || \
+				   PLAT_MT7988
 		config DRAM_DDR4
 			bool "DDR4"
 			depends on PLAT_MT7981 || \
-				   PLAT_MT7986
+				   PLAT_MT7986 || \
+				   PLAT_MT7988
 	endchoice
 	choice BOARD_TYPE
 		bool "BOARD type"
@@ -130,11 +132,13 @@ menu "DRAM"
 		bool "DRAM size limitation"
 		default DRAM_SIZE_AUTO
 		depends on PLAT_MT7981 || \
-			   PLAT_MT7986
+			   PLAT_MT7986 || \
+			   PLAT_MT7988
 		config DRAM_SIZE_AUTO
 			bool "Auto detect"
 			depends on PLAT_MT7981 || \
-				   PLAT_MT7986
+				   PLAT_MT7986 || \
+				   PLAT_MT7988
 		config DRAM_SIZE_256
 			bool "256MB"
 			depends on (PLAT_MT7981 && DRAM_DDR3) || \
@@ -144,37 +148,47 @@ menu "DRAM"
 			depends on (PLAT_MT7981 && DRAM_DDR3) || \
 				   (PLAT_MT7986 && DRAM_DDR3) || \
 				   (PLAT_MT7981 && DRAM_DDR4) || \
-				   (PLAT_MT7986 && DRAM_DDR4)
+				   (PLAT_MT7986 && DRAM_DDR4) || \
+				   (PLAT_MT7988 && DRAM_DDR3) || \
+				   (PLAT_MT7988 && DRAM_DDR4)
 		config DRAM_SIZE_1024
 			bool "1GB"
 			depends on (PLAT_MT7981 && DRAM_DDR4) || \
-				   (PLAT_MT7986 && DRAM_DDR4)
+				   (PLAT_MT7986 && DRAM_DDR4) || \
+				   (PLAT_MT7988 && DRAM_DDR4)
 		config DRAM_SIZE_2048
 			bool "2GB"
-			depends on (PLAT_MT7986 && DRAM_DDR4)
+			depends on (PLAT_MT7986 && DRAM_DDR4) || \
+				   (PLAT_MT7988 && DRAM_DDR4)
 	endchoice
 	choice DDR3_FREQUENCY
 	bool "DDR3 frequency"
 	default DDR3_FREQ_2133
-	depends on PLAT_MT7981 && DRAM_DDR3
+	depends on (PLAT_MT7981 && DRAM_DDR3) || \
+			   (PLAT_MT7988 && DRAM_DDR3)
 	config DDR3_FREQ_2133
 		bool "DDR3 2133MHz"
-	depends on PLAT_MT7981 && DRAM_DDR3
+		depends on (PLAT_MT7981 && DRAM_DDR3) || \
+			   (PLAT_MT7988 && DRAM_DDR3)
 	config DDR3_FREQ_1866
 		bool "DDR3 1866MHz"
-		depends on PLAT_MT7981 && DRAM_DDR3
+		depends on (PLAT_MT7981 && DRAM_DDR3) || \
+			   (PLAT_MT7988 && DRAM_DDR3)
 	endchoice
 
 	choice DDR4_FREQUENCY
 	bool "DDR4 frequency"
 	default DDR4_FREQ_3200
-	depends on PLAT_MT7986 && DRAM_DDR4
+	depends on (PLAT_MT7986 && DRAM_DDR4) || \
+			   (PLAT_MT7988 && DRAM_DDR4)
 	config DDR4_FREQ_3200
 		bool "DDR4 3200MHz"
-		depends on PLAT_MT7986 && DRAM_DDR4
+		depends on (PLAT_MT7986 && DRAM_DDR4) || \
+				   (PLAT_MT7988 && DRAM_DDR4)
 	config DDR4_FREQ_2666
 		bool "DDR4 2666MHz"
-		depends on PLAT_MT7986 && DRAM_DDR4
+		depends on (PLAT_MT7986 && DRAM_DDR4) || \
+				   (PLAT_MT7988 && DRAM_DDR4)
 	endchoice
 
 
