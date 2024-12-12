@@ -23,7 +23,6 @@
 		bootcmd = "mtkboardboot";
 		blink_led = "blue:run";
 		system_led = "white:system";
-		gpio_power_clr = <12>;
 	};
 
 	memory@40000000 {
@@ -68,17 +67,6 @@
 		bl2_compatible = "emmc";
 	};
 
-        usb_vbus: regulator-usb {
-          compatible = "regulator-fixed";
-
-          regulator-name = "usb-vbus";
-          regulator-min-microvolt = <5000000>;
-          regulator-max-microvolt = <5000000>;
-
-          gpios = <&gpio 12 GPIO_ACTIVE_HIGH>;
-          enable-active-high;
-          regulator-boot-on;
-        };
 };
 
 &eth {
@@ -149,5 +137,4 @@
 
 &xhci {
   status = "okay";
-  vbus-supply = <&usb_vbus>;
 };
