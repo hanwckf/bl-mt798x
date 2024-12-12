@@ -340,8 +340,7 @@
     usb_phy: usb-phy@11e10000 {
       compatible = "mediatek,mt7981",
              "mediatek,generic-tphy-v2";
-      /*ranges = <0 0x11e10000 0x1700>;*/
-      ranges = <0 0 0x11e10000 0x1700>;
+      ranges = <0 0x11e10000 0x1700>;
       #address-cells = <1>;
       #size-cells = <1>;
       status = "disabled";
