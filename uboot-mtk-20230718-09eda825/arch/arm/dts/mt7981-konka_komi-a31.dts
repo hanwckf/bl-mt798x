@@ -7,7 +7,7 @@
 / {
 	#address-cells = <1>;
 	#size-cells = <1>;
-	model = "mt7981-konka_komi-a31";
+	model = "mt7981-komi-a31-etr631t-etr635u";
 	compatible = "mediatek,mt7981", "mediatek,mt7981-rfb";
 
 	chosen {
@@ -37,6 +37,13 @@
 		};
 	};
 
+	aliases {
+	    led-boot = &led_boot;
+	    led-failsafe = &led_failsafe;
+	    led-running = &led_running;
+	    led-upgrade = &led_boot;
+	};
+
 	leds {
 		compatible = "gpio-leds";
 
@@ -48,10 +55,36 @@
 		led@1 {
 			label = "blue:system";
 			gpios = <&gpio 13 GPIO_ACTIVE_LOW>;
+			default-state = "on";
 		};
 
 		led@2 {
 			label = "red:system";
+			gpios = <&gpio 34 GPIO_ACTIVE_LOW>;
+		};
+
+		led_running:led@3 {
+			label = "green";
+			gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
+		};
+
+		led_failsafe:led@4 {
+			label = "red";
+			gpios = <&gpio 34 GPIO_ACTIVE_LOW>;
+		};
+
+		led_boot:led@5 {
+			label = "blue";
+			gpios = <&gpio 34 GPIO_ACTIVE_LOW>;
+		};
+
+		led@6 {
+			label = "ap250md:green";
+			gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
+		};
+
+		led@7 {
+			label = "ap250md:red";
 			gpios = <&gpio 34 GPIO_ACTIVE_LOW>;
 		};
 	};
