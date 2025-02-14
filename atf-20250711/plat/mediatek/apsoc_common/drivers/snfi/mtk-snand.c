@@ -1845,6 +1845,33 @@ static int mtk_snand_id_probe(struct mtk_snand *snf,
 	return -EINVAL;
 }
 
+#define MT7622_GPIO_BASE    (void *)0x10211000
+#define MT7622_GPIO_DRIV(x) (MT7622_GPIO_BASE + 0x900 + 0x10 * x)
+
+void mtk_mt7622_snand_adjust_drive(void *dev, enum snand_drv drv)
+{
+	uint32_t e4, e8;
+
+	e4 = readl(MT7622_GPIO_DRIV(6)) & ~(0x3f00);
+	e8 = readl(MT7622_GPIO_DRIV(7)) & ~(0x3f00);
+
+	switch (drv) {
+	case SNAND_DRV_8mA:
+		e4 |= 0x3f00;
+		break;
+	case SNAND_DRV_12mA:
+		e8 |= 0x3f00;
+		break;
+	default:
+		return;
+	}
+
+	snand_log_chip(dev, "adjusting SPI-NAND pin drive strength to %umA\n", drv);
+
+	writel(e4, MT7622_GPIO_DRIV(6));
+	writel(e8, MT7622_GPIO_DRIV(7));
+}
+
 int mtk_snand_init(void *dev, const struct mtk_snand_platdata *pdata,
 		   struct mtk_snand **psnf)
 {
@@ -1887,6 +1914,9 @@ int mtk_snand_init(void *dev, const struct mtk_snand_platdata *pdata,
 	ret = mtk_snand_id_probe(&tmpsnf, &snand_info);
 	if (ret)
 		return ret;
+
+	if (pdata->soc == SNAND_SOC_MT7622 && snand_info->drv)
+		mtk_mt7622_snand_adjust_drive(dev, snand_info->drv);
 
 	rawpage_size = snand_info->memorg.pagesize +
 		       snand_info->memorg.sparesize;
