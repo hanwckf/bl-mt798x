@@ -19,8 +19,11 @@
 
 #define SPI_NAND_MAX_ID_LEN		4U
 #define DELAY_US_400MS			400000U
+#define DOSILICON_ID			0xE5U
 #define ETRON_ID			0xD5U
+#define FMSH_ID				0xA1U
 #define GIGADEVICE_ID			0xC8U
+#define GSTO_ID				0x52U
 #define MACRONIX_ID			0xC2U
 #define MICRON_ID			0x2CU
 #define TOSHIBA_ID			0x98U
@@ -129,7 +132,10 @@ static int spi_nand_quad_enable(uint8_t manufacturer_id)
 
 	if (manufacturer_id != MACRONIX_ID &&
 	    manufacturer_id != GIGADEVICE_ID &&
+	    manufacturer_id != GSTO_ID &&
+	    manufacturer_id != DOSILICON_ID &&
 	    manufacturer_id != ETRON_ID &&
+	    manufacturer_id != FMSH_ID &&
 	    manufacturer_id != FORESEE_ID) {
 		return 0;
 	}
@@ -364,6 +370,10 @@ static int spi_nand_check_pp(struct parameter_page *pp, uint8_t *sel)
 		INFO("PP COPY %d CRC read: 0x%x, compute: 0x%x\n",
 		     i, crc, crc_compute);
 
+		// Integrity CRC (bytes 254-255) on FMSH was reversed
+		if (crc != crc_compute)
+			crc = htobe16(pp->integrity_crc);
+
 		if (crc != crc_compute) {
 			ret = -EBADMSG;
 			continue;
@@ -400,8 +410,9 @@ static int spi_nand_check_pp(struct parameter_page *pp, uint8_t *sel)
 	return ret;
 }
 
-static int spi_nand_read_pp(struct parameter_page *pp, uint8_t *sel)
+static int spi_nand_read_pp(uint8_t *id, struct parameter_page *pp, uint8_t *sel)
 {
+	const bool is_dosilicon = (id[1] == DOSILICON_ID);
 	uint8_t status;
 	uint8_t cfg_reg;
 	int ret, op_ret;
@@ -413,7 +424,7 @@ static int spi_nand_read_pp(struct parameter_page *pp, uint8_t *sel)
 		return ret;
 	}
 
-	ret = spi_nand_write_reg(SPI_NAND_REG_CFG, cfg_reg | BIT(6));
+	ret = spi_nand_write_reg(SPI_NAND_REG_CFG, is_dosilicon ? BIT(6) : (cfg_reg | BIT(6)));
 	if (ret != 0) {
 		return ret;
 	}
@@ -449,7 +460,7 @@ out:
 		ERROR("Parameter page read failed\n");
 	}
 
-	ret = spi_nand_write_reg(SPI_NAND_REG_CFG, cfg_reg);
+	ret = spi_nand_write_reg(SPI_NAND_REG_CFG, is_dosilicon ? 0x10 : cfg_reg);
 	if (ret != 0) {
 		return ret;
 	}
@@ -589,12 +600,15 @@ int spi_nand_init(unsigned long long *size, unsigned int *erase_size)
 		return ret;
 	}
 
-	ret = spi_nand_read_pp(pp, &sel);
+	ret = spi_nand_read_id(id);
+	if (ret != 0) {
+		ERROR("SPI_NAND Read ID failed.\n");
+		return ret;
+	}
+
+	ret = spi_nand_read_pp(id, pp, &sel);
 	if (ret != 0) {
 		ERROR("Parameter page read fail, fallback to read ID.\n");
-		ret = spi_nand_read_id(id);
-		if (ret != 0)
-			return ret;
 		spi_nand_set_data_via_id(&spinand_dev, id, &vendor_id);
 	} else {
 		vendor_id = pp[sel].manufactuere_id;
