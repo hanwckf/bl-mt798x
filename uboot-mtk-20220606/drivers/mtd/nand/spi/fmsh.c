@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright (c) 2020-2021 Rockchip Electronics Co., Ltd
+ * Copyright (c) 2020-2021 Rockchip Electronics Co., Ltd.
  *
  * Authors:
  *	Dingqiang Lin <jon.lin@rock-chips.com>
@@ -108,6 +108,61 @@ static int fm25s01bi3_ecc_ecc_get_status(struct spinand_device *spinand,
 		return -EBADMSG;
 }
 
+static int fm25g0xd_ooblayout_ecc(struct mtd_info *mtd, int section,
+				  struct mtd_oob_region *region)
+{
+	if (section)
+		return -ERANGE;
+
+	region->offset = 64;
+	region->length = 64;
+
+	return 0;
+}
+
+static int fm25g0xd_ooblayout_free(struct mtd_info *mtd, int section,
+				   struct mtd_oob_region *region)
+{
+	if (section)
+		return -ERANGE;
+
+	/* Reserve 2 bytes for the BBM. */
+	region->offset = 2;
+	region->length = 62;
+
+	return 0;
+}
+
+static const struct mtd_ooblayout_ops fm25g0xd_ooblayout = {
+	.ecc = fm25g0xd_ooblayout_ecc,
+	.rfree = fm25g0xd_ooblayout_free,
+};
+
+/*
+ * ecc bits: 0xC0[4,6]
+ * [0x0], No bit errors were detected;
+ * [0x001, 0x011], Bit errors were detected and corrected. Not
+ *	reach Flipping Bits;
+ * [0x100], Bit error count equals the bit flip
+ *	detectionthreshold
+ * [0x101, 0x110], Reserved;
+ * [0x111], Multiple bit errors were detected and
+ *	not corrected.
+ */
+static int fm25g0xd_ecc_get_status(struct spinand_device *spinand,
+				   u8 status)
+{
+	struct nand_device *nand = spinand_to_nand(spinand);
+	u8 eccsr = (status & GENMASK(6, 4)) >> 4;
+
+	if (eccsr <= 3)
+		return 0;
+	else if (eccsr == 4)
+		return nand->eccreq.strength;
+	else
+		return -EBADMSG;
+}
+
 static const struct spinand_info fmsh_spinand_table[] = {
 	SPINAND_INFO("FM25S01A",
 		     SPINAND_ID(SPINAND_READID_METHOD_OPCODE_DUMMY, 0xE4),
@@ -154,6 +209,24 @@ static const struct spinand_info fmsh_spinand_table[] = {
 					      &update_cache_variants),
 		     SPINAND_HAS_QE_BIT,
 		     SPINAND_ECCINFO(&fm25s01_ooblayout, fm25s01bi3_ecc_ecc_get_status)),
+	SPINAND_INFO("FM25S02BI3-DND-A-G3",
+		     SPINAND_ID(SPINAND_READID_METHOD_OPCODE_DUMMY, 0xD6),
+		     NAND_MEMORG(1, 2048, 128, 64, 1024, 1, 1, 1),
+		     NAND_ECCREQ(8, 512),
+		     SPINAND_INFO_OP_VARIANTS(&read_cache_variants,
+					      &write_cache_variants,
+					      &update_cache_variants),
+		     SPINAND_HAS_QE_BIT,
+		     SPINAND_ECCINFO(&fm25s01_ooblayout, fm25s01bi3_ecc_ecc_get_status)),
+	SPINAND_INFO("FM25G02D",
+		     SPINAND_ID(SPINAND_READID_METHOD_OPCODE_DUMMY, 0xF2),
+		     NAND_MEMORG(1, 2048, 64, 64, 2048, 1, 1, 1),
+		     NAND_ECCREQ(4, 512),
+		     SPINAND_INFO_OP_VARIANTS(&read_cache_variants,
+					      &write_cache_variants,
+					      &update_cache_variants),
+		     SPINAND_HAS_QE_BIT,
+		     SPINAND_ECCINFO(&fm25g0xd_ooblayout, fm25g0xd_ecc_get_status)),
 };
 
 static const struct spinand_manufacturer_ops fmsh_spinand_manuf_ops = {
