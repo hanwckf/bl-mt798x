@@ -10,7 +10,7 @@ config _RAM_BOOT_RAM_BOOT_UART_DL
 	bool "Enable RAM boot UART download support"
 	depends on _BOOT_DEVICE_RAM
 	depends on !_RAM_BOOT_DEBUGGER_HOOK
-	depends on _INTERNAL
+	# depends on _INTERNAL
 	default n
 
 # Makefile options
