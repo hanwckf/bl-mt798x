@@ -45,6 +45,8 @@
 
 #define GPT_PRIMARY_PARTITION_ENTRY_LBA 2ULL
 
+#define PART_PRODUCTION_NAME	"production"
+
 struct mmc_image_read_priv {
 	struct image_read_priv p;
 	struct mmc *mmc;
@@ -1214,11 +1216,11 @@ int mmc_boot_image(u32 dev, bool do_boot)
 		return mmc_dual_boot(dev, do_boot);
 
 	if (strcmp(CONFIG_MTK_DEFAULT_FIT_BOOT_CONF, "")) {
-		part_primary = PART_FIRMWARE_NAME;
+		part_primary = PART_PRODUCTION_NAME;
 		part_secondary = PART_KERNEL_NAME;
 	} else {
 		part_primary = PART_KERNEL_NAME;
-		part_secondary = PART_FIRMWARE_NAME;
+		part_secondary = PART_PRODUCTION_NAME;
 	}
 
 	ret = boot_from_mmc_partition(dev, 0, part_primary, do_boot);
@@ -1336,7 +1338,7 @@ static int mmc_upgrade_image_itb(u32 dev, const void *data, size_t size,
 
 			do_dual_boot_post = true;
 		} else {
-			part = PART_FIRMWARE_NAME;
+			part = PART_PRODUCTION_NAME;
 		}
 	}
 
