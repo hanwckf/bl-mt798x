@@ -856,7 +856,7 @@ static int _boot_from_mmc(struct mmc *mmc, u64 offset, bool do_boot)
 		if (ret)
 			return ret;
 
-		itb_size = itb_image_size((const void *)data_load_addr);
+		itb_size = fit_get_totalsize((const void *)data_load_addr);
 		if (itb_size > size) {
 			ret = _mmc_read(mmc, offset + size,
 					(void *)(data_load_addr + size),
@@ -1428,7 +1428,7 @@ int mmc_upgrade_image_cust(u32 dev, const void *data, size_t size,
 	if (ret)
 		return ret;
 
-	if (ii.type == IMAGE_ITB)
+	if (ii.header_type == HEADER_FIT)
 		return mmc_upgrade_image_itb(dev, data, size, kernel_part);
 
 	if (IS_ENABLED(CONFIG_MTK_DUAL_BOOT_ITB_IMAGE) ||

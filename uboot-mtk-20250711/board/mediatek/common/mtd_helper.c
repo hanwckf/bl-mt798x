@@ -571,7 +571,7 @@ int boot_from_mtd(struct mtd_info *mtd, u64 offset, bool do_boot)
 		if (ret)
 			return ret;
 
-		itb_size = itb_image_size((const void *)data_load_addr);
+		itb_size = fit_get_totalsize((const void *)data_load_addr);
 		if (itb_size > size) {
 			ret = mtd_read_skip_bad(mtd, offset + size,
 						itb_size - size,
@@ -1610,7 +1610,7 @@ int mtd_upgrade_image(const void *data, size_t size)
 #endif
 				return write_ubi2_tar_image(data, size, mtd);
 			}
-			if (!ret && ii.type == IMAGE_ITB)
+			if (ii.header_type == HEADER_FIT)
 				return write_ubi_itb_image(data, size, mtd);
 		}
 	}

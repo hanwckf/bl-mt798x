@@ -401,12 +401,12 @@ static int parse_image_itb(const void *fit, size_t size, u32 blocksize,
 			   struct owrt_image_info *ii)
 {
 	int ret, cfg_noffset;
-	u32 image_size;
+	size_t image_size;
 
-	image_size = itb_image_size(fit);
+	image_size = fit_get_totalsize(fit);
 	if (!image_size || image_size > size) {
 		if (image_size) {
-			printf("itb image size is invalid (%u >= %zu)\n",
+			printf("itb image size is invalid (%lu >= %zu)\n",
 			       image_size, size);
 		}
 
@@ -512,8 +512,8 @@ int parse_image_ram(const void *data, size_t size, u32 blocksize,
 #endif
 #if defined(CONFIG_FIT)
 	case IMAGE_FORMAT_FIT:
-		if (!parse_image_itb(data, size, blocksize, ii))
-			return 0;
+		// if (!parse_image_itb(data, size, blocksize, ii))
+		// 	return 0;
 
 		ii->header_type = HEADER_FIT;
 		ii->kernel_size = fit_get_size(data);
