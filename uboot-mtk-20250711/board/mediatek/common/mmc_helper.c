@@ -767,8 +767,8 @@ static int mmc_set_fdtargs_basic(struct mmc *mmc)
 	ulong len;
 	int ret;
 
-#if defined(CONFIG_ENV_MMC_PARTITION)
-	env_part_name = CONFIG_ENV_MMC_PARTITION;
+#if defined(CONFIG_ENV_MMC_SW_PARTITION)
+	env_part_name = CONFIG_ENV_MMC_SW_PARTITION;
 #else
 	env_part_name = ofnode_conf_read_str("u-boot,mmc-env-partition");
 #endif
