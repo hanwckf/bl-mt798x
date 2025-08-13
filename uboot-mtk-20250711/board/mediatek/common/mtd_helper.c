@@ -1367,7 +1367,11 @@ static int str_to_size(const char *s, u64 *retsz)
 
 static int ubi_check_reserved_volumes(bool require_attach)
 {
+#if defined(CONFIG_MTK_UBI_RESERVED_VOLUMES)
 	const char *rsvd_vols = CONFIG_MTK_UBI_RESERVED_VOLUMES;
+#else
+	const char *rsvd_vols = NULL;
+#endif
 	char *buf, *volname, *volsz, *end, *next;
 	struct ubi_volume *vol;
 	u64 volsize;
