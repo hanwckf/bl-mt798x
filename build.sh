@@ -4,7 +4,7 @@ TOOLCHAIN=aarch64-linux-gnu-
 #UBOOT_DIR=uboot-mtk-20220606
 UBOOT_DIR=uboot-mtk-20230718-09eda825
 #ATF_DIR=atf-20220606-637ba581b
-ATF_DIR=atf-20231013-0ea67d76a
+ATF_DIR=atf-20240117-bacca82a8
 
 if [ -z "$SOC" ] || [ -z "$BOARD" ]; then
 	echo "Usage: SOC=[mt7981|mt7986] BOARD=<board name> MULTI_LAYOUT=[0|1] $0"
@@ -59,9 +59,9 @@ if [ "$fixedparts" = "1" ]; then
 	echo "CONFIG_MTK_FIXED_MTD_MTDPARTS=y" >> "$UBOOT_DIR/.config"
 fi
 make -C "$UBOOT_DIR" olddefconfig
+make -C "$UBOOT_DIR" clean
 make -C "$UBOOT_DIR" -j $(nproc) all
 if [ -f "$UBOOT_DIR/u-boot.bin" ]; then
-	cp -f "$UBOOT_DIR/u-boot.bin" "$ATF_DIR/u-boot.bin"
 	echo "u-boot build done!"
 else
 	echo "u-boot build fail!"
@@ -69,13 +69,18 @@ else
 fi
 
 echo "Build atf..."
-make -C "$ATF_DIR" -f makefile "$ATF_CFG" CONFIG_CROSS_COMPILER="${TOOLCHAIN}"
-make -C "$ATF_DIR" -f makefile clean CONFIG_CROSS_COMPILER="${TOOLCHAIN}"
+if [ -e "$ATF_DIR/makefile" ]; then
+	ATF_MKFILE="makefile"
+else
+	ATF_MKFILE="Makefile"
+fi
+make -C "$ATF_DIR" -f "$ATF_MKFILE" clean CONFIG_CROSS_COMPILER="$TOOLCHAIN" CROSS_COMPILER="$TOOLCHAIN"
 rm -rf "$ATF_DIR/build"
-make -C "$ATF_DIR" -f makefile all CONFIG_CROSS_COMPILER="${TOOLCHAIN}"
+make -C "$ATF_DIR" -f "$ATF_MKFILE" "$ATF_CFG" CONFIG_CROSS_COMPILER="$TOOLCHAIN" CROSS_COMPILER="$TOOLCHAIN"
+make -C "$ATF_DIR" -f "$ATF_MKFILE" all CONFIG_CROSS_COMPILER="$TOOLCHAIN" CROSS_COMPILER="$TOOLCHAIN" CONFIG_BL33="../$UBOOT_DIR/u-boot.bin" BL33="../$UBOOT_DIR/u-boot.bin" -j $(nproc)
 
 mkdir -p "output"
-if [ -f "$ATF_DIR/build/${SOC}/release/fip.bin" ]; then
+if [ -f "$ATF_DIR/build/$SOC/release/fip.bin" ]; then
 	FIP_NAME="${SOC}_${BOARD}-fip"
 	if [ "$fixedparts" = "1" ]; then
 		FIP_NAME="${FIP_NAME}-fixed-parts"
@@ -83,16 +88,16 @@ if [ -f "$ATF_DIR/build/${SOC}/release/fip.bin" ]; then
 	if [ "$multilayout" = "1" ]; then
 		FIP_NAME="${FIP_NAME}-multi-layout"
 	fi
-	cp -f "$ATF_DIR/build/${SOC}/release/fip.bin" "output/${FIP_NAME}.bin"
+	cp -f "$ATF_DIR/build/$SOC/release/fip.bin" "output/$FIP_NAME.bin"
 	echo "$FIP_NAME build done"
 else
 	echo "fip build fail!"
 	exit 1
 fi
-if grep -q "CONFIG_TARGET_ALL_NO_SEC_BOOT=y" "$ATF_DIR/configs/$ATF_CFG"; then
-	if [ -f "$ATF_DIR/build/${SOC}/release/bl2.img" ]; then
+if grep -Eq "(^_|CONFIG_TARGET_ALL_NO_SEC_BOOT=y)" "$ATF_DIR/configs/$ATF_CFG"; then
+	if [ -f "$ATF_DIR/build/$SOC/release/bl2.img" ]; then
 		BL2_NAME="${SOC}_${BOARD}-bl2"
-		cp -f "$ATF_DIR/build/${SOC}/release/bl2.img" "output/${BL2_NAME}.bin"
+		cp -f "$ATF_DIR/build/$SOC/release/bl2.img" "output/$BL2_NAME.bin"
 		echo "$BL2_NAME build done"
 	else
 		echo "bl2 build fail!"
