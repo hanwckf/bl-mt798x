@@ -477,7 +477,7 @@ static int write_ubi_fit_image(const void *data, size_t size,
 	if (ret)
 		return ret;
 
-	if (!find_ubi_volume("fit")) {
+	if (!find_ubi_volume("fit") && !find_ubi_volume("fip")) {
 		/* ubi is dirty, erase ubi and recreate volumes */
 		umount_ubi();
 		ubi_mtd_param_parse(mtd->name, NULL);

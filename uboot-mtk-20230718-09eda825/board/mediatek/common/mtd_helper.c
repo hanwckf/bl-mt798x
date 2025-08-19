@@ -28,6 +28,7 @@
 #include "untar.h"
 
 #define PART_UBI_NAME		"ubi"
+#define PART_FIP_NAME		"fip"
 #define PART_FIRMWARE_NAME	"firmware"
 #define PART_FIT_NAME		"fit"
 #define PART_KERNEL_NAME	"kernel"
@@ -654,7 +655,7 @@ static int write_ubi_fit_image(const void *data, size_t size,
 	if (ret)
 		return ret;
 
-	if (!ubi_find_volume(PART_FIT_NAME)) {
+	if (!ubi_find_volume(PART_FIT_NAME) && !ubi_find_volume(PART_FIP_NAME)) {
 		/* ubi is dirty, erase ubi and recreate volumes */
 		ubi_exit();
 		ret = mtd_erase_skip_bad(mtd, 0, mtd->size, mtd->size, NULL, NULL, false);
