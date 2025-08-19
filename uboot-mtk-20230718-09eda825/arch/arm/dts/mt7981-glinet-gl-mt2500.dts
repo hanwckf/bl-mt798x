@@ -23,7 +23,6 @@
 		bootcmd = "mtkboardboot";
 		blink_led = "blue:run";
 		system_led = "white:system";
-		gpio_power_clr = <12>;
 	};
 
 	memory@40000000 {
@@ -129,4 +128,12 @@
 
 &watchdog {
 	status = "disabled";
+};
+
+&usb_phy {
+  status = "okay";
+};
+
+&xhci {
+  status = "okay";
 };

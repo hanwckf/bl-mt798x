@@ -8,6 +8,7 @@
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/clock/mt7981-clk.h>
 #include <dt-bindings/reset/mt7629-reset.h>
+#include <dt-bindings/phy/phy.h>
 #include <dt-bindings/pinctrl/mt65xx.h>
 #include <dt-bindings/input/linux-event-codes.h>
 
@@ -336,4 +337,51 @@
 		status = "disabled";
 	};
 
+	usb_phy: usb-phy@11e10000 {
+		compatible = "mediatek,mt7981",
+			"mediatek,generic-tphy-v2";
+		ranges = <0 0x11e10000 0x1700>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		status = "disabled";
+
+		u2port0: usb-phy@0 {
+			reg = <0x0 0x700>;
+			clocks = <&topckgen CK_TOP_USB_FRMCNT_SEL>;
+			clock-names = "ref";
+			#phy-cells = <1>;
+		};
+
+		u3port0: usb-phy@700 {
+			reg = <0x700 0x900>;
+			clocks = <&topckgen CK_TOP_USB3_PHY_SEL>;
+			clock-names = "ref";
+			#phy-cells = <1>;
+			mediatek,syscon-type = <&topmisc 0x218 0>;
+			status = "okay";
+		};
+	};
+
+	reg_3p3v: regulator-3p3v {
+		compatible = "regulator-fixed";
+		regulator-name = "fixed-3.3V";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	xhci: usb@11200000 {
+		compatible = "mediatek,mt7986-xhci",
+			"mediatek,mtk-xhci";
+		reg = <0x11200000 0x2e00>,
+			<0x11203e00 0x0100>;
+		reg-names = "mac", "ippc";
+		interrupts = <GIC_SPI 173 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&topckgen CK_TOP_U2U3_XHCI_SEL>;
+		phys = <&u2port0 PHY_TYPE_USB2>,
+			<&u3port0 PHY_TYPE_USB3>;
+		vusb33-supply = <&reg_3p3v>;
+		status = "disabled";
+	};
 };
