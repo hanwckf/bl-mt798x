@@ -71,19 +71,13 @@
 	phy-mode = "2500base-x";
 	phy-handle = <&phy1>;
 
-	fixed-link {
-		speed = <2500>;
-		full-duplex;
-		pause;
-	};
-
 	phy1: ethernet-phy@1 {
-		compatible = "ethernet-phy-ieee802.3-c45";
+		compatible = "ethernet-phy-id001c.c849", "ethernet-phy-ieee802.3-c45";
 		reg = <1>;
 		phy-mode = "2500base-x";
 		reset-gpios = <&pio 42 GPIO_ACTIVE_LOW>;
-		reset-assert-us = <100000>;
-		reset-deassert-us = <100000>;
+		reset-assert-us = <200000>;
+		reset-deassert-us = <200000>;
 	};
 };
 
