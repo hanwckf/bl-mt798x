@@ -2,34 +2,26 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Firmware update</title>
+		<title>U-Boot update</title>
 		<link rel="stylesheet" href="/style.css">
-        <script src="/main.js"></script>
+		<script src="/main.js"></script>
 	</head>
-	<body onload="startup()">
+	<body onload="getversion()">
 		<div id="m">
-			<h1>FIRMWARE UPDATE</h1>
+			<h1>U-BOOT UPDATE</h1>
 			<p id="hint">
-				You are going to update <strong>firmware</strong> on the device.<br>
+				You are going to update <strong>U-Boot (bootloader)</strong> on the device.<br>
 				Please, choose file from your local hard drive and click <strong>Upload</strong> button.
 			</p>
 			<form id="form">
-				<div id="mtd_layout" style="display: none;">
-					<div id="current_mtd_layout"></div>
-					<br>
-					Choose mtd layout:	
-					<select id="mtd_layout_label" name="mtd_layout_label"></select>
-					<br><br>
-				</div>
-				<input id="file" type="file" name="firmware">
-				<input type="button" value="Upload" onclick="upload('firmware')">
+				<input id="file" type="file" name="fip">
+				<input type="button" value="Upload" onclick="upload('fip')">
 			</form>
 			<div>
 				<div class="bar" id="bar" style="display: none; --percent: 0;"></div>
 			</div>
 			<div id="size" style="display: none;">Size: xxxx</div>
 			<div id="md5" style="display: none;">MD5: xxxx</div>
-			<div id="mtd" style="display: none;">MTD layout: xxxx</div>
 			<div id="upgrade" style="display: none;">
 				<p>If all information above is correct, click "Update".</p>
 				<button class="button" onclick="location = '/flashing.html'">Update</button>
@@ -39,7 +31,8 @@
 				<ul>
 					<li>do not power off the device during update</li>
 					<li>if everything goes well, the device will restart</li>
-					<li>you can upload whatever you want, so be sure that you choose proper firmware image for your device</li>
+					<li>you can upload whatever you want, so be sure that you choose proper U-Boot image for your device</li>
+					<li>updating U-Boot is a very dangerous operation and may damage your device!</li>
 				</ul>
 			</div>
 		</div>

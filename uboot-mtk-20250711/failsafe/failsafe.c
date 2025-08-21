@@ -9,25 +9,39 @@
 
 #include <command.h>
 #include <errno.h>
+#include <env.h>
 #include <malloc.h>
 #include <net.h>
 #include <net/mtk_tcp.h>
 #include <net/mtk_httpd.h>
 #include <u-boot/md5.h>
+#include <linux/stringify.h>
+#include <dm/ofnode.h>
 #include <vsprintf.h>
+#include <version_string.h>
+#include <failsafe/fw_type.h>
+
+#include "../board/mediatek/common/boot_helper.h"
 #include "fs.h"
 
 static u32 upload_data_id;
 static const void *upload_data;
 static size_t upload_size;
 static int upgrade_success;
+static failsafe_fw_t fw_type;
 
-int __weak failsafe_validate_image(const void *data, size_t size)
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+static const char *mtd_layout_label;
+const char *get_mtd_layout_label(void);
+#define MTD_LAYOUTS_MAXLEN	128
+#endif
+
+int __weak failsafe_validate_image(const void *data, size_t size, failsafe_fw_t fw)
 {
 	return 0;
 }
 
-int __weak failsafe_write_image(const void *data, size_t size)
+int __weak failsafe_write_image(const void *data, size_t size, failsafe_fw_t fw)
 {
 	return -ENOSYS;
 }
@@ -58,6 +72,23 @@ static int output_plain_file(struct httpd_response *response,
 	return ret;
 }
 
+static void version_handler(enum httpd_uri_handler_status status,
+	struct httpd_request *request,
+	struct httpd_response *response)
+{
+	if (status != HTTP_CB_NEW)
+		return;
+
+	response->status = HTTP_RESP_STD;
+
+	response->data = version_string;
+	response->size = strlen(response->data);
+
+	response->info.code = 200;
+	response->info.connection_close = 1;
+	response->info.content_type = "text/plain";
+}
+
 static void index_handler(enum httpd_uri_handler_status status,
 			  struct httpd_request *request,
 			  struct httpd_response *response)
@@ -66,109 +97,107 @@ static void index_handler(enum httpd_uri_handler_status status,
 		output_plain_file(response, "index.html");
 }
 
-struct upload_status {
-	bool free_response_data;
-};
 
 static void upload_handler(enum httpd_uri_handler_status status,
 			  struct httpd_request *request,
 			  struct httpd_response *response)
 {
-	char *buff, *md5_ptr, *size_ptr, size_str[16];
+	static char md5_str[33] = "";
+	static char resp[128];
 	struct httpd_form_value *fw;
-	struct upload_status *us;
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+	struct httpd_form_value *mtd = NULL;
+#endif
 	u8 md5_sum[16];
 	int i;
 
 	static char hexchars[] = "0123456789abcdef";
 
-	if (status == HTTP_CB_NEW) {
-		us = calloc(1, sizeof(*us));
-		if (!us) {
-			response->info.code = 500;
-			return;
-		}
-
-		response->session_data = us;
-
-		fw = httpd_request_find_value(request, "firmware");
-		if (!fw) {
-			response->info.code = 302;
-			response->info.connection_close = 1;
-			response->info.location = "/";
-			return;
-		}
-
-		if (failsafe_validate_image(fw->data, fw->size)) {
-			if (output_plain_file(response, "validate_fail.html"))
-				response->info.code = 500;
-
-			return;
-		}
-
-		if (output_plain_file(response, "upload.html")) {
-			response->info.code = 500;
-			return;
-		}
-
-		buff = malloc(response->size + 1);
-		if (buff) {
-			memcpy(buff, response->data, response->size);
-			buff[response->size] = 0;
-
-			md5_ptr = strstr(buff, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-			size_ptr = strstr(buff, "YYYYYYYYYY");
-
-			if (md5_ptr) {
-				md5_wd((u8 *)fw->data, fw->size, md5_sum, MD5_DEF_CHUNK_SZ);
-				for (i = 0; i < 16; i++) {
-					u8 hex;
-
-					hex = (md5_sum[i] >> 4) & 0xf;
-					md5_ptr[i * 2] = hexchars[hex];
-					hex = md5_sum[i] & 0xf;
-					md5_ptr[i * 2 + 1] = hexchars[hex];
-				}
-			}
-
-			if (size_ptr) {
-				u32 n;
-
-				n = snprintf(size_str, sizeof(size_str), "%zu",
-					     fw->size);
-				memset(size_str + n, ' ', sizeof(size_str) - n);
-				memcpy(size_ptr, size_str, 10);
-			}
-
-			response->data = buff;
-			us->free_response_data = true;
-		}
-
-		upload_data_id = upload_id;
-		upload_data = fw->data;
-		upload_size = fw->size;
-
+	if (status != HTTP_CB_NEW)
 		return;
+
+	response->status = HTTP_RESP_STD;
+	response->info.code = 200;
+	response->info.connection_close = 1;
+	response->info.content_type = "text/plain";
+
+#ifdef CONFIG_MTK_BOOTMENU_MMC
+	fw = httpd_request_find_value(request, "gpt");
+	if (fw) {
+		fw_type = FW_TYPE_GPT;
+		goto done;
+	}
+#endif
+
+	fw = httpd_request_find_value(request, "fip");
+	if (fw) {
+		fw_type = FW_TYPE_FIP;
+		if (failsafe_validate_image(fw->data, fw->size, fw_type))
+			goto fail;
+		goto done;
 	}
 
-	if (status == HTTP_CB_CLOSED) {
-		if (response->session_data) {
-			us = response->session_data;
-
-			if (us->free_response_data)
-				free((void *)response->data);
-
-			free(response->session_data);
-		}
+	fw = httpd_request_find_value(request, "bl2");
+	if (fw) {
+		fw_type = FW_TYPE_BL2;
+		if (failsafe_validate_image(fw->data, fw->size, fw_type))
+			goto fail;
+		goto done;
 	}
-}
 
-static void flashing_handler(enum httpd_uri_handler_status status,
-			     struct httpd_request *request,
-			     struct httpd_response *response)
-{
-	if (status == HTTP_CB_NEW)
-		output_plain_file(response, "flashing.html");
+	fw = httpd_request_find_value(request, "firmware");
+	if (fw) {
+		fw_type = FW_TYPE_FW;
+		if (failsafe_validate_image(fw->data, fw->size, fw_type))
+			goto fail;
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+		mtd = httpd_request_find_value(request, "mtd_layout");
+#endif
+		goto done;
+	}
+
+	fw = httpd_request_find_value(request, "initramfs");
+	if (fw) {
+		fw_type = FW_TYPE_INITRD;
+		if (fdt_check_header(fw->data))
+			goto fail;
+		goto done;
+	}
+
+fail:
+	response->data = "fail";
+	response->size = strlen(response->data);
+	return;
+
+done:
+	upload_data_id = upload_id;
+	upload_data = fw->data;
+	upload_size = fw->size;
+
+	md5_wd((u8 *)fw->data, fw->size, md5_sum, 0);
+	for (i = 0; i < 16; i++) {
+		u8 hex = (md5_sum[i] >> 4) & 0xf;
+		md5_str[i * 2] = hexchars[hex];
+		hex = md5_sum[i] & 0xf;
+		md5_str[i * 2 + 1] = hexchars[hex];
+	}
+
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+	if (mtd) {
+		mtd_layout_label = mtd->data;
+		sprintf(resp, "%ld %s %s", fw->size, md5_str, mtd->data);
+	} else {
+		sprintf(resp, "%ld %s", fw->size, md5_str);
+	}
+#else
+	sprintf(resp, "%ld %s", fw->size, md5_str);
+#endif
+
+	response->data = resp;
+	response->size = strlen(response->data);
+
+	return;
+
 }
 
 struct flashing_status {
@@ -181,7 +210,6 @@ static void result_handler(enum httpd_uri_handler_status status,
 			  struct httpd_request *request,
 			  struct httpd_response *response)
 {
-	const struct fs_desc *file;
 	struct flashing_status *st;
 	u32 size;
 
@@ -221,29 +249,31 @@ static void result_handler(enum httpd_uri_handler_status status,
 			return;
 		}
 
-		if (upload_data_id == upload_id)
-			st->ret = failsafe_write_image(upload_data,
-						       upload_size);
+		if (upload_data_id == upload_id) {
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+			if (mtd_layout_label &&
+					strcmp(get_mtd_layout_label(), mtd_layout_label) != 0) {
+				printf("httpd: saving mtd_layout_label: %s\n", mtd_layout_label);
+				env_set("mtd_layout_label", mtd_layout_label);
+				env_save();
+			}
+#endif
+			if (fw_type == FW_TYPE_INITRD)
+				st->ret = 0;
+			else
+				st->ret = failsafe_write_image(upload_data,
+							       upload_size, fw_type);
+		}
 
 		/* invalidate upload identifier */
 		upload_data_id = rand();
 
 		if (!st->ret)
-			file = fs_find_file("success.html");
+			response->data = "success";
 		else
-			file = fs_find_file("fail.html");
+			response->data = "failed";
 
-		if (!file) {
-			if (!st->ret)
-				response->data = "Upgrade completed!";
-			else
-				response->data = "Upgrade failed!";
-			response->size = strlen(response->data);
-			return;
-		}
-
-		response->data = file->data;
-		response->size = file->size;
+		response->size = strlen(response->data);
 
 		st->body_sent = 1;
 
@@ -272,6 +302,16 @@ static void style_handler(enum httpd_uri_handler_status status,
 	}
 }
 
+static void js_handler(enum httpd_uri_handler_status status,
+	struct httpd_request *request,
+	struct httpd_response *response)
+{
+	if (status == HTTP_CB_NEW) {
+		output_plain_file(response, "main.js");
+		response->info.content_type = "text/javascript";
+	}
+}
+
 static void not_found_handler(enum httpd_uri_handler_status status,
 			      struct httpd_request *request,
 			      struct httpd_response *response)
@@ -280,6 +320,59 @@ static void not_found_handler(enum httpd_uri_handler_status status,
 		output_plain_file(response, "404.html");
 		response->info.code = 404;
 	}
+}
+
+static void html_handler(enum httpd_uri_handler_status status,
+	struct httpd_request *request,
+	struct httpd_response *response)
+{
+	if (status != HTTP_CB_NEW)
+		return;
+
+	if (output_plain_file(response, request->urih->uri + 1))
+		not_found_handler(status, request, response);
+}
+
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+static const char *get_mtdlayout_str(void)
+{
+	static char mtd_layout_str[MTD_LAYOUTS_MAXLEN];
+	ofnode node, layout;
+
+	sprintf(mtd_layout_str, "%s;", get_mtd_layout_label());
+
+	node = ofnode_path("/mtd-layout");
+	if (ofnode_valid(node) && ofnode_get_child_count(node)) {
+		ofnode_for_each_subnode(layout, node) {
+			strcat(mtd_layout_str, ofnode_read_string(layout, "label"));
+			strcat(mtd_layout_str, ";");
+		}
+	}
+
+	return mtd_layout_str;
+}
+#endif
+
+static void mtd_layout_handler(enum httpd_uri_handler_status status,
+	struct httpd_request *request,
+	struct httpd_response *response)
+{
+	if (status != HTTP_CB_NEW)
+		return;
+
+	response->status = HTTP_RESP_STD;
+
+#ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
+	response->data = get_mtdlayout_str();
+#else
+	response->data = "error";
+#endif
+
+	response->size = strlen(response->data);
+
+	response->info.code = 200;
+	response->info.connection_close = 1;
+	response->info.content_type = "text/plain";
 }
 
 int start_web_failsafe(void)
@@ -297,11 +390,23 @@ int start_web_failsafe(void)
 	}
 
 	httpd_register_uri_handler(inst, "/", &index_handler, NULL);
+	httpd_register_uri_handler(inst, "/bl2.html", &html_handler, NULL);
+	httpd_register_uri_handler(inst, "/booting.html", &html_handler, NULL);
 	httpd_register_uri_handler(inst, "/cgi-bin/luci", &index_handler, NULL);
-	httpd_register_uri_handler(inst, "/upload", &upload_handler, NULL);
-	httpd_register_uri_handler(inst, "/flashing", &flashing_handler, NULL);
+	httpd_register_uri_handler(inst, "/cgi-bin/luci/", &index_handler, NULL);
+	httpd_register_uri_handler(inst, "/fail.html", &html_handler, NULL);
+	httpd_register_uri_handler(inst, "/flashing.html", &html_handler, NULL);
+	httpd_register_uri_handler(inst, "/getmtdlayout", &mtd_layout_handler, NULL);
+#ifdef CONFIG_MTK_BOOTMENU_MMC
+	httpd_register_uri_handler(inst, "/gpt.html", &html_handler, NULL);
+#endif
+	httpd_register_uri_handler(inst, "/initramfs.html", &html_handler, NULL);
+	httpd_register_uri_handler(inst, "/main.js", &js_handler, NULL);
 	httpd_register_uri_handler(inst, "/result", &result_handler, NULL);
 	httpd_register_uri_handler(inst, "/style.css", &style_handler, NULL);
+	httpd_register_uri_handler(inst, "/uboot.html", &html_handler, NULL);
+	httpd_register_uri_handler(inst, "/upload", &upload_handler, NULL);
+	httpd_register_uri_handler(inst, "/version", &version_handler, NULL);
 	httpd_register_uri_handler(inst, "", &not_found_handler, NULL);
 
 	net_loop(MTK_TCP);
@@ -312,8 +417,14 @@ int start_web_failsafe(void)
 static int do_httpd(struct cmd_tbl *cmdtp, int flag, int argc,
 		    char *const argv[])
 {
-	u32 local_ip = ntohl(net_ip.s_addr);
+	u32 local_ip;
 	int ret;
+
+#ifdef CONFIG_NET_FORCE_IPADDR
+	net_ip = string_to_ip(CONFIG_IPADDR);
+	net_netmask = string_to_ip(CONFIG_NETMASK);
+#endif
+	local_ip = ntohl(net_ip.s_addr);
 
 	printf("\nWeb failsafe UI started\n");
 	printf("URL: http://%u.%u.%u.%u/\n",
@@ -323,8 +434,12 @@ static int do_httpd(struct cmd_tbl *cmdtp, int flag, int argc,
 
 	ret = start_web_failsafe();
 
-	if (upgrade_success)
-		do_reset(NULL, 0, 0, NULL);
+	if (upgrade_success) {
+		if (fw_type == FW_TYPE_INITRD)
+			boot_from_mem((ulong)upload_data);
+		else
+			do_reset(NULL, 0, 0, NULL);
+	}
 
 	return ret;
 }
