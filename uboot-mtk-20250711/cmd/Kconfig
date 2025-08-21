@@ -3118,4 +3118,10 @@ config CMD_SPAWN_NUM_JOBS
 	  When a jobs exits, its identifier is available to be re-used by the next
 	  spawn command.
 
+config CMD_GL_BTN
+	bool "GL-iNet button check command"
+	depends on BUTTON
+	default n
+	select POLLER
+
 endif
