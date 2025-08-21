@@ -538,6 +538,8 @@ config MTK_BOARDINFO
 config MTK_FIP_SUPPORT
 	bool "Enable ATF FIP utilities"
 	select MTK_BOARDINFO
+	select SHA256
+	select MD5
 	default n
 	help
 	  Enable this option will allow boards to use ATF related
