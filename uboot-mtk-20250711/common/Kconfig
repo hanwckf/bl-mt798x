@@ -1255,3 +1255,7 @@ config FDT_NO_BOOTARGS_OVERRIDE
 	help
 	  Enable this option to avoid bootargs in fdt being overrided by that
 	  set in environment.
+
+config POLLER
+	bool "generic polling infrastructure"
+	default n

@@ -12,6 +12,7 @@
 #include <linux/mtd/mtd.h>
 #include <jffs2/load_kernel.h>
 #include <watchdog.h>
+#include <poller.h>
 
 #include "nmbm-debug.h"
 
@@ -376,6 +377,8 @@ static int nmbm_mtd_write_data(struct nmbm_mtd *nm, uint64_t addr,
 
 	while (len || ooblen) {
 		schedule();
+
+		poller_call();
 
 		if (len) {
 			/* Move data */

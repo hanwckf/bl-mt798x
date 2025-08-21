@@ -8,6 +8,7 @@
 #include "nmbm-private.h"
 
 #include "nmbm-debug.h"
+#include <poller.h>
 
 #define NMBM_VER_MAJOR			1
 #define NMBM_VER_MINOR			0
@@ -2535,6 +2536,8 @@ int nmbm_erase_block_range(struct nmbm_instance *ni, uint64_t addr,
 	while (start_ba <= end_ba) {
 		WATCHDOG_RESET();
 
+		poller_call();
+
 		ret = nmbm_erase_logic_block(ni, start_ba);
 		if (ret) {
 			if (failed_addr)
@@ -2666,6 +2669,8 @@ int nmbm_read_range(struct nmbm_instance *ni, uint64_t addr, size_t size,
 
 	while (sizeremain) {
 		WATCHDOG_RESET();
+
+		poller_call();
 
 		leading = off & ni->writesize_mask;
 		chunksize = ni->lower.writesize - leading;
