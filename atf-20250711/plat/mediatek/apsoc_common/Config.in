@@ -1,0 +1,1247 @@
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Copyright (c) 2023, MediaTek Inc. All rights reserved.
+# Author: Weijie Gao <weijie.gao@mediatek.com>
+#
+# Main configurations for MediaTek ApSoc platforms
+#
+
+mainmenu "MediaTek ATF Configuration"
+
+config _AARCH32
+	bool
+
+choice
+	prompt "Platform"
+
+	config _PLAT_MT7622
+		bool "MT7622"
+		select _SUPPORTS_BOOT_DEVICE_SNFI_NAND
+		select _SUPPORTS_BOOT_DEVICE_EMMC_SD
+		select _DEFAULT_BOOT_DEVICE_SNFI_NAND
+		select _BROM_NAND_HEADER_LEGACY
+		select _DEFAULT_NAND_NMBM
+		select _SUPPORTS_AR_V1
+
+	config _PLAT_MT7629
+		bool "MT7629"
+		select _AARCH32
+		select _SUPPORTS_BOOT_DEVICE_SNFI_NAND
+		select _DEFAULT_BOOT_DEVICE_SNFI_NAND
+		select _BROM_NAND_HEADER_LEGACY
+		select _DEFAULT_NAND_NMBM
+
+	config _PLAT_MT7981
+		bool "MT7981"
+		select _SUPPORTS_DRAM_SIZE_LIMIT
+		select _SUPPORTS_DDR3_256MB
+		select _SUPPORTS_DDR3_512MB
+		select _SUPPORTS_DDR4
+		select _SUPPORTS_DDR4_512MB
+		select _SUPPORTS_DDR4_1GB
+		select _SUPPORTS_DDR3_FREQ
+		select _SUPPORTS_DDR3_1866
+		select _SUPPORTS_DDR3_2133
+		select _DEFAULT_DDR3_2133
+		select _SUPPORTS_DRAM_DEBUG_LOG
+		select _SUPPORTS_BOOT_DEVICE_SNFI_NAND
+		select _SUPPORTS_BOOT_DEVICE_SPIM_NAND
+		select _SUPPORTS_BOOT_DEVICE_EMMC_SD
+		select _DEFAULT_BOOT_DEVICE_SPIM_NAND
+		select _BROM_NAND_HEADER_HSM
+		select _DEFAULT_NAND_NMBM
+		select _SUPPORTS_EMERG_MEM_DUMP
+		select _SUPPORTS_AR_V2
+		select _SUPPORTS_DUAL_FIP
+
+	config _PLAT_MT7986
+		bool "MT7986"
+		select _SUPPORTS_DRAM_SIZE_LIMIT
+		select _SUPPORTS_DDR3_256MB
+		select _SUPPORTS_DDR3_512MB
+		select _SUPPORTS_DDR4
+		select _SUPPORTS_DDR4_512MB
+		select _SUPPORTS_DDR4_1GB
+		select _SUPPORTS_DDR4_2GB
+		select _SUPPORTS_DDR4_FREQ
+		select _SUPPORTS_DDR4_2666
+		select _SUPPORTS_DDR4_3200
+		select _DEFAULT_DDR4_3200
+		select _SUPPORTS_DRAM_DEBUG_LOG
+		select _SUPPORTS_BOOT_DEVICE_SNFI_NAND
+		select _SUPPORTS_BOOT_DEVICE_SPIM_NAND
+		select _SUPPORTS_BOOT_DEVICE_EMMC_SD
+		select _DEFAULT_BOOT_DEVICE_SPIM_NAND
+		select _BROM_NAND_HEADER_HSM
+		select _DEFAULT_NAND_NMBM
+		select _SUPPORTS_I2C
+		select _SUPPORTS_EMERG_MEM_DUMP
+		select _SUPPORTS_AR_V2
+		select _SUPPORTS_DUAL_FIP
+
+	config _PLAT_MT7987
+		bool "MT7987"
+		select _SUPPORTS_DDR_AUTO
+		select _SUPPORTS_DDR3_FREQ
+		select _SUPPORTS_DDR3_1866
+		select _SUPPORTS_DDR3_2133
+		select _DEFAULT_DDR3_2133
+		select _SUPPORTS_DDR4_FREQ
+		select _SUPPORTS_DDR4_2666
+		select _SUPPORTS_DDR4_3200
+		select _DEFAULT_DDR4_3200
+		select _SUPPORTS_DDR4_SOCKET_BOARD
+		select _DEFAULT_DDR4_SOCKET_BOARD
+		select _SUPPORTS_DRAM_DEBUG_LOG
+		select _SUPPORTS_BOOT_DEVICE_SPIM_NAND
+		select _SUPPORTS_BOOT_DEVICE_EMMC_SD
+		select _DEFAULT_BOOT_DEVICE_SPIM_NAND
+		select _DEFAULT_NAND_NMBM
+		select _SUPPORTS_I2C
+		select _SUPPORTS_EMERG_MEM_DUMP
+		select _SUPPORTS_AR_V2
+		select _SUPPORTS_DUAL_FIP
+		select _SUPPORTS_BL32_TZRAM_CONFIG
+
+	config _PLAT_MT7988
+		bool "MT7988"
+		select _SUPPORTS_DRAM_SIZE_LIMIT
+		select _SUPPORTS_DDR3_256MB
+		select _SUPPORTS_DDR3_512MB
+		select _SUPPORTS_DDR4
+		select _SUPPORTS_DDR4_1GB
+		select _SUPPORTS_DDR4_2GB
+		select _SUPPORTS_DDR_COMB
+		select _SUPPORTS_DDR3_FREQ
+		select _SUPPORTS_DDR3_1866
+		select _SUPPORTS_DDR3_2133
+		select _DEFAULT_DDR3_2133
+		select _SUPPORTS_DDR4_FREQ
+		select _SUPPORTS_DDR4_2666
+		select _SUPPORTS_DDR4_3200
+		select _DEFAULT_DDR4_3200
+		select _SUPPORTS_DRAM_DEBUG_LOG
+		select _SUPPORTS_BOOT_DEVICE_SNFI_NAND
+		select _SUPPORTS_BOOT_DEVICE_SPIM_NAND
+		select _SUPPORTS_BOOT_DEVICE_EMMC_SD
+		select _DEFAULT_BOOT_DEVICE_SPIM_NAND
+		select _BROM_NAND_HEADER_HSM20
+		select _DEFAULT_NAND_NMBM
+		select _SUPPORTS_I2C
+		select _SUPPORTS_EMERG_MEM_DUMP
+		select _SUPPORTS_I2P5G_PHY
+		select _SUPPORTS_AR_V2
+		select _SUPPORTS_DUAL_FIP
+
+endchoice
+
+# Makefile options
+config ARCH
+	string
+	depends on _AARCH32
+	default "aarch32"
+
+config PLAT
+	string
+	default "mt7622" if _PLAT_MT7622
+	default "mt7629" if _PLAT_MT7629
+	default "mt7981" if _PLAT_MT7981
+	default "mt7986" if _PLAT_MT7986
+	default "mt7987" if _PLAT_MT7987
+	default "mt7988" if _PLAT_MT7988
+
+################################################################################
+
+config _SUPPORTS_DDR4
+	bool
+
+config _SUPPORTS_DDR_COMB
+	bool
+
+config _SUPPORTS_DDR_AUTO
+	bool
+
+choice
+	prompt "DRAM type"
+	depends on !_SUPPORTS_DDR_AUTO
+
+if !_ENABLE_FPGA
+	config _DRAM_DDR3
+		bool "DDR3"
+
+	config _DRAM_DDR4
+		bool "DDR4"
+		depends on _SUPPORTS_DDR4
+
+	config _DRAM_DDR_COMB
+		bool "DDR comb"
+		depends on _SUPPORTS_DDR_COMB
+endif
+
+osource "plat/mediatek/apsoc_common/Config-fpga-dram.in"
+
+endchoice
+
+# Makefile option
+config DRAM_USE_DDR4
+	int
+	default 1
+	depends on _DRAM_DDR4
+
+config DRAM_USE_COMB
+	int
+	default 1
+	depends on _DRAM_DDR_COMB
+
+################################################################################
+
+config _SUPPORTS_DRAM_SIZE_LIMIT
+	bool
+
+config _SUPPORTS_DDR3_256MB
+	bool
+
+config _SUPPORTS_DDR3_512MB
+	bool
+
+config _SUPPORTS_DDR4_512MB
+	bool
+
+config _SUPPORTS_DDR4_1GB
+	bool
+
+config _SUPPORTS_DDR4_2GB
+	bool
+
+config _SUPPORTS_DDR3_FREQ
+	bool
+
+config _SUPPORTS_DDR3_1866
+	bool
+
+config _SUPPORTS_DDR3_2133
+	bool
+
+config _DEFAULT_DDR3_1866
+	bool
+
+config _DEFAULT_DDR3_2133
+	bool
+
+config _SUPPORTS_DDR4_FREQ
+	bool
+
+config _SUPPORTS_DDR4_2666
+	bool
+
+config _SUPPORTS_DDR4_3200
+	bool
+
+config _DEFAULT_DDR4_2666
+	bool
+
+config _DEFAULT_DDR4_3200
+	bool
+
+config _SUPPORTS_DDR4_SOCKET_BOARD
+	bool
+
+config _DEFAULT_DDR4_SOCKET_BOARD
+	bool
+
+config _SUPPORTS_DRAM_DEBUG_LOG
+	bool
+
+################################################################################
+
+menu "Advanced DRAM configurations"
+	depends on !_ENABLE_FPGA
+
+choice
+	prompt "DRAM size limitation"
+	depends on _SUPPORTS_DRAM_SIZE_LIMIT
+
+	config _DRAM_SIZE_AUTO
+		bool "No limit"
+
+	config _DRAM_SIZE_256MB
+		bool "256MB"
+		depends on _DRAM_DDR3 && _SUPPORTS_DDR3_256MB
+
+	config _DRAM_SIZE_512MB
+		bool "512MB"
+		depends on (_DRAM_DDR3 && _SUPPORTS_DDR3_512MB) || \
+			   (_DRAM_DDR4 && _SUPPORTS_DDR4_512MB)
+
+	config _DRAM_SIZE_1GB
+		bool "1GB"
+		depends on _DRAM_DDR4 && _SUPPORTS_DDR4_1GB
+
+	config _DRAM_SIZE_2GB
+		bool "2GB"
+		depends on _DRAM_DDR4 && _SUPPORTS_DDR4_2GB
+endchoice
+
+# Makefile option
+config DRAM_SIZE_LIMIT
+	int
+	depends on !_DRAM_SIZE_AUTO
+	default 256 if _DRAM_SIZE_256MB
+	default 512 if _DRAM_SIZE_512MB
+	default 1024 if _DRAM_SIZE_1GB
+	default 2048 if _DRAM_SIZE_2GB
+
+################################################################################
+
+choice
+	prompt "DDR3 frequency"
+	depends on _SUPPORTS_DDR3_FREQ && (_DRAM_DDR3 || _DRAM_DDR_COMB || _SUPPORTS_DDR_AUTO)
+	default _DDR3_FREQ_1866 if _DEFAULT_DDR3_1866
+	default _DDR3_FREQ_2133 if _DEFAULT_DDR3_2133
+
+	config _DDR3_FREQ_1866
+		bool "1866MT/s"
+		depends on _SUPPORTS_DDR3_1866
+
+	config _DDR3_FREQ_2133
+		bool "2133MT/s"
+		depends on _SUPPORTS_DDR3_2133
+endchoice
+
+# Makefile options
+config DDR3_FREQ_1866
+	int
+	default 1
+	depends on _DDR3_FREQ_1866
+
+config DDR3_FREQ_2133
+	int
+	default 1
+	depends on _DDR3_FREQ_2133
+
+################################################################################
+
+choice
+	prompt "DDR4 frequency"
+	depends on _SUPPORTS_DDR4_FREQ && (_DRAM_DDR4 || _DRAM_DDR_COMB || _SUPPORTS_DDR_AUTO)
+	default _DDR4_FREQ_2666 if _DEFAULT_DDR4_2666
+	default _DDR4_FREQ_3200 if _DEFAULT_DDR4_3200
+	default _DDR4_SOCKET_BOARD if _DEFAULT_DDR4_SOCKET_BOARD
+
+	config _DDR4_FREQ_2666
+		bool "2666MT/s"
+		depends on _SUPPORTS_DDR4_2666
+
+	config _DDR4_FREQ_3200
+		bool "3200MT/s"
+		depends on _SUPPORTS_DDR4_3200
+
+	config _DDR4_SOCKET_BOARD
+		bool "2800MT/s"
+		depends on _SUPPORTS_DDR4_SOCKET_BOARD
+endchoice
+
+# Makefile options
+config DDR4_FREQ_2666
+	int
+	default 1
+	depends on _DDR4_FREQ_2666
+
+config DDR4_FREQ_3200
+	int
+	default 1
+	depends on _DDR4_FREQ_3200
+
+config SOCKET_BOARD
+	int
+	default 1
+	depends on _DDR4_SOCKET_BOARD
+
+config _DDR_FREQ_ADJUST
+	bool "DDR frequency adjustment"
+	default n
+	depends on _PLAT_MT7987
+
+config DDR_FREQ_ADJUST
+	int "Level (unit: 13MHz)"
+	default 0
+	depends on _DDR_FREQ_ADJUST
+
+choice
+	prompt "DDR tREFI"
+	depends on _PLAT_MT7987
+	default _DDR_REFRESH_INTERVAL_390
+
+	config _DDR_REFRESH_INTERVAL_195
+		bool "1.95μs"
+
+	config _DDR_REFRESH_INTERVAL_390
+		bool "3.9μs"
+
+	config _DDR_REFRESH_INTERVAL_780
+		bool "7.8μs"
+endchoice
+
+# Makefile option
+config DDR_REFRESH_INTERVAL_195
+	int
+	default 1
+	depends on _DDR_REFRESH_INTERVAL_195
+
+config DDR_REFRESH_INTERVAL_390
+	int
+	default 1
+	depends on _DDR_REFRESH_INTERVAL_390
+
+config DDR_REFRESH_INTERVAL_780
+	int
+	default 1
+	depends on _DDR_REFRESH_INTERVAL_780
+
+choice
+	prompt "DDR Power Down Mode"
+	depends on _PLAT_MT7987
+	default _DDR_POWER_DOWN_DYNAMIC
+
+	config _DDR_POWER_DOWN_ALWAYS_ON
+		bool "Always on"
+
+	config _DDR_POWER_DOWN_DYNAMIC
+		bool "Dynamic"
+endchoice
+
+# Makefile option
+config DDR_POWER_DOWN_ALWAYS_ON
+	int
+	default 1
+	depends on _DDR_POWER_DOWN_ALWAYS_ON
+
+config DDR_POWER_DOWN_DYNAMIC
+	int
+	default 1
+	depends on _DDR_POWER_DOWN_DYNAMIC
+################################################################################
+
+source "plat/mediatek/mt7622/drivers/dram/Config.in"
+source "plat/mediatek/mt7981/drivers/dram/Config.in"
+source "plat/mediatek/mt7987/drivers/dram/Config.in"
+source "plat/mediatek/mt7988/drivers/dram/Config.in"
+
+################################################################################
+
+config _DRAM_DEBUG_LOG
+	bool "Enable verbose DRAM log"
+	default n
+	depends on _SUPPORTS_DRAM_DEBUG_LOG
+
+# Makefile option
+config DRAM_DEBUG_LOG
+	int
+	default 1
+	depends on _DRAM_DEBUG_LOG
+
+endmenu # Advanced DRAM configurations
+
+################################################################################
+
+config _SUPPORTS_BOOT_DEVICE_SNFI_NAND
+	bool
+
+config _SUPPORTS_BOOT_DEVICE_SPIM_NAND
+	bool
+
+config _SUPPORTS_BOOT_DEVICE_EMMC_SD
+	bool
+
+config _DEFAULT_BOOT_DEVICE_SNFI_NAND
+	bool
+
+config _DEFAULT_BOOT_DEVICE_SPIM_NAND
+	bool
+
+choice
+	prompt "Boot device"
+	default _BOOT_DEVICE_SNFI_NAND if _DEFAULT_BOOT_DEVICE_SNFI_NAND
+	default _BOOT_DEVICE_SPIM_NAND if _DEFAULT_BOOT_DEVICE_SPIM_NAND
+
+	config _BOOT_DEVICE_SPI_NOR
+		bool "SPI-NOR"
+
+	config _BOOT_DEVICE_SNFI_NAND
+		bool "SPI-NAND (SNFI)"
+		depends on _SUPPORTS_BOOT_DEVICE_SNFI_NAND
+
+	config _BOOT_DEVICE_SPIM_NAND
+		bool "SPI-NAND (SPIM)"
+		depends on _SUPPORTS_BOOT_DEVICE_SPIM_NAND
+
+	config _BOOT_DEVICE_EMMC
+		bool "eMMC"
+		depends on _SUPPORTS_BOOT_DEVICE_EMMC_SD
+
+	config _BOOT_DEVICE_SD
+		bool "SD"
+		depends on _SUPPORTS_BOOT_DEVICE_EMMC_SD
+
+	config _BOOT_DEVICE_RAM
+		bool "RAM"
+endchoice
+
+menu "Advanced boot device configuration"
+
+config _BROM_NAND_HEADER_LEGACY
+	bool
+
+config _BROM_NAND_HEADER_HSM
+	bool
+
+config _BROM_NAND_HEADER_HSM20
+	bool
+
+choice
+	prompt "NAND type"
+	depends on _BOOT_DEVICE_SNFI_NAND || _BOOT_DEVICE_SPIM_NAND
+	default _NAND_TYPE_2K_64
+
+	config _NAND_TYPE_2K_64
+		bool "2k+64"
+
+	config _NAND_TYPE_2K_120
+		bool "2k+120"
+		depends on _BROM_NAND_HEADER_LEGACY
+
+	config _NAND_TYPE_2K_128
+		bool "2k+128"
+
+	config _NAND_TYPE_4K_256
+		bool "4k+256"
+endchoice
+
+config _RAM_BOOT_DEBUGGER_HOOK
+	bool "Enable RAM boot debugger hook"
+	depends on _BOOT_DEVICE_RAM
+	default y if _ENABLE_FPGA
+	default n
+
+osource "plat/mediatek/apsoc_common/bl2/Config-uart_dl.in"
+
+config _DEFAULT_NAND_NMBM
+	bool
+
+config _DEFAULT_NAND_UBI
+	bool
+
+choice
+	prompt "NAND bad block management"
+	depends on _BOOT_DEVICE_SNFI_NAND || _BOOT_DEVICE_SPIM_NAND
+	default _NAND_NMBM if _DEFAULT_NAND_NMBM
+	default _NAND_UBI if _DEFAULT_NAND_UBI
+
+	config _NAND_SKIP_BAD
+		bool "Skip bad block"
+
+	config _NAND_NMBM
+		bool "NMBM"
+
+	config _NAND_UBI
+		bool "UBI"
+endchoice
+
+menuconfig _NMBM_CONFIGS
+	bool "Advanced NMBM Configurations"
+	depends on _NAND_NMBM
+
+if _NMBM_CONFIGS
+
+config NMBM_MAX_RATIO
+	int "Default ratio for reserved block for management (N/16)"
+	range 1 8
+	default 1
+	help
+	  This option determines how many blocks at the high adress of NAND
+	  can be used for NMBM. For a large size NAND, 1/16 of total blocks
+	  are still too large for NMBM. For this situation please set
+	  CONFIG_NMBM_MAX_BLOCKS to a proper value to limit the maximum
+	  reserved blocks.
+
+config NMBM_MAX_RESERVED_BLOCKS
+	int "Maximum blocks allowed for reserved block for management"
+	range 32 2147483647
+	default 256
+	help
+	  This option is applied after NMBM_MAX_RATIO to ensure maximum
+	  blocks reserved block for NMBM will not exceed the value set by
+	  this option.
+
+choice
+	prompt "Default log level"
+	default _NMBM_LOG_LEVEL_INFO
+
+config _NMBM_LOG_LEVEL_DEBUG
+	bool "0 - Debug"
+
+config _NMBM_LOG_LEVEL_INFO
+	bool "1 - Info"
+
+config _NMBM_LOG_LEVEL_WARN
+	bool "2 - Warn"
+
+config _NMBM_LOG_LEVEL_ERR
+	bool "3 - Error"
+
+config _NMBM_LOG_LEVEL_EMERG
+	bool "4 - Emergency"
+
+config _NMBM_LOG_LEVEL_NONE
+	bool "5 - None"
+
+endchoice
+
+# Makefile options
+config NMBM_DEFAULT_LOG_LEVEL
+	int
+	default 0 if _NMBM_LOG_LEVEL_DEBUG
+	default 1 if _NMBM_LOG_LEVEL_INFO
+	default 2 if _NMBM_LOG_LEVEL_WARN
+	default 3 if _NMBM_LOG_LEVEL_ERR
+	default 4 if _NMBM_LOG_LEVEL_EMERG
+	default 5 if _NMBM_LOG_LEVEL_NONE
+
+endif # _NMBM_CONFIGS
+
+config _ENABLE_OVERRIDE_FIP_BASE
+	bool "Override default FIP offset"
+	depends on (_BOOT_DEVICE_SPI_NOR || _BOOT_DEVICE_SNFI_NAND || _BOOT_DEVICE_SPIM_NAND) && !_NAND_UBI
+	default n
+
+config OVERRIDE_FIP_BASE
+	hex "FIP offset"
+	depends on _ENABLE_OVERRIDE_FIP_BASE
+
+config _ENABLE_OVERRIDE_FIP_SIZE
+	bool "Override default FIP size"
+	depends on (_BOOT_DEVICE_SPI_NOR || _BOOT_DEVICE_SNFI_NAND || _BOOT_DEVICE_SPIM_NAND) && !_NAND_UBI
+	default n
+
+config OVERRIDE_FIP_SIZE
+	hex "FIP size"
+	depends on _ENABLE_OVERRIDE_FIP_SIZE
+
+config _ENABLE_OVERRIDE_UBI_START_ADDR
+	bool "Override default UBI partition start address"
+	depends on _NAND_UBI
+	default n
+
+config OVERRIDE_UBI_START_ADDR
+	hex "UBI partition start address"
+	depends on _ENABLE_OVERRIDE_UBI_START_ADDR
+	default 0x200000
+
+config _ENABLE_OVERRIDE_UBI_END_ADDR
+	bool "Override default UBI partition end address"
+	depends on _NAND_UBI
+	default n
+
+config OVERRIDE_UBI_END_ADDR
+	hex "UBI partition end address (0 means end of NAND)"
+	depends on _ENABLE_OVERRIDE_UBI_END_ADDR
+	default 0
+
+endmenu # Advanced boot device configuration
+
+# Makefile options
+config BOOT_DEVICE
+	string
+	default "nor" if _BOOT_DEVICE_SPI_NOR
+	default "snand" if _BOOT_DEVICE_SNFI_NAND
+	default "spim-nand" if _BOOT_DEVICE_SPIM_NAND
+	default "emmc" if _BOOT_DEVICE_EMMC
+	default "sdmmc" if _BOOT_DEVICE_SD
+	default "ram" if _BOOT_DEVICE_RAM
+
+config NAND_TYPE
+	string
+	depends on _BOOT_DEVICE_SNFI_NAND || _BOOT_DEVICE_SPIM_NAND
+	default "2k+64" if _BOOT_DEVICE_SNFI_NAND && _BROM_NAND_HEADER_LEGACY && _NAND_TYPE_2K_64
+	default "hsm:2k+64" if _BOOT_DEVICE_SNFI_NAND && _BROM_NAND_HEADER_HSM && _NAND_TYPE_2K_64
+	default "hsm20:2k+64" if _BOOT_DEVICE_SNFI_NAND && _BROM_NAND_HEADER_HSM20 && _NAND_TYPE_2K_64
+	default "spim:2k+64" if _BOOT_DEVICE_SPIM_NAND && _NAND_TYPE_2K_64
+	default "2k+120" if _BOOT_DEVICE_SNFI_NAND && _BROM_NAND_HEADER_LEGACY && _NAND_TYPE_2K_120
+	default "2k+128" if _BOOT_DEVICE_SNFI_NAND && _BROM_NAND_HEADER_LEGACY && _NAND_TYPE_2K_128
+	default "hsm:2k+128" if _BOOT_DEVICE_SNFI_NAND && _BROM_NAND_HEADER_HSM && _NAND_TYPE_2K_128
+	default "hsm20:2k+128" if _BOOT_DEVICE_SNFI_NAND && _BROM_NAND_HEADER_HSM20 && _NAND_TYPE_2K_128
+	default "spim:2k+128" if _BOOT_DEVICE_SPIM_NAND && _NAND_TYPE_2K_128
+	default "4k+256" if _BOOT_DEVICE_SNFI_NAND && _BROM_NAND_HEADER_LEGACY && _NAND_TYPE_4K_256
+	default "hsm:4k+256" if _BOOT_DEVICE_SNFI_NAND && _BROM_NAND_HEADER_HSM && _NAND_TYPE_4K_256
+	default "hsm20:4k+256" if _BOOT_DEVICE_SNFI_NAND && _BROM_NAND_HEADER_HSM20 && _NAND_TYPE_4K_256
+	default "spim:4k+256" if _BOOT_DEVICE_SPIM_NAND && _NAND_TYPE_4K_256
+
+config DEVICE_HEADER_OFFSET
+	hex "Device header offset for SD"
+	default 0x80000
+	depends on _PLAT_MT7622 && _BOOT_DEVICE_SD
+
+config RAM_BOOT_DEBUGGER_HOOK
+	int
+	default 1
+	depends on _RAM_BOOT_DEBUGGER_HOOK
+
+config NMBM
+	int
+	default 1
+	depends on _NAND_NMBM
+
+config UBI
+	int
+	default 1
+	depends on _NAND_UBI
+
+################################################################################
+
+menu "Platform configurations"
+
+config _SUPPORTS_I2C
+	bool
+
+config _SUPPORTS_EMERG_MEM_DUMP
+	bool
+
+config _SUPPORTS_I2P5G_PHY
+	bool
+
+config _ENABLE_I2C_SUPPORT
+	bool "Enable I2C driver support"
+	depends on _SUPPORTS_I2C
+	default n
+
+config _ENABLE_EMERG_MEM_DUMP
+	bool "Enable emergency memory dump support"
+	depends on _SUPPORTS_EMERG_MEM_DUMP && !FPGA
+	default n
+
+config EMERG_MEM_DUMP_AUTONEG_TIMEOUT
+	int "Emergency memory dump auto-negotiation timeout (0 for wait forever) (s)"
+	depends on _ENABLE_EMERG_MEM_DUMP
+	range 0 4294967294
+	default 30
+
+config _MTK_ETH_USE_I2P5G_PHY
+	bool "Use internal 2.5G PHY"
+	depends on _ENABLE_EMERG_MEM_DUMP
+	depends on _SUPPORTS_I2P5G_PHY
+	default n
+
+config _MTK_ETH_I2P5G_PHY_FW_LOAD
+	bool "Load firmware for internal 2.5G PHY"
+	depends on _MTK_ETH_USE_I2P5G_PHY
+	default n
+
+config MTK_ETH_AUTONEG_TIMEOUT
+	int "Ethernet port auto-negotiation timeout (0 for wait forever) (s)"
+	depends on _ENABLE_EMERG_MEM_DUMP
+	range 0 4294967294
+	default 15
+
+config _ENABLE_JTAG
+	bool "Enable JTAG function"
+	default n
+	depends on !_INTERNAL
+
+config _ENABLE_BL31_RUNTIME_LOG
+	bool "Enable BL31 runtime log"
+	default y if _ENABLE_FPGA
+	default n
+
+# Makefile options
+config I2C_SUPPORT
+	int
+	default 1
+	depends on _ENABLE_I2C_SUPPORT
+
+config EMERG_MEM_DUMP
+	int
+	default 1
+	depends on _ENABLE_EMERG_MEM_DUMP
+
+config MTK_ETH_USE_I2P5G_PHY
+	int
+	default 1
+	depends on _MTK_ETH_USE_I2P5G_PHY
+
+config MTK_ETH_I2P5G_PHY_FW_LOAD
+	int
+	default 1
+	depends on _MTK_ETH_I2P5G_PHY_FW_LOAD
+
+config ENABLE_JTAG
+	int
+	default 1
+	depends on _ENABLE_JTAG || _INTERNAL
+
+config ENABLE_BL31_RUNTIME_LOG
+	int
+	default 1
+	depends on _ENABLE_BL31_RUNTIME_LOG
+
+source "plat/mediatek/mt7988/Config.in"
+
+endmenu # Platform configurations
+
+################################################################################
+
+osource "plat/mediatek/apsoc_common/Config-fpga.in"
+
+################################################################################
+
+config _REQUIRE_MBEDTLS
+	bool
+
+config _BUILD_FIP
+	bool "Build FIP"
+	default y
+
+config _SUPPORTS_DUAL_FIP
+	bool
+
+menuconfig _DUAL_FIP
+	bool "Enable Dual-FIP"
+	depends on _SUPPORTS_DUAL_FIP && _BUILD_FIP
+	default y if (_BOOT_DEVICE_SPIM_NAND && _NAND_UBI) || _BOOT_DEVICE_EMMC
+	default n
+
+if _DUAL_FIP
+
+choice
+	prompt "FIP location"
+	depends on _BOOT_DEVICE_EMMC
+
+config _FIP_IN_UDA
+	bool "UDA"
+	help
+	  FIP is stored in UDA (normal user data) described by GPT.
+	  The partition name must be "fip"
+
+config _FIP_IN_BOOT0
+	bool "BOOT0"
+	help
+	  FIP is stored in BOOT0, offset 1MiB. Requires BOOT0 is at lease 4MiB
+
+endchoice
+
+choice
+	prompt "FIP2 location"
+	depends on _BOOT_DEVICE_EMMC
+
+config _FIP2_IN_UDA
+	bool "UDA"
+	help
+	  FIP2 is stored in UDA (normal user data) described by GPT.
+	  The partition name must be "fip2"
+
+config _FIP2_IN_BOOT1
+	bool "BOOT1"
+	help
+	  FIP2 is stored in BOOT1, offset 1MiB. Requires BOOT0 is at lease 4MiB
+
+endchoice
+
+endif # _DUAL_FIP
+
+# Makefile options
+config DUAL_FIP
+	int
+	default 1
+	depends on _DUAL_FIP
+
+config FIP_IN_BOOT0
+	int
+	default 1
+	depends on _FIP_IN_BOOT0
+
+config FIP2_IN_BOOT1
+	int
+	default 1
+	depends on _FIP2_IN_BOOT1
+
+config BL33
+	string "BL33 payload path"
+	depends on _BUILD_FIP
+	default "u-boot.bin"
+
+config BL32
+	string "BL32 payload path"
+	depends on _BUILD_FIP && _ENABLE_BL32
+	default "tee.bin"
+
+config MBEDTLS_DIR
+	string "mbedTLS source path"
+	depends on _REQUIRE_MBEDTLS
+
+menu "Advanced build configurations"
+
+config _ENABLE_BL2_COMPRESS
+	bool "Compress BL2"
+	default n
+
+config _ENABLE_FIP_COMPRESS
+	bool "Compress FIP"
+	depends on _BUILD_FIP
+	default n
+
+config _USE_MKIMAGE
+	bool "Use mkimage to generate BL2 image"
+	default n
+
+# Makefile options
+config BL2_COMPRESS
+	int
+	default 1
+	depends on _ENABLE_BL2_COMPRESS
+
+config FIP_COMPRESS
+	int
+	default 1
+	depends on _ENABLE_FIP_COMPRESS
+
+config MKIMAGE
+	string "mkimage program path"
+	default "mkimage"
+	depends on _USE_MKIMAGE
+
+config USE_MKIMAGE
+	int
+	default 1
+	depends on _USE_MKIMAGE
+
+endmenu # Advanced build configurations
+
+################################################################################
+
+config _SUPPORTS_AR_V1
+	bool
+
+config _SUPPORTS_AR_V2
+	bool
+
+config _SUPPORTS_BL32_TZRAM_CONFIG
+	bool
+
+menuconfig _ENABLE_SBC
+	bool "Enable Secure Boot framework"
+	select _REQUIRE_MBEDTLS
+	select _BUILD_FIP
+	default n
+
+if _ENABLE_SBC
+
+choice
+	prompt "Secure Boot Algorithm"
+	default _SBC_ALGO_RSA2048_SHA256
+
+	config _SBC_ALGO_RSA2048_SHA256
+		bool "rsa2048+sha256"
+
+	config _SBC_ALGO_RSA3072_SHA256
+		bool "rsa3072+sha256"
+		depends on _PLAT_MT7988 || _PLAT_MT7987
+
+	config _SBC_ALGO_RSA3072_SHA384
+		bool "rsa3072+sha384"
+		depends on _PLAT_MT7988 || _PLAT_MT7987
+endchoice
+
+config KEY_ALG
+	string
+	default "rsa"
+
+config KEY_SIZE
+	string
+	default "2048" if _SBC_ALGO_RSA2048_SHA256
+	default "3072" if _SBC_ALGO_RSA3072_SHA256 || _SBC_ALGO_RSA3072_SHA384
+
+config HASH_ALG
+	string
+	default "sha256" if _SBC_ALGO_RSA2048_SHA256 || _SBC_ALGO_RSA3072_SHA256
+	default "sha384" if _SBC_ALGO_RSA3072_SHA384
+
+config _ENABLE_AR
+	bool "Enable Anti-rollback"
+	default n
+
+menuconfig _ENABLE_BL32
+	bool "Enable BL32 (Secure Payload)"
+	default n
+
+if _ENABLE_BL32
+
+config BL32_TZRAM_BASE
+	hex "BL32 TZRAM base address"
+	depends on _SUPPORTS_BL32_TZRAM_CONFIG
+	default 0x4fa00000
+
+config BL32_TZRAM_SIZE
+	hex "BL32 TZRAM size"
+	depends on _SUPPORTS_BL32_TZRAM_CONFIG
+	default 0x500000
+
+config BL32_LOAD_OFFSET
+	hex "BL32 load offset"
+	depends on _SUPPORTS_BL32_TZRAM_CONFIG
+	default 0x1000
+
+endif # _ENABLE_BL32
+
+config _ENABLE_OFFLINE_SIGN
+	bool "Enable Offline signing"
+	default n
+
+config _ENABLE_FIP_ENC
+	bool "Enable FIP Encryption"
+	default n
+
+if _ENABLE_FIP_ENC
+
+config ENC_KEY_PATH
+	string "Platform Key Path"
+	depends on _ENABLE_FIP_ENC
+	default "plat_key.bin"
+	help
+	  This key is Platform key and key size is 16 bytes.
+	  Must use binary in ENC_KEY_PATH.
+
+config ENC_NONCE_PATH
+	string "FIP Encryption Nonce Path"
+	depends on _ENABLE_FIP_ENC
+	default "enc_nonce.bin"
+	help
+	  The nonce is for FIP encryption. It is 32 bytes.
+	  Must use binary in ENC_NONCE_PATH
+
+
+endif #_ENABLE_FIP_ENC
+
+config _ENABLE_FW_ENC
+	bool "Enable Firmware Encryption"
+	default n
+
+choice
+	prompt "Decrypt firmware in BL31 or OPTEE"
+	depends on _ENABLE_FW_ENC
+
+	config _ENABLE_FW_ENC_VIA_BL31
+		bool "Enable BL31 decrypt firmeare"
+		depends on _ENABLE_FW_ENC
+
+	config _ENABLE_FW_ENC_VIA_OPTEE
+		bool "Enable OPTEE decrypt firmeare"
+		depends on _ENABLE_FW_ENC
+		select _ENABLE_BL32
+endchoice
+
+config ROE_KEY_SALT
+	string "Path to roe key salt"
+	depends on _ENABLE_FIP_ENC || _ENABLE_FW_ENC
+	default "salt/roe_salt.bin"
+	help
+	  ROE KEY SALT is for deriving ROE KEY from platform key.
+	  The size of salt is 32 bytes.
+	  Must use binary in ROE_KEY_SALT
+
+config FIP_KEY_SALT
+	string "Path to fip key salt"
+	depends on _ENABLE_FIP_ENC
+	default "salt/fip_salt.bin"
+	help
+	  FIP KEY SALT is for deriving FIP KEY from ROE KEY.
+	  The size of salt is 32 bytes.
+	  Must use binary in FIP_KEY_SALT
+
+config KERNEL_KEY_SALT
+	string "Path to kernel key salt"
+	depends on _ENABLE_FW_ENC
+	default "salt/kernel_salt.bin"
+	help
+	  KERNEL KEY SALT is for deriving KERNEL KEY from ROE KEY.
+	  The size of salt is 32 bytes.
+	  Must use binary in KERNEL_KEY_SALT
+
+config ROOTFS_KEY_SALT
+	string "Path to rootfs key salt"
+	depends on _ENABLE_FW_ENC
+	default "salt/rootfs_salt.bin"
+	help
+	  ROOTFS KEY SALT is for deriving ROOTFS KEY from ROE KEY.
+	  The size of salt is 32 bytes.
+	  Must use binary in ROOTFS_KEY_SALT
+
+# Makefile options
+config ROT_KEY
+	string "ROT_KEY path"
+	default "fip_private_key.pem"
+
+config BROM_SIGN_KEY
+	string "BootROM signing key path"
+	default "bl2_private_key.pem"
+
+config SCP_BL2_KEY
+	string "SCP BL2 key path"
+	default "scp_fw_public_key.pem"
+	depends on _ENABLE_OFFLINE_SIGN
+
+config TRUSTED_WORLD_KEY
+	string "Trusted world key path"
+	default "trusted_public_key.pem"
+	depends on _ENABLE_OFFLINE_SIGN
+
+config NON_TRUSTED_WORLD_KEY
+	string "Non-trusted world key path"
+	default "non_trusted_public_key.pem"
+	depends on _ENABLE_OFFLINE_SIGN
+
+config BL31_KEY
+	string "BL31 key path"
+	default "soc_fw_public_key.pem"
+	depends on _ENABLE_OFFLINE_SIGN
+
+config BL32_KEY
+	string "BL32 key path"
+	default "tos_fw_public_key.pem"
+	depends on _ENABLE_OFFLINE_SIGN
+
+config BL33_KEY
+	string "BL33 key path"
+	default "nt_fw_public_key.pem"
+	depends on _ENABLE_OFFLINE_SIGN
+
+config AR_TABLE_XML
+	string "Anti-rollback table path"
+	default "ar_table.xml"
+	depends on _ENABLE_AR && _SUPPORTS_AR_V1
+
+config ANTI_ROLLBACK_TABLE
+	string "Anti-rollback table path"
+	default "bl_ar_table.xml"
+	depends on _ENABLE_AR && _SUPPORTS_AR_V2
+
+config SPD
+	string "Secure Payload (BL32) Dispatcher"
+	depends on _ENABLE_BL32
+	default "opteed"
+
+config TRUSTED_BOARD_BOOT
+	int
+	default 1
+
+config GENERATE_COT
+	int
+	default 1
+
+config OFFLINE_SIGN
+	int
+	default 1
+	depends on _ENABLE_OFFLINE_SIGN
+
+config ANTI_ROLLBACK
+	int
+	default 1
+	depends on _ENABLE_AR
+
+config FW_ENC
+	int
+	default 1
+	depends on _ENABLE_FW_ENC
+
+config FW_ENC_VIA_BL31
+	int
+	default 1
+	depends on _ENABLE_FW_ENC_VIA_BL31
+
+config FW_ENC_VIA_OPTEE
+	int
+	default 1
+	depends on _ENABLE_FW_ENC_VIA_OPTEE
+
+config FIP_ENC
+	int
+	default 1
+	depends on _ENABLE_FIP_ENC
+
+config ENCRYPT_BL31
+	int
+	default 1
+	depends on _ENABLE_FIP_ENC
+
+config ENCRYPT_BL32
+	int
+	default 1
+	depends on _ENABLE_FIP_ENC
+
+config ENCRYPT_BL33
+	int
+	default 1
+	depends on _ENABLE_FIP_ENC
+
+config DECRYPTION_SUPPORT
+	string
+	default "aes_gcm"
+	depends on _ENABLE_FIP_ENC
+
+endif # _ENABLE_SBC
+
+################################################################################
+
+CC64_1 := /mtkoss/aarch64/7.5.0/x86_64/bin/aarch64-linux-gnu-
+TEST64_1 := $(shell, test -e $(CC64_1)gcc && echo "1" || echo "0")
+CC64_2 := /usr/bin/aarch64-linux-gnu-
+TEST64_2 := $(shell, test -e $(CC64_2)gcc && echo "1" || echo "0")
+
+CC32_1 := /mtkoss/buildroot/buildroot-gcc740_arm_musl/usr/bin/arm-linux-
+TEST32_1 := $(shell, test -e $(CC32_1)gcc && echo "1" || echo "0")
+CC32_2 := /usr/bin/arm-linux-gnueabi-
+TEST32_2 := $(shell, test -e $(CC32_2)gcc && echo "1" || echo "0")
+
+config CROSS_COMPILE
+	string "Cross compiler prefix"
+	default "$(CC64_1)" if $(TEST64_1)="1" && !_AARCH32
+	default "$(CC64_2)" if $(TEST64_2)="1" && !_AARCH32
+	default "$(CC32_1)" if $(TEST32_1)="1" && _AARCH32
+	default "$(CC32_2)" if $(TEST32_2)="1" && _AARCH32
+
+################################################################################
+
+choice
+	prompt "Log level"
+	default _LOG_LEVEL_WARNING
+
+	config _LOG_LEVEL_NONE
+		bool "None"
+
+	config _LOG_LEVEL_ERROR
+		bool "Error"
+
+	config _LOG_LEVEL_NOTICE
+		bool "Notice"
+
+	config _LOG_LEVEL_WARNING
+		bool "Warning"
+
+	config _LOG_LEVEL_INFO
+		bool "Info"
+
+	config _LOG_LEVEL_VERBOSE
+		bool "Verbose"
+endchoice
+
+# Makefile option
+config LOG_LEVEL
+	int
+	default 0 if _LOG_LEVEL_NONE
+	default 10 if _LOG_LEVEL_ERROR
+	default 20 if _LOG_LEVEL_NOTICE
+	default 30 if _LOG_LEVEL_WARNING
+	default 40 if _LOG_LEVEL_INFO
+	default 50 if _LOG_LEVEL_VERBOSE
+
+################################################################################
+
+osource "plat/mediatek/apsoc_common/Config-internal.in"

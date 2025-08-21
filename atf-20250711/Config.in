@@ -1,0 +1,7 @@
+#
+# Copyright (c) 2023, MediaTek Inc. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+
+source "plat/mediatek/apsoc_common/Config.in"

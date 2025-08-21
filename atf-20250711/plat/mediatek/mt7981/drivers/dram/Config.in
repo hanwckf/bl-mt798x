@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Copyright (c) 2023, MediaTek Inc. All rights reserved.
+# Author: Weijie Gao <weijie.gao@mediatek.com>
+#
+# MT7981 DRAM-pecific configurations
+#
+
+if _PLAT_MT7981
+
+choice
+	prompt "Chip package"
+
+	config _MT7981_BOARD_QFN
+		bool "QFN"
+		depends on _DRAM_DDR3
+
+	config _MT7981_BOARD_BGA
+		bool "BGA"
+endchoice
+
+# Makefile options
+config BOARD_QFN
+	int
+	default 1
+	depends on _MT7981_BOARD_QFN
+
+config BOARD_BGA
+	int
+	default 1
+	depends on _MT7981_BOARD_BGA
+
+endif # _PLAT_MT7981

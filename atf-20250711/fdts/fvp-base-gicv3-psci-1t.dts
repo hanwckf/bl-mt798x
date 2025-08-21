@@ -1,0 +1,18 @@
+/*
+ * Copyright (c) 2017-2020, ARM Limited and Contributors. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+/* Configuration: max 4 clusters with up to 4 CPUs with 1 thread per each */
+
+#define	AFF	00
+
+#include "fvp-defs.dtsi"
+
+/dts-v1/;
+
+/memreserve/ 0x80000000 0x00010000;
+
+#include "fvp-base-gicv3.dtsi"
+#include "fvp-base-psci-common.dtsi"

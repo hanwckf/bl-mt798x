@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Copyright (c) 2023, MediaTek Inc. All rights reserved.
+# Author: Weijie Gao <weijie.gao@mediatek.com>
+#
+# MT7988 platform-specific configurations
+#
+
+if _PLAT_MT7988
+
+config _ENABLE_EIP197_SUPPORT
+	bool "Enable EIP197 support"
+	default n
+
+config _ENABLE_BL2_CPU_FULL_SPEED
+	bool "Enable BL2 CPU full speed mode"
+	select _ENABLE_I2C_SUPPORT
+	default n
+
+config _ENABLE_FWDL
+	bool "Enable BL31 FWDL SMCC"
+	select _REQUIRE_MBEDTLS
+	default n
+
+# Makefile options
+config EIP197_SUPPORT
+	int
+	default 1
+	depends on _ENABLE_EIP197_SUPPORT
+
+config BL2_CPU_FULL_SPEED
+	int
+	default 1
+	depends on _ENABLE_BL2_CPU_FULL_SPEED
+
+config FWDL
+	int
+	default 1
+	depends on _ENABLE_FWDL
+
+osource "plat/mediatek/mt7988/drivers/fwdl/Config.in"
+
+endif # _PLAT_MT7988

@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Copyright (c) 2023, MediaTek Inc. All rights reserved.
+# Author: Weijie Gao <weijie.gao@mediatek.com>
+#
+# MT7622 DRAM-pecific configurations
+#
+
+if _PLAT_MT7622
+
+config _MT7622_DDR3_FLYBY
+	bool "Enable Fly-by topology (Uses 2x DDR3 chips)"
+	default n
+
+# Makefile option
+config DDR3_FLYBY
+	int
+	default 1
+	depends on _MT7622_DDR3_FLYBY
+
+endif # _PLAT_MT7622

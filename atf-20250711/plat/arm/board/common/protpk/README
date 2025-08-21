@@ -1,0 +1,17 @@
+This directory contains some development keys to be used as the platform
+root-of-trust key.
+
+* arm_protprivk_rsa.pem is a 2K RSA private key in PEM format. It has been
+  generated using the openssl command line tool:
+
+  openssl genrsa 2048 > arm_protprivk_rsa.pem
+
+* arm_protprivk_ecdsa.pem is a P-256 ECSA private key in PEM format. It has been
+  generated using the openssl command line tool:
+
+  openssl ecparam -name prime256v1 -genkey -outform PEM -noout -out arm_protprivk_ecdsa.pem
+
+* arm_protprivk_ecdsa_secp384r1.pem is a P-384 ECSA private key in PEM format. It has been
+  generated using the openssl command line tool:
+
+  openssl ecparam -name secp384r1 -genkey -outform PEM -noout -out arm_protprivk_ecdsa_secp384r1.pem

@@ -1,0 +1,11 @@
+BL2 memory map:
+
+00100200 - 00100203 (000004)  : Flag of debugger hook for RAM boot
+
+40100000 - 401fffff (100000)  : Scratch buffer for mtk-qspi/mtk-snand driver
+40400000 - 407fffff (400000)  : Scratch buffer for UBI/NMBM/RAM-load
+40800000 - 40bfffff (400000)  : FIP XZ decompression buffer
+41000000 - 41dfffff (e00000)  : Block device buffer
+41e00000 - 427fffff (a00000)  : BL33
+42800000 - 433fffff (c00000)  : Reserved for pstore and BL31
+43400000 - 443fffff (1000000) : Scratch buffer for Dual-FIP

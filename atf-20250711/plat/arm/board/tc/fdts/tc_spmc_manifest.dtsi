@@ -1,0 +1,123 @@
+/*
+ * Copyright (c) 2020-2024, Arm Limited. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+#include <platform_def.h>
+
+/ {
+	compatible = "arm,ffa-core-manifest-1.0";
+	#address-cells = <2>;
+	#size-cells = <2>;
+
+	attribute {
+		spmc_id = <0x8000>;
+		maj_ver = <0x1>;
+		min_ver = <0x2>;
+		exec_state = <0x0>;
+		load_address = <0x0 0xfd000000>;
+		entrypoint = <0x0 0xfd000000>;
+		binary_size = <0x80000>;
+	};
+
+	hafnium:hypervisor {
+		compatible = "hafnium,hafnium";
+		/* filled in in top level .dts */
+	};
+
+	cpus {
+		#address-cells = <0x2>;
+		#size-cells = <0x0>;
+
+		CPU0:cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x0>;
+			enable-method = "psci";
+		};
+
+		/*
+		 * SPMC (Hafnium) requires secondary cpu nodes are declared in
+		 * descending order
+		 */
+		CPU7:cpu@700 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x700>;
+			enable-method = "psci";
+		};
+
+		CPU6:cpu@600 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x600>;
+			enable-method = "psci";
+		};
+
+		CPU5:cpu@500 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x500>;
+			enable-method = "psci";
+		};
+
+		CPU4:cpu@400 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x400>;
+			enable-method = "psci";
+		};
+
+		CPU3:cpu@300 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x300>;
+			enable-method = "psci";
+		};
+
+		CPU2:cpu@200 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x200>;
+			enable-method = "psci";
+		};
+
+		CPU1:cpu@100 {
+			device_type = "cpu";
+			compatible = "arm,armv8";
+			reg = <0x0 0x100>;
+			enable-method = "psci";
+		};
+	};
+
+	/* the full secure world range */
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 TC_TZC_DRAM1_BASE 0x0 TC_TZC_DRAM1_SIZE>,
+		      <0x0 0xff000000 0x0 0x1000000>;
+	};
+
+	memory@1 {
+		device_type = "ns-memory";
+		reg = <0x0 TC_NS_DRAM1_BASE 0x0 TC_NS_DRAM1_SIZE>,
+		      <HI(PLAT_ARM_DRAM2_BASE) LO(PLAT_ARM_DRAM2_BASE)
+		       HI(TC_NS_DRAM2_SIZE) LO(TC_NS_DRAM2_SIZE)>;
+	};
+
+	memory@2 {
+		device_type = "device-memory";
+		reg = <0x0 0x25000000 0x0 0x10000>; /* For cactus tertiary dummy device. */
+	};
+
+	s_uart {
+		device_type = "device-memory";
+		reg = <0x0 PLAT_ARM_BOOT_UART_BASE 0x0 0x01000>;
+	};
+
+#ifdef TS_SP_FW_CONFIG
+	ns_flash {
+		device_type = "ns-device-memory";
+		reg = <0x0 V2M_FLASH0_BASE 0x0 V2M_FLASH0_SIZE>;
+	};
+#endif
+};

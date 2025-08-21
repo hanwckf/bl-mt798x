@@ -1,0 +1,223 @@
+# Copyright (C) 2021-2022 SkyLake Huang
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+# SD-card layout(mt7981/mt7986):
+#       0x0~0x4400    : GPT
+#   0x80000~0x400000  : bl2
+#  0x400000~0x480000  : u-boot-env
+#  0x480000~0x680000  : rf
+#  0x680000~0x880000  : fip
+#  0x880000~0x2880000 : kernel
+# 0x2880000~0x12880000: rootfs
+mt7981:
+  default:
+    gpt:
+      start: 0x0
+      size: 0x4400
+    bl2:
+      start: 0x80000
+      size: 0x400000
+    factory:
+      start: 0x480000
+      size: 0x200000
+    fip:
+      start: 0x680000
+      size: 0x200000
+    kernel:
+      start: 0x880000
+      size: 0x2000000
+    rootfs:
+      start: 0x2880000
+      size: 0x10000000
+  "dual-image":
+    gpt:
+      start: 0x0
+      size: 0x4400
+    bl2:
+      start: 0x80000
+      size: 0x400000
+    factory:
+      start: 0x480000
+      size: 0x200000
+    fip:
+      start: 0x680000
+      size: 0x200000
+    kernel:
+      start: 0x880000
+      size: 0x2000000
+    rootfs:
+      start: 0x2880000
+      size: 0x2000000
+    kernel2:
+      start: 0x4880000
+      size: 0x2000000
+    rootfs2:
+      start: 0x6880000
+      size: 0x2000000
+
+mt7986:
+  default:
+    gpt:
+      start: 0x0
+      size: 0x4400
+    bl2:
+      start: 0x80000
+      size: 0x400000
+    factory:
+      start: 0x480000
+      size: 0x200000
+    fip:
+      start: 0x680000
+      size: 0x200000
+    kernel:
+      start: 0x880000
+      size: 0x2000000
+    rootfs:
+      start: 0x2880000
+      size: 0x10000000
+  "dual-image":
+    gpt:
+      start: 0x0
+      size: 0x4400
+    bl2:
+      start: 0x80000
+      size: 0x400000
+    factory:
+      start: 0x480000
+      size: 0x200000
+    fip:
+      start: 0x680000
+      size: 0x200000
+    kernel:
+      start: 0x880000
+      size: 0x2000000
+    rootfs:
+      start: 0x2880000
+      size: 0x2000000
+    kernel2:
+      start: 0x4880000
+      size: 0x2000000
+    rootfs2:
+      start: 0x6880000
+      size: 0x2000000
+
+# SD-card layout(mt7988):
+#       0x0~0x4400    : GPT
+#   0x80000~0x400000  : bl2
+#  0x400000~0x480000  : u-boot-env
+#  0x480000~0x880000  : rf
+#  0x880000~0xa80000  : fip
+#  0xa80000~0x2a80000 : kernel
+# 0x2a80000~0x12a80000: rootfs
+mt7988:
+  default:
+    gpt:
+      start: 0x0
+      size: 0x4400
+    bl2:
+      start: 0x80000
+      size: 0x400000
+    factory:
+      start: 0x480000
+      size: 0x400000
+    fip:
+      start: 0x880000
+      size: 0x200000
+    kernel:
+      start: 0xa80000
+      size: 0x2000000
+    rootfs:
+      start: 0x2a80000
+      size: 0x10000000
+  "dual-image":
+    gpt:
+      start: 0x0
+      size: 0x4400
+    bl2:
+      start: 0x80000
+      size: 0x400000
+    factory:
+      start: 0x480000
+      size: 0x400000
+    fip:
+      start: 0x880000
+      size: 0x200000
+    kernel:
+      start: 0xa80000
+      size: 0x2000000
+    rootfs:
+      start: 0x2a80000
+      size: 0x2000000
+    kernel2:
+      start: 0x4a80000
+      size: 0x2000000
+    rootfs2:
+      start: 0x6a80000
+      size: 0x2000000
+
+# SD-card layout(mt7987):
+#       0x0~0x4400    : GPT
+#   0x80000~0x400000  : bl2
+#  0x400000~0x480000  : u-boot-env
+#  0x480000~0x880000  : rf
+#  0x880000~0xa80000  : fip
+#  0xa80000~0x2a80000 : kernel
+# 0x2a80000~0x12a80000: rootfs
+mt7987:
+  default:
+    gpt:
+      start: 0x0
+      size: 0x4400
+    bl2:
+      start: 0x80000
+      size: 0x400000
+    factory:
+      start: 0x480000
+      size: 0x400000
+    fip:
+      start: 0x880000
+      size: 0x200000
+    kernel:
+      start: 0xa80000
+      size: 0x2000000
+    rootfs:
+      start: 0x2a80000
+      size: 0x10000000
+  "dual-image":
+    gpt:
+      start: 0x0
+      size: 0x4400
+    bl2:
+      start: 0x80000
+      size: 0x400000
+    factory:
+      start: 0x480000
+      size: 0x400000
+    fip:
+      start: 0x880000
+      size: 0x200000
+    kernel:
+      start: 0xa80000
+      size: 0x2000000
+    rootfs:
+      start: 0x2a80000
+      size: 0x2000000
+    kernel2:
+      start: 0x4a80000
+      size: 0x2000000
+    rootfs2:
+      start: 0x6a80000
+      size: 0x2000000

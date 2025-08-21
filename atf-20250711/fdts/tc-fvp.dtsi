@@ -1,0 +1,84 @@
+/*
+ * Copyright (c) 2023-2024, Arm Limited. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#define GIC_CTRL_ADDR		2c010000
+#define GIC_GICR_OFFSET		0x200000
+#define UART_OFFSET		0x1000
+
+#ifdef TC_RESOLUTION_1920X1080P60
+
+#define LCD_TIMING_CLK 148500000
+#define LCD_TIMING								\
+	clock-frequency = <LCD_TIMING_CLK>;					\
+	hactive = <1920>;							\
+	vactive = <1080>;							\
+	hfront-porch = <88>;							\
+	hback-porch = <148>;							\
+	hsync-len = <44>;							\
+	vfront-porch = <4>;							\
+	vback-porch = <36>;							\
+	vsync-len = <5>
+
+#else /* TC_RESOLUTION_640X480P60 */
+
+#define LCD_TIMING_CLK 25175000
+#define LCD_TIMING								\
+	clock-frequency = <LCD_TIMING_CLK>;					\
+	hactive = <640>;							\
+	vactive = <480>;							\
+	hfront-porch = <16>;							\
+	hback-porch = <48>;							\
+	hsync-len = <96>;							\
+	vfront-porch = <10>;							\
+	vback-porch = <33>;							\
+	vsync-len = <2>
+
+#endif
+
+/ {
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	ethernet: ethernet@ETHERNET_ADDR {
+		compatible = "smsc,lan91c111";
+	};
+
+	mmci: mmci@MMC_ADDR {
+		cd-gpios = <&sysreg 0 0>;
+	};
+
+	rtc@RTC_ADDR {
+		compatible = "arm,pl031", "arm,primecell";
+		reg = <0x0 ADDRESSIFY(RTC_ADDR) 0x0 0x1000>;
+		interrupts = <GIC_SPI RTC_INT IRQ_TYPE_LEVEL_HIGH 0>;
+		clocks = <&soc_refclk>;
+		clock-names = "apb_pclk";
+	};
+
+	kmi@KMI_0_ADDR {
+		compatible = "arm,pl050", "arm,primecell";
+		reg = <0x0 ADDRESSIFY(KMI_0_ADDR) 0x0 0x1000>;
+		interrupts = <GIC_SPI KMI_0_INT IRQ_TYPE_LEVEL_HIGH 0>;
+		clocks = <&bp_clock24mhz>, <&bp_clock24mhz>;
+		clock-names = "KMIREFCLK", "apb_pclk";
+	};
+
+	kmi@1c070000 {
+		compatible = "arm,pl050", "arm,primecell";
+		reg = <0x0 0x001c070000 0x0 0x1000>;
+		interrupts = <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH 0>;
+		clocks = <&bp_clock24mhz>, <&bp_clock24mhz>;
+		clock-names = "KMIREFCLK", "apb_pclk";
+	};
+
+	virtio_block@VIRTIO_BLOCK_ADDR {
+		compatible = "virtio,mmio";
+		reg = <0x0 ADDRESSIFY(VIRTIO_BLOCK_ADDR) 0x0 0x200>;
+		/* spec lists this wrong */
+		interrupts = <GIC_SPI VIRTIO_BLOCK_INT IRQ_TYPE_LEVEL_HIGH 0>;
+	};
+};

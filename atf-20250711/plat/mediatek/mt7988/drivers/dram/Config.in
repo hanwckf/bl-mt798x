@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Copyright (c) 2023, MediaTek Inc. All rights reserved.
+# Author: Weijie Gao <weijie.gao@mediatek.com>
+#
+# MT7988 DRAM-pecific configurations
+#
+
+if _PLAT_MT7988
+
+config _MT7988_DDR4_8GB
+	bool "Support DDR4 8GB (2x16-bits) / 4GB (1x16-bits)"
+	depends on _DRAM_DDR_COMB || _DRAM_DDR4
+	default n
+
+# Makefile options
+config DDR4_4BG_MODE
+	int
+	default 1
+	depends on _MT7988_DDR4_8GB
+
+endif # _PLAT_MT7988

@@ -1,0 +1,28 @@
+{
+	"bl2" : {
+		"start": 2048,
+		"end" : 8191,
+		"attributes": 4
+	},
+
+	"u-boot-env" : {
+		"start": 8192,
+		"end" : 16383,
+		"part_type_guid" : "{3de21764-95bd-54bd-a5c3-4abe786f38a8}"
+	},
+
+	"factory" : {
+		"start": 16384,
+		"end" : 24575
+	},
+
+	"fip": {
+		"start": 24576,
+		"end" : 32767
+	},
+
+	"firmware" : {
+		"start": 32768,
+		"end" : 557055
+	}
+}

@@ -1,0 +1,108 @@
+/*
+ * Copyright (c) 2024, Arm Limited. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * This file provide a malformed CoT DT file that there
+ * are image/certificate that missing mandantory attributes
+ *
+ */
+
+cot {
+	manifests {
+		compatible = "arm, cert-descs";
+
+		cca_content_cert: cca_content_cert {
+			root-certificate;
+			antirollback-counter = <&cca_nv_ctr>;
+
+			hw_config_hash: hw_config_hash {
+			};
+
+			soc_fw_config_hash: soc_fw_config_hash {
+				oid = "1.3.6.1.4.1.4128.2100.604";
+			};
+		};
+
+		plat_key_cert: plat_key_cert {
+			root-certificate;
+			image-id = <38>;
+			signing-key = <&prot_pk>;
+			antirollback-counter = <&non_trusted_nv_ctr>;
+
+			plat_pk: plat_pk {
+				oid = "1.3.6.1.4.1.4128.2100.1105";
+			};
+		};
+
+		non_trusted_fw_content_cert: non_trusted_fw_content_cert {
+			image-id = <15>;
+			signing-key = <&plat_pk>;
+			antirollback-counter = <&non_trusted_nv_ctr>;
+
+			nt_world_bl_hash: nt_world_bl_hash {
+				oid = "1.3.6.1.4.1.4128.2100.1201";
+			};
+			nt_fw_config_hash: nt_fw_config_hash {
+				oid =  "1.3.6.1.4.1.4128.2100.1202";
+			};
+		};
+
+	images {
+		compatible = "arm, img-descs";
+
+		hw_config {
+			image-id = <23>;
+			hash = <&hw_config_hash>;
+		};
+
+		soc_fw_config {
+			image-id = <25>;
+			parent = <&cca_content_cert>;
+			hash = <&soc_fw_config_hash>;
+		};
+
+		bl33_image {
+			image-id = <5>;
+			parent = <&non_trusted_fw_content_cert>;
+			hash = <&nt_world_bl_hash>;
+		};
+
+		nt_fw_config {
+			image-id = <27>;
+			parent = <&non_trusted_fw_content_cert>;
+			hash = <&nt_fw_config_hash>;
+		};
+	};
+};
+
+non_volatile_counters: non_volatile_counters {
+	compatible = "arm, non-volatile-counter";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	cca_nv_ctr: cca_nv_ctr {
+		id  = <0>;
+		oid = "1.3.6.1.4.1.4128.2100.3";
+	};
+
+	trusted_nv_ctr: trusted_nv_ctr {
+		id  = <0>;
+		oid = "1.3.6.1.4.1.4128.2100.1";
+	};
+
+	non_trusted_nv_ctr: non_trusted_nv_ctr {
+		id  = <1>;
+		oid = "1.3.6.1.4.1.4128.2100.2";
+	};
+};
+
+rot_keys {
+	swd_rot_pk: swd_rot_pk {
+		oid = "1.3.6.1.4.1.4128.2100.1103";
+	};
+	prot_pk: prot_pk {
+		oid = "1.3.6.1.4.1.4128.2100.1102";
+	};
+};

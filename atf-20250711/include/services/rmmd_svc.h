@@ -1,0 +1,315 @@
+/*
+ * Copyright (c) 2021-2025, Arm Limited and Contributors. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#ifndef RMMD_SVC_H
+#define RMMD_SVC_H
+
+#include <common/sha_common_macros.h>
+#include <lib/smccc.h>
+#include <lib/utils_def.h>
+
+/* STD calls FNUM Min/Max ranges */
+#define RMI_FNUM_MIN_VALUE	U(0x150)
+#define RMI_FNUM_MAX_VALUE	U(0x18F)
+
+/* Construct RMI fastcall std FID from offset */
+#define SMC64_RMI_FID(_offset)					  \
+	((SMC_TYPE_FAST << FUNCID_TYPE_SHIFT)			| \
+	 (SMC_64 << FUNCID_CC_SHIFT)				| \
+	 (OEN_STD_START << FUNCID_OEN_SHIFT)			| \
+	 (((RMI_FNUM_MIN_VALUE + (_offset)) & FUNCID_NUM_MASK)	  \
+	  << FUNCID_NUM_SHIFT))
+
+#define is_rmi_fid(fid) __extension__ ({		\
+	__typeof__(fid) _fid = (fid);			\
+	((GET_SMC_NUM(_fid) >= RMI_FNUM_MIN_VALUE) &&	\
+	 (GET_SMC_NUM(_fid) <= RMI_FNUM_MAX_VALUE) &&	\
+	 (GET_SMC_TYPE(_fid) == SMC_TYPE_FAST)	   &&	\
+	 (GET_SMC_CC(_fid) == SMC_64)              &&	\
+	 (GET_SMC_OEN(_fid) == OEN_STD_START)      &&	\
+	 ((_fid & 0x00FE0000) == 0U)); })
+
+/*
+ * RMI_FNUM_REQ_COMPLETE is the only function in the RMI range that originates
+ * from the Realm world and is handled by the RMMD. The RMI functions are
+ * always invoked by the Normal world, forwarded by RMMD and handled by the
+ * RMM.
+ */
+					/* 0x18F */
+#define RMM_RMI_REQ_COMPLETE		SMC64_RMI_FID(U(0x3F))
+
+/* RMM_BOOT_COMPLETE arg0 error codes */
+#define E_RMM_BOOT_SUCCESS				(0)
+#define E_RMM_BOOT_UNKNOWN				(-1)
+#define E_RMM_BOOT_VERSION_MISMATCH			(-2)
+#define E_RMM_BOOT_CPUS_OUT_OF_RANGE			(-3)
+#define E_RMM_BOOT_CPU_ID_OUT_OF_RANGE			(-4)
+#define E_RMM_BOOT_INVALID_SHARED_BUFFER		(-5)
+#define E_RMM_BOOT_MANIFEST_VERSION_NOT_SUPPORTED	(-6)
+#define E_RMM_BOOT_MANIFEST_DATA_ERROR			(-7)
+
+/* The SMC in the range 0x8400 0191 - 0x8400 01AF are reserved for RSIs.*/
+
+/*
+ * EL3 - RMM SMCs used for requesting RMMD services. These SMCs originate in Realm
+ * world and return to Realm world.
+ *
+ * These are allocated from 0x8400 01B0 - 0x8400 01CF in the RMM Service range.
+ */
+#define RMMD_EL3_FNUM_MIN_VALUE		U(0x1B0)
+#define RMMD_EL3_FNUM_MAX_VALUE		U(0x1CF)
+
+/* Construct RMM_EL3 fastcall std FID from offset */
+#define SMC64_RMMD_EL3_FID(_offset)					  \
+	((SMC_TYPE_FAST << FUNCID_TYPE_SHIFT)				| \
+	 (SMC_64 << FUNCID_CC_SHIFT)					| \
+	 (OEN_STD_START << FUNCID_OEN_SHIFT)				| \
+	 (((RMMD_EL3_FNUM_MIN_VALUE + (_offset)) & FUNCID_NUM_MASK)	  \
+	  << FUNCID_NUM_SHIFT))
+
+/* The macros below are used to identify GTSI calls from the SMC function ID */
+#define is_rmmd_el3_fid(fid) __extension__ ({		\
+	__typeof__(fid) _fid = (fid);			\
+	((GET_SMC_NUM(_fid) >= RMMD_EL3_FNUM_MIN_VALUE) &&\
+	(GET_SMC_NUM(_fid) <= RMMD_EL3_FNUM_MAX_VALUE)  &&\
+	(GET_SMC_TYPE(_fid) == SMC_TYPE_FAST)	    &&	\
+	(GET_SMC_CC(_fid) == SMC_64)                &&	\
+	(GET_SMC_OEN(_fid) == OEN_STD_START)        &&	\
+	((_fid & 0x00FE0000) == 0U)); })
+
+					/* 0x1B0 - 0x1B1 */
+#define RMM_GTSI_DELEGATE		SMC64_RMMD_EL3_FID(U(0))
+#define RMM_GTSI_UNDELEGATE		SMC64_RMMD_EL3_FID(U(1))
+
+/* Return error codes from RMM-EL3 SMCs */
+#define E_RMM_OK			 0
+#define E_RMM_UNK			-1
+#define E_RMM_BAD_ADDR			-2
+#define E_RMM_BAD_PAS			-3
+#define E_RMM_NOMEM			-4
+#define E_RMM_INVAL			-5
+#define E_RMM_AGAIN			-6
+#define E_RMM_FAULT			-7
+#define E_RMM_IN_PROGRESS		-8
+
+/* Return error codes from RMI SMCs */
+#define RMI_SUCCESS			0
+#define RMI_ERROR_INPUT			1
+
+/*
+ * Retrieve Realm attestation key from EL3. Only P-384 ECC curve key is
+ * supported. The arguments to this SMC are :
+ *    arg0 - Function ID.
+ *    arg1 - Realm attestation key buffer Physical address.
+ *    arg2 - Realm attestation key buffer size (in bytes).
+ *    arg3 - The type of the elliptic curve to which the requested
+ *           attestation key belongs to. The value should be one of the
+ *           defined curve types.
+ * The return arguments are :
+ *    ret0 - Status / error.
+ *    ret1 - Size of the realm attestation key if successful.
+ */
+					/* 0x1B2 */
+#define RMM_ATTEST_GET_REALM_KEY	SMC64_RMMD_EL3_FID(U(2))
+
+/*
+ * Retrieve Platform token from EL3.
+ * The arguments to this SMC are :
+ *    arg0 - Function ID.
+ *    arg1 - Platform attestation token buffer Physical address. (The challenge
+ *           object is passed in this buffer.)
+ *    arg2 - Platform attestation token buffer size (in bytes).
+ *    arg3 - Challenge object size (in bytes). It has to be one of the defined
+ *           SHA hash sizes.
+ * The return arguments are :
+ *    ret0 - Status / error.
+ *    ret1 - Size of the platform token if successful.
+ */
+					/* 0x1B3 */
+#define RMM_ATTEST_GET_PLAT_TOKEN	SMC64_RMMD_EL3_FID(U(3))
+
+/* Starting RMM-EL3 interface version 0.4 */
+#define RMM_EL3_FEATURES				SMC64_RMMD_EL3_FID(U(4))
+#define RMM_EL3_FEAT_REG_0_IDX				U(0)
+/* Bit 0 of FEAT_REG_0 */
+/* 1 - the feature is present in EL3 , 0 - the feature is absent */
+#define RMM_EL3_FEAT_REG_0_EL3_TOKEN_SIGN_MASK		U(0x1)
+
+/*
+ * Function codes to support attestation where EL3 is used to sign
+ * realm attestation tokens. In this model, the private key is not
+ * exposed to the RMM.
+ * The arguments to this SMC are:
+ *     arg0 - Function ID.
+ *     arg1 - Opcode, one of:
+ *               RMM_EL3_TOKEN_SIGN_PUSH_REQ_OP,
+ *               RMM_EL3_TOKEN_SIGN_PULL_RESP_OP,
+ *               RMM_EL3_TOKEN_SIGN_GET_RAK_PUB_OP
+ *     arg2 - Pointer to buffer with request/response structures,
+ *            which is in the RMM<->EL3 shared buffer.
+ *     arg3 - Buffer size of memory pointed by arg2.
+ *     arg4 - ECC Curve, when opcode is RMM_EL3_TOKEN_SIGN_GET_RAK_PUB_OP
+ * The return arguments are:
+ *     ret0 - Status/Error
+ *     ret1 - Size of public key if opcode is RMM_EL3_TOKEN_SIGN_GET_RAK_PUB_OP
+ */
+#define RMM_EL3_TOKEN_SIGN			SMC64_RMMD_EL3_FID(U(5))
+
+/* Opcodes for RMM_EL3_TOKEN_SIGN  */
+#define RMM_EL3_TOKEN_SIGN_PUSH_REQ_OP          U(1)
+#define RMM_EL3_TOKEN_SIGN_PULL_RESP_OP         U(2)
+#define RMM_EL3_TOKEN_SIGN_GET_RAK_PUB_OP       U(3)
+
+/* Starting RMM-EL3 interface version 0.5 */
+
+/*
+ * Function code to support update of MEC keys.
+ * The arguments of this SMC are:
+ * 	arg0 - Function ID.
+ * 	arg1 - MECID
+ * The return arguments are:
+ * 	ret0 - Status/Error
+ */
+#define RMM_MECID_KEY_UPDATE			SMC64_RMMD_EL3_FID(U(6))
+
+/* ECC Curve types for attest key generation */
+#define ATTEST_KEY_CURVE_ECC_SECP384R1		U(0)
+
+/* Identifier for the hash algorithm used for attestation signing */
+#define EL3_TOKEN_SIGN_HASH_ALG_SHA384		U(1)
+
+/* Starting RMM-EL3 interface version 0.6 */
+/*
+ * Function codes to support RMM IDE Key management Interface.
+ * The arguments to this SMC are:
+ *     arg0 - Function ID.
+ *     arg1 - Enhanced Configuration Access Mechanism address
+ *     arg2 - Root Port ID
+ *     arg3 - IDE selective stream info
+ *     arg4 - Quad word of key[63:0]
+ *     arg5 - Quad word of key[127:64]
+ *     arg6 - Quad word of key[191:128]
+ *     arg7 - Quad word of key[255:192]
+ *     arg8 - Quad word of IV [63:0]
+ *     arg9 - Quad word of IV [95:64]
+ *     arg10 - request_id
+ *     arg11 - cookie
+ * The return arguments are:
+ *     ret0 - Status/Error
+ */
+#define RMM_IDE_KEY_PROG			SMC64_RMMD_EL3_FID(U(7))
+
+/*******************************************************************************
+ * Structure to hold el3_ide_key info
+ ******************************************************************************/
+#ifndef __ASSEMBLER__
+typedef struct rp_ide_key_info {
+	uint64_t keyqw0;
+	uint64_t keyqw1;
+	uint64_t keyqw2;
+	uint64_t keyqw3;
+	uint64_t ifvqw0;
+	uint64_t ifvqw1;
+} rp_ide_key_info_t;
+#endif /* __ASSEMBLER__ */
+
+/*
+ * Function codes to support RMM IDE Key management Interface.
+ * The arguments to this SMC are:
+ *     arg0 - Function ID.
+ *     arg1 - Enhanced Configuration Access Mechanism address
+ *     arg2 - Root Port ID
+ *     arg3 - IDE selective stream info
+ *     arg4 - request_id
+ *     arg5 - cookie
+ * The return arguments are:
+ *     ret0 - Status/Error
+ */
+#define RMM_IDE_KEY_SET_GO			SMC64_RMMD_EL3_FID(U(8))
+
+/*
+ * Function codes to support RMM IDE Key management Interface.
+ * The arguments to this SMC are:
+ *     arg0 - Function ID.
+ *     arg1 - Enhanced Configuration Access Mechanism address
+ *     arg2 - Root Port ID
+ *     arg3 - IDE selective stream info
+ *     arg4 - request_id
+ *     arg5 - cookie
+ * The return arguments are:
+ *     ret0 - Status/Error
+ */
+#define RMM_IDE_KEY_SET_STOP			SMC64_RMMD_EL3_FID(U(9))
+
+/*
+ * Function codes to support RMM IDE Key management Interface.
+ * The arguments to this SMC are:
+ *     arg0 - Function ID.
+ *     arg1 - Enhanced Configuration Access Mechanism address
+ *     arg2 - Root Port ID
+ * The return arguments are:
+ *     ret0 - Status/Error
+ *     ret1 - Retrieved response corresponding to the previous request.
+ *     ret2 - request_id
+ *     ret3 - cookie
+ */
+#define RMM_IDE_KM_PULL_RESPONSE		SMC64_RMMD_EL3_FID(U(10))
+
+/*
+ * RMM_BOOT_COMPLETE originates on RMM when the boot finishes (either cold
+ * or warm boot). This is handled by the RMM-EL3 interface SMC handler.
+ *
+ * RMM_BOOT_COMPLETE FID is located at the end of the available range.
+ */
+					 /* 0x1CF */
+#define RMM_BOOT_COMPLETE		SMC64_RMMD_EL3_FID(U(0x1F))
+
+/*
+ * The major version number of the RMM Boot Interface implementation.
+ * Increase this whenever the semantics of the boot arguments change making it
+ * backwards incompatible.
+ */
+#define RMM_EL3_IFC_VERSION_MAJOR	(U(0))
+
+/*
+ * The minor version number of the RMM Boot Interface implementation.
+ * Increase this when a bug is fixed, or a feature is added without
+ * breaking compatibility.
+ */
+#define RMM_EL3_IFC_VERSION_MINOR	(U(6))
+
+#define RMM_EL3_INTERFACE_VERSION				\
+	(((RMM_EL3_IFC_VERSION_MAJOR << 16) & 0x7FFFF) |	\
+		RMM_EL3_IFC_VERSION_MINOR)
+
+#define RMM_EL3_IFC_VERSION_GET_MAJOR(_version) (((_version) >> 16) \
+								& 0x7FFF)
+#define RMM_EL3_IFC_VERSION_GET_MAJOR_MINOR(_version) ((_version) & 0xFFFF)
+
+#ifndef __ASSEMBLER__
+#include <stdint.h>
+
+int rmmd_setup(void);
+uint64_t rmmd_rmi_handler(uint32_t smc_fid,
+		uint64_t x1,
+		uint64_t x2,
+		uint64_t x3,
+		uint64_t x4,
+		void *cookie,
+		void *handle,
+		uint64_t flags);
+
+uint64_t rmmd_rmm_el3_handler(uint32_t smc_fid,
+		uint64_t x1,
+		uint64_t x2,
+		uint64_t x3,
+		uint64_t x4,
+		void *cookie,
+		void *handle,
+		uint64_t flags);
+
+#endif /* __ASSEMBLER__ */
+#endif /* RMMD_SVC_H */

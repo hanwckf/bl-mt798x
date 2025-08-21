@@ -1,0 +1,19 @@
+#
+# Copyright (c) 2024, MediaTek Inc. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+
+BL32_TZRAM_BASE ?= 0x4fa00000
+BL32_TZRAM_SIZE ?= 0x500000
+BL32_LOAD_OFFSET ?= 0x1000
+
+ifneq ($(BL32),)
+ifeq ($(TRUSTED_BOARD_BOOT),1)
+CPPFLAGS += -DNEED_BL32
+endif
+endif
+
+CPPFLAGS += -DBL32_TZRAM_BASE=$(BL32_TZRAM_BASE) \
+	    -DBL32_TZRAM_SIZE=$(BL32_TZRAM_SIZE) \
+	    -DBL32_LOAD_OFFSET=$(BL32_LOAD_OFFSET)

@@ -1,0 +1,11 @@
+/* SPDX-License-Identifier: BSD-3-Clause */
+/*
+ * Copyright (c) 2024, MediaTek Inc. All rights reserved.
+ */
+/dts-v1/;
+
+/ {
+	soc {
+		compatible = "mediatek,mt7988";
+	};
+};

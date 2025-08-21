@@ -1,0 +1,5 @@
+#!/bin/sh
+
+if ! git config --get tf-a.disableCommitizen > /dev/null; then
+    "$(dirname "$0")/prepare-commit-msg.cz" "$@"
+fi

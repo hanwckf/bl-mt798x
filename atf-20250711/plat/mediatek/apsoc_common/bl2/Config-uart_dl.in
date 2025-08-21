@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Copyright (c) 2023, MediaTek Inc. All rights reserved.
+# Author: Weijie Gao <weijie.gao@mediatek.com>
+#
+# UART DL internal configurations
+#
+
+config _RAM_BOOT_RAM_BOOT_UART_DL
+	bool "Enable RAM boot UART download support"
+	depends on _BOOT_DEVICE_RAM
+	depends on !_RAM_BOOT_DEBUGGER_HOOK
+	default n
+
+# Makefile options
+config RAM_BOOT_UART_DL
+	int
+	default 1
+	depends on _RAM_BOOT_RAM_BOOT_UART_DL
