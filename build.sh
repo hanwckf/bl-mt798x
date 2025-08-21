@@ -34,7 +34,7 @@ for file in "$ATF_DIR/configs/$ATF_CFG" "$UBOOT_DIR/configs/$UBOOT_CFG"; do
 	fi
 done
 
-if grep -q "CONFIG_FLASH_DEVICE_EMMC=y" $ATF_DIR/configs/$ATF_CFG ; then
+if grep -Eq "CONFIG_FLASH_DEVICE_EMMC=y|_BOOT_DEVICE_EMMC=y" $ATF_DIR/configs/$ATF_CFG ; then
 	# No fixed-mtdparts or multilayout for EMMC
 	fixedparts=0
 	multilayout=0
