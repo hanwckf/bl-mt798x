@@ -233,6 +233,10 @@ config MTK_HTTPD
 	help
 	  Enable mediatek httpd framework that allows some customized features.
 
+config NET_FORCE_IPADDR
+	bool "Use ipaddr and netmask with CONFIG_IPADDR and CONFIG_NETMASK"
+	default n
+
 endif   # if NET
 
 source "net/lwip/Kconfig"

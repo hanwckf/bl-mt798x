@@ -123,19 +123,23 @@ static int load_tftp(ulong addr, size_t *data_size, const char *env_name)
 {
 	char file_name[CONFIG_SYS_CBSIZE + 1];
 	u32 size;
-
+#ifdef CONFIG_NET_FORCE_IPADDR
+	printf("U-Boot's IP address: %s, IP netmask: %s\n", CONFIG_IPADDR, CONFIG_NETMASK);
+#else
 	if (env_update("ipaddr", CONFIG_IPADDR,
 		       "Input U-Boot's IP address:", NULL, 0))
 		return CMD_RET_FAILURE;
-
+#endif
 	if (env_update("serverip", CONFIG_SERVERIP,
 		       "Input TFTP server's IP address:", NULL, 0))
 		return CMD_RET_FAILURE;
 
+#ifndef CONFIG_NET_FORCE_IPADDR
 #ifdef CONFIG_NETMASK
 	if (env_update("netmask", CONFIG_NETMASK,
 		       "Input IP netmask:", NULL, 0))
 		return CMD_RET_FAILURE;
+#endif
 #endif
 
 	if (env_update(env_name, "", "Input file name:",
