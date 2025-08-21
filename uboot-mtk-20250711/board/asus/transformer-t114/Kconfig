@@ -1,0 +1,17 @@
+if TARGET_TRANSFORMER_T114
+
+config SYS_BOARD
+	default "transformer-t114"
+
+config SYS_VENDOR
+	default "asus"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "ASUS Transformer T114"
+
+config TEGRA_PRAM_SIZE
+	depends on TEGRA_PRAM
+	default 0x20000
+
+endif

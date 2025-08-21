@@ -1,0 +1,17 @@
+# Copyright (c) 2016, NVIDIA CORPORATION.
+#
+# SPDX-License-Identifier: GPL-2.0
+
+if TARGET_P2771_0000
+
+config SYS_BOARD
+	default "p2771-0000"
+
+config SYS_VENDOR
+	default "nvidia"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "NVIDIA P2771-0000"
+
+endif

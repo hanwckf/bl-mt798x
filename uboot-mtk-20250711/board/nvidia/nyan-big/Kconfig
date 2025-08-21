@@ -1,0 +1,13 @@
+if TARGET_NYAN_BIG
+
+config SYS_BOARD
+	default "nyan-big"
+
+config SYS_VENDOR
+	default "nvidia"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "Google/NVIDIA Nyan-big"
+
+endif

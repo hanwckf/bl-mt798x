@@ -1,0 +1,16 @@
+#include <configs/imx8mp_dhsom.config>
+
+CONFIG_ARM=y
+CONFIG_ARCH_IMX8M=y
+CONFIG_DEFAULT_DEVICE_TREE="freescale/imx8mp-dhcom-pdk3"
+CONFIG_DEFAULT_FDT_FILE="freescale/imx8mp-dhcom-pdk3.dtb"
+CONFIG_PREBOOT="gpio clear GPIO1_11 ; sleep 0.1 ; gpio set GPIO1_11 ; sleep 0.1 ; i2c dev 4 && i2c mw 0x70 0 4 && i2c probe 0x2d && i2c mw 0x2d 0xaa55.2 0"
+CONFIG_OF_UPSTREAM=y
+CONFIG_OF_UPSTREAM_INCLUDE_LOCAL_FALLBACK_DTBOS=y
+CONFIG_CMD_PCI=y
+CONFIG_NVME_PCI=y
+CONFIG_PCI=y
+CONFIG_PCIE_DW_IMX=y
+CONFIG_PHY_IMX8M_PCIE=y
+CONFIG_I2C_MUX=y
+CONFIG_I2C_MUX_PCA954x=y

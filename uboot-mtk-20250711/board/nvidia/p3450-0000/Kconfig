@@ -1,0 +1,13 @@
+if TARGET_P3450_0000
+
+config SYS_BOARD
+	default "p3450-0000"
+
+config SYS_VENDOR
+	default "nvidia"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "NVIDIA P3450-0000"
+
+endif

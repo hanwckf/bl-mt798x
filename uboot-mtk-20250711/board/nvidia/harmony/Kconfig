@@ -1,0 +1,13 @@
+if TARGET_HARMONY
+
+config SYS_BOARD
+	default "harmony"
+
+config SYS_VENDOR
+	default "nvidia"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "NVIDIA Harmony"
+
+endif

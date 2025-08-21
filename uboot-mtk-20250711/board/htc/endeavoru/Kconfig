@@ -1,0 +1,13 @@
+if TARGET_ENDEAVORU
+
+config SYS_BOARD
+	default "endeavoru"
+
+config SYS_VENDOR
+	default "htc"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "HTC One X"
+
+endif

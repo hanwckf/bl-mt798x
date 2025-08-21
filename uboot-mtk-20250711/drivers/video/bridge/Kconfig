@@ -1,0 +1,68 @@
+config VIDEO_BRIDGE
+	bool "Support video bridges"
+	depends on DM
+	help
+	  Some platforms use video bridges to convert from one output to
+	  another. For example, where the SoC only supports eDP and the LCD
+	  requires LVDS, an eDP->LVDS bridge chip can be used to provide the
+	  necessary conversion. This option enables support for these devices.
+
+config VIDEO_BRIDGE_PARADE_DP501
+	bool "Support Parade DP501 DP & DVI/HDMI dual mode transmitter"
+	depends on VIDEO_BRIDGE && PANEL && DM_GPIO
+	select DM_I2C
+	help
+	  The Parade DP501 is a DP & DVI/HDMI dual-mode transmitter. It
+	  enables an RGB/Parallel SOC output to be converted, packed and
+	  serialized into either DP or TMDS output device. Only DisplayPort
+	  functionality of this transmitter has been implemented and tested.
+
+config VIDEO_BRIDGE_PARADE_PS862X
+	bool "Support Parade PS862X DP->LVDS bridge"
+	depends on VIDEO_BRIDGE
+	help
+	  The Parade PS8622 and PS8625 are DisplayPort-to-LVDS (Low voltage
+	  differential signalling) converters. They enable an LVDS LCD panel
+	  to be connected to an eDP output device such as an SoC that lacks
+	  LVDS capability, or where LVDS requires too many signals to route
+	  on the PCB. Setup parameters are provided in the device tree.
+
+config VIDEO_BRIDGE_NXP_PTN3460
+	bool "Support NXP PTN3460 DP->LVDS bridge"
+	depends on VIDEO_BRIDGE
+	help
+	  The NXP PTN3460 is a DisplayPort-to-LVDS (Low voltage differential
+	  signalling) converter. It enables an LVDS LCD panel to be connected
+	  to an eDP output device such as an SoC that lacks LVDS capability,
+	  or where LVDS requires too many signals to route on the PCB.
+
+config VIDEO_BRIDGE_ANALOGIX_ANX6345
+	bool "Support Analogix ANX6345 RGB->DP bridge"
+	depends on VIDEO_BRIDGE
+	select DM_I2C
+	help
+	 The Analogix ANX6345 is RGB-to-DP converter. It enables an eDP LCD
+	 panel to be connected to an parallel LCD interface.
+
+config VIDEO_BRIDGE_SOLOMON_SSD2825
+	bool "Solomon SSD2825 bridge driver"
+	depends on VIDEO_BRIDGE && PANEL && DM_GPIO
+	select VIDEO_MIPI_DSI
+	help
+	  Solomon SSD2824 SPI RGB-DSI bridge driver.
+
+config VIDEO_BRIDGE_TOSHIBA_TC358768
+	bool "Support Toshiba TC358768 MIPI DSI bridge"
+	depends on VIDEO_BRIDGE && PANEL && DM_GPIO
+	select VIDEO_MIPI_DSI
+	select DM_I2C
+	help
+	  Toshiba TC358768AXBG/TC358778XBG DSI bridge chip driver.
+	  Found in Asus Transformer Infinity TF700T.
+
+config VIDEO_BRIDGE_LVDS_CODEC
+	bool "Transparent LVDS encoders and decoders support"
+	depends on VIDEO_BRIDGE && PANEL && DM_GPIO
+	help
+	  Support for transparent LVDS encoders and decoders that don't
+	  require any configuration.

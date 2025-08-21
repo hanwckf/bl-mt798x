@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: GPL-2.0+
+
+dtb-y += $(patsubst %,%.dtb,$(subst ",,$(CONFIG_DEFAULT_DEVICE_TREE) $(CONFIG_OF_LIST) $(CONFIG_SPL_OF_LIST)))
+dtb-y += $(patsubst %,%.dtbo,$(subst ",,$(CONFIG_OF_OVERLAY_LIST)))
+
+ifeq ($(CONFIG_OF_UPSTREAM_BUILD_VENDOR),y)
+ifeq ($(CONFIG_ARM64),y)
+dt_dir := $(srctree)/dts/upstream/src/arm64
+else
+dt_dir := $(srctree)/dts/upstream/src/$(ARCH)
+endif
+
+dtb-vendor_dts := $(patsubst %.dts,%.dtb,$(wildcard $(dt_dir)/$(subst ",,$(CONFIG_OF_UPSTREAM_VENDOR))/*.dts))
+
+dtb-y += $(subst $(dt_dir)/,,$(dtb-vendor_dts))
+
+endif
+
+ifneq ($(CONFIG_SYS_DTC_PAD_BYTES),0)
+DTC_FLAGS += -p $(CONFIG_SYS_DTC_PAD_BYTES)
+endif
+
+targets += $(dtb-y)
+
+PHONY += dtbs
+dtbs: $(addprefix $(obj)/, $(dtb-y))
+	@:
+
+ifneq ($(CONFIG_OF_UPSTREAM_INCLUDE_LOCAL_FALLBACK_DTBOS),)
+PHONY += dtbos
+dtbos: $(addprefix $(obj)/, $(filter-out %.dtb,$(dtb-y)))
+	@:
+endif
+
+clean-files := *.dtb *.dtbo */*.dtb */*.dtbo *_HS

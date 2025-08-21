@@ -1,0 +1,5 @@
+INTEL COUGAR CANYON 2 BOARD
+M:	Bin Meng <bmeng.cn@gmail.com>
+S:	Maintained
+F:	board/intel/cougarcanyon2/
+F:	configs/cougarcanyon2_defconfig

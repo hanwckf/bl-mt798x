@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0
+
+#include "mt7987a-emmc-rfb.dts"
+#include "mt7987a-emmc-rfb-u-boot.dtsi"
+
+/ {
+	model = "mt7987";
+	compatible = "mediatek,mt7987", "mediatek,mt7987-nor-emmc-rfb";
+
+	bl2_verify {
+		bl2_compatible = "spim-nor";
+	};
+};

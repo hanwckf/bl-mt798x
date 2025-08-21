@@ -1,0 +1,9 @@
+#include <configs/imx8mp_dhsom.config>
+
+CONFIG_ARM=y
+CONFIG_ARCH_IMX8M=y
+CONFIG_DEFAULT_DEVICE_TREE="freescale/imx8mp-dhcom-pdk2"
+CONFIG_DEFAULT_FDT_FILE="freescale/imx8mp-dhcom-pdk2.dtb"
+CONFIG_PREBOOT=""
+CONFIG_OF_UPSTREAM=y
+CONFIG_OF_UPSTREAM_INCLUDE_LOCAL_FALLBACK_DTBOS=y

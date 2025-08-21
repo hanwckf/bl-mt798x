@@ -1,0 +1,137 @@
+#
+# NOTE! Don't add files that are generated in specific
+# subdirectories here. Add them in the ".gitignore" file
+# in that subdirectory instead.
+#
+# Normal rules (sorted alphabetically)
+#
+.*
+!.checkpatch.conf
+*.a
+*.asn1.[ch]
+*.bin
+*.bin[_.]*
+*.cfgout
+*.cover
+*.dtb
+*.dtbo
+*.dtb.S
+*.elf
+*.exe
+*.fit
+*.gcda
+*.gcno
+*.i
+*.img
+*.itb
+*.lex.c
+*.lst
+*.map
+*.mod.c
+*.mbx
+*.o
+*.o.*
+*.order
+*.patch
+*.pem
+*.s
+*.su
+*.swp
+*.tab.[ch]
+*.ti-*
+# Build tree
+/build*
+
+#
+# Top-level generic files
+#
+fit-dtb.blob*
+/MLO*
+/SPL*
+/System.map
+/boards.cfg
+/mkimage-in-simple-bin*
+/simple-bin*
+/u-boot*
+/*.log
+
+#
+# git files that we don't want to ignore even it they are dot-files
+#
+!.gitignore
+!.mailmap
+!.get_maintainer.*
+
+#
+# Generated files
+#
+/spl/
+/tpl/
+/defconfig
+/generated_defconfig
+/Test*
+/capsule.*.efi-capsule
+/capsule*.map
+/keep-syms-lto.*
+/*imx8mimage*
+/*imx8mcst*
+/*rcar4-sa0*
+/drivers/video/u_boot_logo.S
+/test/overlay/test-fdt-overlay.dtbo.S
+/test/overlay/test-fdt-overlay-stacked.dtbo.S
+capsule_esl_file
+
+#
+# Generated include files
+#
+/include/autoconf.mk*
+/include/config.h
+/include/config/
+/include/generated/
+/include/bmp_logo.h
+/include/bmp_logo_data.h
+
+# stgit generated dirs
+patches-*
+.stgit-edit.txt
+
+# quilt's files
+patches
+series
+
+# gdb files
+.gdb_history
+
+# cscope files
+cscope.*
+
+# tags files
+/tags
+/ctags
+/etags
+
+# gnu global files
+GPATH
+GRTAGS
+GSYMS
+GTAGS
+
+*.orig
+*~
+\#*#
+
+# Python cache
+__pycache__
+
+# Python code coverage output (python3-coverage html)
+/htmlcov/
+
+# pylint files
+/pylint.cur
+/pylint.out/
+
+# qconfig database
+/qconfig.db
+
+# Clang's compilation database file
+/compile_commands.json

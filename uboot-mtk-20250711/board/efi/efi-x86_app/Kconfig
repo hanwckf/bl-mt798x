@@ -1,0 +1,16 @@
+if EFI_APP
+
+config SYS_BOARD
+	default "efi-x86_app"
+
+config SYS_VENDOR
+	default "efi"
+
+config SYS_SOC
+	default "efi"
+
+config BOARD_SPECIFIC_OPTIONS # dummy
+	def_bool y
+	imply VIDEO_EFI
+
+endif

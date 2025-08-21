@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * (C) Copyright 2018-2019 Rockchip Electronics Co., Ltd
+ * (C) Copyright 2020 David Bauer
+ */
+
+#include "rk3328-u-boot.dtsi"
+#include "rk3328-sdram-ddr4-666.dtsi"
+
+&gpio1 {
+	bootph-pre-ram;
+};
+
+&sdio_vcc_pin {
+	bootph-pre-ram;
+};
+
+&usb20_otg {
+	dr_mode = "peripheral";
+};
+
+&vcc_io_sdio {
+	bootph-pre-ram;
+};
+
+&vcc_sd {
+	bootph-pre-ram;
+};

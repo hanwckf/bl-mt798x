@@ -1,0 +1,13 @@
+if TARGET_TRANSFORMER_T20
+
+config SYS_BOARD
+	default "transformer-t20"
+
+config SYS_VENDOR
+	default "asus"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "ASUS Transformer T20"
+
+endif

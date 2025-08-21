@@ -1,0 +1,128 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (C) 2021, Bin Meng <bmeng.cn@gmail.com>
+ */
+
+#include <config.h>
+
+/ {
+	binman: binman {
+		multiple-images;
+	};
+};
+
+&binman {
+	itb {
+
+#ifndef CONFIG_SPL_LOAD_FIT_OPENSBI_OS_BOOT
+		filename = "u-boot.itb";
+#else
+		filename = "linux.itb";
+#endif
+
+		fit {
+			description = "Configuration to load OpenSBI before U-Boot";
+			#address-cells = <2>;
+			fit,fdt-list = "of-list";
+
+			images {
+#ifndef CONFIG_SPL_LOAD_FIT_OPENSBI_OS_BOOT
+				uboot {
+					description = "U-Boot";
+					type = "standalone";
+					os = "U-Boot";
+					arch = "riscv";
+					compression = "none";
+					load = /bits/ 64 <CONFIG_TEXT_BASE>;
+
+					uboot_blob: u-boot-nodtb {
+					};
+				};
+#else
+				linux {
+					description = "Linux";
+					type = "standalone";
+					os = "Linux";
+					arch = "riscv";
+					compression = "none";
+					load = /bits/ 64 <CONFIG_TEXT_BASE>;
+
+					linux_blob: blob-ext {
+						filename = "Image";
+					};
+				};
+#endif
+#ifdef CONFIG_OPTEE
+				tee {
+					description = "OP-TEE";
+					type = "tee";
+					arch = "riscv";
+					compression = "none";
+					os = "tee";
+					load = /bits/ 64 <CONFIG_SPL_OPTEE_LOAD_ADDR>;
+					tee_blob: tee-os {
+						filename = "tee.bin";
+					};
+				};
+#endif
+
+				opensbi {
+					description = "OpenSBI fw_dynamic Firmware";
+					type = "firmware";
+					os = "opensbi";
+					arch = "riscv";
+					compression = "none";
+					load = /bits/ 64 <CONFIG_SPL_OPENSBI_LOAD_ADDR>;
+					entry = /bits/ 64 <CONFIG_SPL_OPENSBI_LOAD_ADDR>;
+
+					opensbi_blob: opensbi {
+						filename = "fw_dynamic.bin";
+						missing-msg = "opensbi";
+					};
+				};
+
+#if !defined(CONFIG_OF_BOARD) || defined(CONFIG_MULTI_DTB_FIT)
+				@fdt-SEQ {
+					fit,operation = "gen-fdt-nodes";
+					description = "NAME";
+					type = "flat_dt";
+					compression = "none";
+				};
+#endif
+			};
+
+			configurations {
+
+#ifndef CONFIG_MULTI_DTB_FIT
+				default = "conf-1";
+#endif
+
+#if !defined(CONFIG_OF_BOARD) || defined(CONFIG_MULTI_DTB_FIT)
+				@conf-SEQ {
+#else
+				conf-1 {
+#endif
+					description = "NAME";
+					firmware = "opensbi";
+#ifdef CONFIG_OPTEE
+#ifdef CONFIG_SPL_LOAD_FIT_OPENSBI_OS_BOOT
+					loadables = "linux", "tee";
+#else
+					loadables = "uboot", "tee";
+#endif
+#else /* !CONFIG_OPTEEE */
+#ifdef CONFIG_SPL_LOAD_FIT_OPENSBI_OS_BOOT
+					loadables = "linux";
+#else
+					loadables = "uboot";
+#endif
+#endif /* CONFIG_OPTEE */
+
+#if !defined(CONFIG_OF_BOARD) || defined(CONFIG_MULTI_DTB_FIT)
+					fdt = "fdt-SEQ";
+#endif
+				};
+			};
+		};
+	};
+};

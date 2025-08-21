@@ -1,0 +1,303 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (C) 2022 Texas Instruments Incorporated - https://www.ti.com/
+ */
+
+#include "k3-binman.dtsi"
+
+#if IS_ENABLED(CONFIG_TARGET_AM62P5_R5_EVM)
+
+&binman {
+	tiboot3-am62px-hs-fs-evm.bin {
+		filename = "tiboot3-am62px-hs-fs-evm.bin";
+		symlink = "tiboot3.bin";
+
+		ti-secure-rom {
+			content = <&u_boot_spl_fs>, <&ti_fs_enc_fs>, <&combined_tifs_cfg_fs>,
+				  <&combined_dm_cfg_fs>, <&sysfw_inner_cert_fs>;
+			combined;
+			dm-data;
+			sysfw-inner-cert;
+			keyfile = "custMpk.pem";
+			sw-rev = <1>;
+			content-sbl = <&u_boot_spl_fs>;
+			content-sysfw = <&ti_fs_enc_fs>;
+			content-sysfw-data = <&combined_tifs_cfg_fs>;
+			content-sysfw-inner-cert = <&sysfw_inner_cert_fs>;
+			content-dm-data = <&combined_dm_cfg_fs>;
+			load = <0x43c00000>;
+			load-sysfw = <0x40000>;
+			load-sysfw-data = <0x67000>;
+			load-dm-data = <0x43c4a800>;
+		};
+
+		u_boot_spl_fs: u-boot-spl {
+			no-expanded;
+		};
+
+		ti_fs_enc_fs: ti-fs-enc.bin {
+			filename = "ti-sysfw/ti-fs-firmware-am62px-hs-fs-enc.bin";
+			type = "blob-ext";
+		};
+
+		combined_tifs_cfg_fs: combined-tifs-cfg.bin {
+			filename = "combined-tifs-cfg.bin";
+			type = "blob-ext";
+		};
+
+		sysfw_inner_cert_fs: sysfw-inner-cert {
+			filename = "ti-sysfw/ti-fs-firmware-am62px-hs-fs-cert.bin";
+			type = "blob-ext";
+		};
+
+		combined_dm_cfg_fs: combined-dm-cfg.bin {
+			filename = "combined-dm-cfg.bin";
+			type = "blob-ext";
+		};
+	};
+
+	tiboot3-am62px-hs-evm.bin {
+		filename = "tiboot3-am62px-hs-evm.bin";
+
+		ti-secure-rom {
+			content = <&u_boot_spl_hs>, <&ti_fs_enc_hs>, <&combined_tifs_cfg_hs>,
+				  <&combined_dm_cfg_hs>, <&sysfw_inner_cert_hs>;
+			combined;
+			dm-data;
+			sysfw-inner-cert;
+			keyfile = "custMpk.pem";
+			sw-rev = <1>;
+			content-sbl = <&u_boot_spl_hs>;
+			content-sysfw = <&ti_fs_enc_hs>;
+			content-sysfw-data = <&combined_tifs_cfg_hs>;
+			content-sysfw-inner-cert = <&sysfw_inner_cert_hs>;
+			content-dm-data = <&combined_dm_cfg_hs>;
+			load = <0x43c00000>;
+			load-sysfw = <0x40000>;
+			load-sysfw-data = <0x67000>;
+			load-dm-data = <0x43c4a800>;
+		};
+
+		u_boot_spl_hs: u-boot-spl {
+			no-expanded;
+		};
+
+		ti_fs_enc_hs: ti-fs-enc.bin {
+			filename = "ti-sysfw/ti-fs-firmware-am62px-hs-enc.bin";
+			type = "blob-ext";
+		};
+
+		combined_tifs_cfg_hs: combined-tifs-cfg.bin {
+			filename = "combined-tifs-cfg.bin";
+			type = "blob-ext";
+		};
+
+		sysfw_inner_cert_hs: sysfw-inner-cert {
+			filename = "ti-sysfw/ti-fs-firmware-am62px-hs-cert.bin";
+			type = "blob-ext";
+		};
+
+		combined_dm_cfg_hs: combined-dm-cfg.bin {
+			filename = "combined-dm-cfg.bin";
+			type = "blob-ext";
+		};
+	};
+};
+
+#include "k3-binman-capsule-r5.dtsi"
+
+// Capsule update GUIDs in string form.  See am62px_evm.h
+#define AM62PX_SK_TIBOOT3_IMAGE_GUID_STR "b08471b7-be2d-4489-87a1-cab28a0cf743"
+
+&capsule_tiboot3 {
+	efi-capsule {
+		image-guid = AM62PX_SK_TIBOOT3_IMAGE_GUID_STR;
+	};
+};
+
+#endif /* CONFIG_TARGET_AM62P5_R5_EVM */
+
+#if IS_ENABLED(CONFIG_TARGET_AM62P5_A53_EVM)
+
+#define SPL_AM62PX_SK_DTB "spl/dts/ti/k3-am62p5-sk.dtb"
+#define AM62PX_SK_DTB "u-boot.dtb"
+
+&binman {
+	tifsstub-hs {
+		filename = "tifsstub.bin_hs";
+		ti-secure-rom {
+			content = <&tifsstub_hs_cert>;
+			core = "secure";
+			load = <0x60000>;
+			sw-rev = <CONFIG_K3_X509_SWRV>;
+			keyfile = "custMpk.pem";
+			countersign;
+			tifsstub;
+		};
+		tifsstub_hs_cert: tifsstub-hs-cert.bin {
+			filename = "ti-sysfw/ti-fs-stub-firmware-am62px-hs-cert.bin";
+			type = "blob-ext";
+			optional;
+		};
+		tifsstub_hs_enc: tifsstub-hs-enc.bin {
+			filename = "ti-sysfw/ti-fs-stub-firmware-am62px-hs-enc.bin";
+			type = "blob-ext";
+			optional;
+		};
+	};
+
+	tifsstub-fs {
+		filename = "tifsstub.bin_fs";
+		tifsstub_fs_cert: tifsstub-fs-cert.bin {
+			filename = "ti-sysfw/ti-fs-stub-firmware-am62px-hs-cert.bin";
+			type = "blob-ext";
+			optional;
+		};
+		tifsstub_fs_enc: tifsstub-fs-enc.bin {
+			filename = "ti-sysfw/ti-fs-stub-firmware-am62px-hs-enc.bin";
+			type = "blob-ext";
+			optional;
+		};
+
+	};
+
+	ti-spl {
+		insert-template = <&ti_spl_template>;
+
+		fit {
+			images {
+				tifsstub-hs {
+					description = "TIFSSTUB";
+					type = "firmware";
+					arch = "arm32";
+					compression = "none";
+					os = "tifsstub-hs";
+					load = <0x9ca00000>;
+					entry = <0x9ca00000>;
+					blob-ext {
+						filename = "tifsstub.bin_hs";
+					};
+				};
+
+				tifsstub-fs {
+					description = "TIFSSTUB";
+					type = "firmware";
+					arch = "arm32";
+					compression = "none";
+					os = "tifsstub-fs";
+					load = <0x9ca00000>;
+					entry = <0x9ca00000>;
+					blob-ext {
+						filename = "tifsstub.bin_fs";
+					};
+				};
+				dm {
+					ti-secure {
+						content = <&dm>;
+						keyfile = "custMpk.pem";
+					};
+
+					dm: ti-dm {
+						filename = "ti-dm/am62pxx/ipc_echo_testb_mcu1_0_release_strip.xer5f";
+					};
+				};
+
+				fdt-0 {
+					description = "k3-am62p5-sk";
+					type = "flat_dt";
+					arch = "arm";
+					compression = "none";
+
+					ti-secure {
+						content = <&spl_am62p5_sk_dtb>;
+						keyfile = "custMpk.pem";
+					};
+
+					spl_am62p5_sk_dtb: blob-ext {
+						filename = SPL_AM62PX_SK_DTB;
+					};
+
+				};
+
+			};
+
+			configurations {
+				default = "conf-0";
+
+				conf-0 {
+					description = "k3-am62px-sk";
+					firmware = "atf";
+					loadables = "tee", "dm", "spl",
+					"tifsstub-hs", "tifsstub-fs";
+					fdt = "fdt-0";
+				};
+			};
+		};
+	};
+};
+
+&binman {
+	u-boot {
+		insert-template = <&u_boot_template>;
+
+		fit {
+			images {
+				uboot {
+					description = "U-Boot for AM62P5 Boards";
+				};
+
+				fdt-0 {
+					description = "k3-am62px-sk";
+					type = "flat_dt";
+					arch = "arm";
+					compression = "none";
+
+					ti-secure {
+						content = <&am62px_sk_dtb>;
+						keyfile = "custMpk.pem";
+					};
+
+					am62px_sk_dtb: blob-ext {
+						filename = AM62PX_SK_DTB;
+					};
+
+					hash {
+						algo = "crc32";
+					};
+				};
+			};
+
+			configurations {
+				default = "conf-0";
+
+				conf-0 {
+					description = "k3-am62px-sk";
+					firmware = "uboot";
+					loadables = "uboot";
+					fdt = "fdt-0";
+				};
+
+			};
+		};
+	};
+};
+
+#include "k3-binman-capsule.dtsi"
+
+// Capsule update GUIDs in string form.  See am62px_evm.h
+#define AM62PX_SK_SPL_IMAGE_GUID_STR "d02ed781-6d71-4c1a-a999-3c6a41c36324"
+#define AM62PX_SK_UBOOT_IMAGE_GUID_STR "7e6aea51-965c-44ab-b388-daeb03b54f66"
+
+&capsule_tispl {
+	efi-capsule {
+		image-guid = AM62PX_SK_SPL_IMAGE_GUID_STR;
+	};
+};
+
+&capsule_uboot {
+	efi-capsule {
+		image-guid = AM62PX_SK_UBOOT_IMAGE_GUID_STR;
+	};
+};
+
+#endif /* CONFIG_TARGET_AM62P5_A53_EVM */

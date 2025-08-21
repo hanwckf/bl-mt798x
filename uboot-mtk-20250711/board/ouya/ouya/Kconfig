@@ -1,0 +1,13 @@
+if TARGET_OUYA
+
+config SYS_BOARD
+	default "ouya"
+
+config SYS_VENDOR
+	default "ouya"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "Ouya Game Console"
+
+endif

@@ -1,0 +1,13 @@
+if TARGET_SEABOARD
+
+config SYS_BOARD
+	default "seaboard"
+
+config SYS_VENDOR
+	default "nvidia"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "NVIDIA Seaboard"
+
+endif

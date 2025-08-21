@@ -1,0 +1,7 @@
+DH_IMX6 BOARD
+M:	Andreas Geisreiter <ageisreiter@dh-electronics.de>
+M:	Christoph Niedermaier <cniedermaier@dh-electronics.com>
+L:	u-boot@dh-electronics.com
+S:	Maintained
+N:	imx6.*dh[cs]o
+N:	dh_imx6

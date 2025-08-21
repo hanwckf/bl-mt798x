@@ -1,0 +1,168 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (C) 2019 Jagan Teki <jagan@amarulasolutions.com>
+ */
+#include "rockchip-u-boot.dtsi"
+
+/ {
+	aliases {
+		mmc0 = &sdhci;
+		mmc1 = &sdmmc;
+		pci0 = &pcie0;
+		spi1 = &spi1;
+	};
+
+	chosen {
+		u-boot,spl-boot-order = "same-as-spl", &sdhci, &sdmmc;
+	};
+
+	pmusgrf: syscon@ff330000 {
+		compatible = "rockchip,rk3399-pmusgrf", "syscon";
+		reg = <0x0 0xff330000 0x0 0xe3d4>;
+		bootph-all;
+	};
+
+	cic: syscon@ff620000 {
+		compatible = "rockchip,rk3399-cic", "syscon";
+		reg = <0x0 0xff620000 0x0 0x100>;
+		bootph-all;
+	};
+};
+
+&cru {
+	bootph-all;
+};
+
+&dfi {
+	bootph-all;
+};
+
+&dmc {
+	reg = <0x0 0xffa80000 0x0 0x0800
+	       0x0 0xffa80800 0x0 0x1800
+	       0x0 0xffa82000 0x0 0x2000
+	       0x0 0xffa84000 0x0 0x1000
+	       0x0 0xffa88000 0x0 0x0800
+	       0x0 0xffa88800 0x0 0x1800
+	       0x0 0xffa8a000 0x0 0x2000
+	       0x0 0xffa8c000 0x0 0x1000>;
+	bootph-all;
+	status = "okay";
+};
+
+&emmc_phy {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&grf {
+	bootph-all;
+};
+
+&pcfg_pull_none {
+	bootph-all;
+};
+
+&pcfg_pull_up {
+	bootph-all;
+};
+
+&pinctrl {
+	bootph-all;
+};
+
+&pmu {
+	bootph-all;
+};
+
+&pmucru {
+	bootph-all;
+};
+
+&pmugrf {
+	bootph-all;
+};
+
+&sdhci {
+	bootph-pre-ram;
+	bootph-some-ram;
+	max-frequency = <200000000>;
+
+	/* mmc to sram can't do dma, prevent aborts transferring TF-A parts */
+	u-boot,spl-fifo-mode;
+};
+
+&sdmmc {
+	bootph-pre-ram;
+	bootph-some-ram;
+
+	/* mmc to sram can't do dma, prevent aborts transferring TF-A parts */
+	u-boot,spl-fifo-mode;
+};
+
+&sdmmc_bus4 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc_cd {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc_clk {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc_cmd {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&spi1 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&spi1_clk {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&spi1_cs0 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&spi1_rx {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&spi1_tx {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&uart2 {
+	bootph-all;
+	clock-frequency = <24000000>;
+};
+
+&uart2c_xfer {
+	bootph-pre-sram;
+	bootph-pre-ram;
+};
+
+&vopb {
+	bootph-some-ram;
+};
+
+&vopl {
+	bootph-some-ram;
+};
+
+&xin24m {
+	bootph-all;
+};

@@ -1,0 +1,13 @@
+if TARGET_TEC
+
+config SYS_BOARD
+	default "tec"
+
+config SYS_VENDOR
+	default "avionic-design"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "Avionic Design Tamonten Evaluation Carrier"
+
+endif

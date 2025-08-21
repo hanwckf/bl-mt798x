@@ -1,0 +1,13 @@
+if TARGET_IDEAPAD_YOGA_11
+
+config SYS_BOARD
+	default "ideapad-yoga-11"
+
+config SYS_VENDOR
+	default "lenovo"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "Lenovo Ideapad Yoga 11"
+
+endif

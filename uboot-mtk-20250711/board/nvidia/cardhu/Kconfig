@@ -1,0 +1,13 @@
+if TARGET_CARDHU
+
+config SYS_BOARD
+	default "cardhu"
+
+config SYS_VENDOR
+	default "nvidia"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "NVIDIA Cardhu"
+
+endif

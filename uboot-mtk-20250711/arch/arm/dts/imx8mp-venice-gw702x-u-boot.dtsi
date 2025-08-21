@@ -1,0 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright 2023 Gateworks Corporation
+ */
+
+#include "imx8mp-venice-u-boot.dtsi"

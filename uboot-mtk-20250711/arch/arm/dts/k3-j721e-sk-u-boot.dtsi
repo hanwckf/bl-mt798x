@@ -1,0 +1,172 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (C) 2021 Texas Instruments Incorporated - https://www.ti.com/
+ */
+
+#include "k3-j721e-binman.dtsi"
+
+&cbass_main {
+	bootph-all;
+};
+
+&main_navss {
+	bootph-all;
+};
+
+&cbass_mcu_wakeup {
+	bootph-all;
+};
+
+&chipid {
+	bootph-all;
+};
+
+&mcu_navss {
+	bootph-all;
+};
+
+&mcu_ringacc {
+	bootph-all;
+};
+
+&mcu_udmap {
+	bootph-all;
+};
+
+&secure_proxy_main {
+	bootph-all;
+};
+
+&dmsc {
+	bootph-all;
+};
+
+&k3_pds {
+	bootph-all;
+};
+
+&k3_clks {
+	bootph-all;
+};
+
+&k3_reset {
+	bootph-all;
+};
+
+&wkup_pmx0 {
+	bootph-all;
+};
+
+&main_pmx0 {
+	bootph-all;
+};
+
+&main_uart0 {
+	bootph-all;
+};
+
+&mcu_uart0 {
+	bootph-all;
+};
+
+&main_sdhci1 {
+	bootph-all;
+};
+
+&main_uart0_pins_default {
+	bootph-all;
+};
+
+&serdes_ln_ctrl {
+	bootph-all;
+};
+
+&usb_serdes_mux {
+	bootph-all;
+};
+
+&main_usbss0_pins_default {
+	bootph-all;
+};
+
+&usbss0 {
+	bootph-all;
+};
+
+&usb0 {
+	dr_mode = "host";
+	bootph-all;
+};
+
+&main_usbss1_pins_default {
+	bootph-all;
+};
+
+&usbss1 {
+	bootph-all;
+};
+
+&usb1 {
+	dr_mode = "host";
+	bootph-all;
+};
+
+&main_mmc1_pins_default {
+	bootph-all;
+};
+
+&wkup_i2c0_pins_default {
+	bootph-all;
+};
+
+&wkup_i2c0 {
+	bootph-all;
+};
+
+&wkup_uart0 {
+	bootph-all;
+	status = "okay";
+};
+
+&mcu_fss0_ospi0_pins_default {
+	bootph-all;
+};
+
+&fss {
+	bootph-all;
+};
+
+&main_esm {
+	bootph-all;
+};
+
+&ospi0 {
+	bootph-all;
+
+	flash@0 {
+		bootph-all;
+	};
+};
+
+#ifdef CONFIG_TARGET_J721E_A72_EVM
+
+#define SPL_J721E_SK_DTB "spl/dts/ti/k3-j721e-sk.dtb"
+#define J721E_SK_DTB "u-boot.dtb"
+
+&spl_j721e_dtb {
+	filename = SPL_J721E_SK_DTB;
+};
+
+&j721e_dtb {
+	filename = J721E_SK_DTB;
+};
+
+&spl_j721e_dtb_unsigned {
+	filename = SPL_J721E_SK_DTB;
+};
+
+&j721e_dtb_unsigned {
+	filename = J721E_SK_DTB;
+};
+
+#endif

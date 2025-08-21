@@ -1,0 +1,77 @@
+menu "Xtensa architecture"
+	depends on XTENSA
+
+config SYS_ARCH
+	default "xtensa"
+
+config SYS_CPU
+	string "Xtensa Core Variant"
+
+choice
+	prompt "Target select"
+
+config TARGET_XTFPGA
+	bool "Support XTFPGA"
+	select BOARD_POSTCLK_INIT
+
+config TARGET_QEMU_XTENSA
+	bool "Support QEMU Xtensa Virt Board"
+	select BOARD_LATE_INIT
+
+endchoice
+
+config SYS_ICACHE_OFF
+	bool "Do not enable icache"
+	help
+	  Do not enable instruction cache in U-Boot.
+
+config SPL_SYS_ICACHE_OFF
+	bool "Do not enable icache in SPL"
+	depends on SPL
+	default SYS_ICACHE_OFF
+	help
+	  Do not enable instruction cache in SPL.
+
+config SYS_DCACHE_OFF
+	bool "Do not enable dcache"
+	help
+	  Do not enable data cache in U-Boot.
+
+config SPL_SYS_DCACHE_OFF
+	bool "Do not enable dcache in SPL"
+	depends on SPL
+	default SYS_DCACHE_OFF
+	help
+	  Do not enable data cache in SPL.
+
+config XTENSA_SEMIHOSTING
+	bool "Support semihosting"
+	help
+	  Enable Xtensa semihosting debugging support.
+
+choice
+	prompt "Semihosting interface"
+	default XTENSA_SIMCALL_ISS
+	depends on XTENSA_SEMIHOSTING
+	help
+	  Choose semihosting interface that will be used for serial port,
+	  block device and networking.
+
+config XTENSA_SIMCALL_ISS
+	bool "simcall"
+	help
+	  Use simcall instruction. simcall is only available on simulators,
+	  it does nothing on hardware.
+
+config XTENSA_SIMCALL_GDBIO
+	bool "GDBIO"
+	help
+	  Use break instruction. It is available on real hardware when GDB
+	  is attached to it via JTAG.
+
+endchoice
+
+source "board/cadence/xtfpga/Kconfig"
+source "board/emulation/qemu-xtensa/Kconfig"
+
+endmenu

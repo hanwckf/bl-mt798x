@@ -1,0 +1,48 @@
+if ARCH_SNAPDRAGON
+
+config SYS_SOC
+	default "snapdragon"
+
+config SYS_VENDOR
+	string "Snapdragon board vendor"
+	default "qualcomm"
+	help
+	  Allows to specify vendor for the Snapdragon SoCs based boards.
+	  Based on this option board/<CONFIG_SYS_VENDOR>/<CONFIG_SYS_BOARD>
+	  will be used as the custom board directory.
+
+config SYS_MALLOC_LEN
+	default 0x10000000
+
+config SYS_MALLOC_F_LEN
+	default 0x2000
+
+config SPL_SYS_MALLOC_F
+	default y
+
+config SPL_SYS_MALLOC_F_LEN
+	default 0x2000
+
+config SYS_MALLOC_LEN
+	default 0x800000
+
+config LNX_KRNL_IMG_TEXT_OFFSET_BASE
+	default 0x80000000
+
+config SYS_BOARD
+	string "Snapdragon SoCs based board"
+	help
+	  Allows to specify the Snapdragon SoCs based board name.
+	  Based on this option board/<CONFIG_SYS_VENDOR>/<CONFIG_SYS_BOARD>
+	  will be used as the custom board directory.
+
+config SYS_CONFIG_NAME
+	string "Board configuration name"
+	default SYS_BOARD if SYS_BOARD != ""
+	default "qcom"
+	help
+	  This option contains information about board configuration name.
+	  Based on this option include/configs/<CONFIG_SYS_CONFIG_NAME>.h header
+	  will be used for board configuration.
+
+endif

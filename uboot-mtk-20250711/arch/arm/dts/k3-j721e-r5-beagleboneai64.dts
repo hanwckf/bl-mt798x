@@ -1,0 +1,137 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * https://beagleboard.org/ai-64
+ *
+ * Copyright (C) 2022-2023 Texas Instruments Incorporated - https://www.ti.com/
+ * Copyright (C) 2022 Jason Kridner, BeagleBoard.org Foundation
+ * Copyright (C) 2022-2023 Robert Nelson, BeagleBoard.org Foundation
+ */
+
+#include "k3-j721e-beagleboneai64.dts"
+#include "k3-j721e-ddr-beagleboneai64-lp4-3200.dtsi"
+#include "k3-j721e-ddr.dtsi"
+
+#include "k3-j721e-beagleboneai64-u-boot.dtsi"
+#include "k3-j721e-r5.dtsi"
+
+
+&wkup_i2c0 {
+	bootph-pre-ram;
+};
+
+&binman {
+	tiboot3-j721e-gp-evm.bin {
+		filename = "tiboot3-j721e-gp-evm.bin";
+		symlink = "tiboot3.bin";
+		ti-secure-rom {
+			content = <&u_boot_spl_unsigned>;
+			core = "public";
+			load = <CONFIG_SPL_TEXT_BASE>;
+			sw-rev = <CONFIG_K3_X509_SWRV>;
+			keyfile = "ti-degenerate-key.pem";
+		};
+		u_boot_spl_unsigned: u-boot-spl {
+			no-expanded;
+		};
+	};
+
+	sysfw_gp {
+		filename = "sysfw.bin_gp";
+		ti-secure-rom {
+			content = <&ti_fs>;
+			core = "secure";
+			load = <0x40000>;
+			sw-rev = <CONFIG_K3_X509_SWRV>;
+			keyfile = "ti-degenerate-key.pem";
+		};
+		ti_fs: ti-fs.bin {
+			filename = "ti-sysfw/ti-fs-firmware-j721e-gp.bin";
+			type = "blob-ext";
+		};
+	};
+
+	itb_gp {
+		filename = "sysfw-j721e-gp-evm.itb";
+		symlink = "sysfw.itb";
+		fit {
+			description = "SYSFW and Config fragments";
+			#address-cells = <1>;
+			images {
+				sysfw.bin {
+					description = "sysfw";
+					type = "firmware";
+					arch = "arm";
+					compression = "none";
+					blob-ext {
+					    filename = "sysfw.bin_gp";
+					};
+				};
+				board-cfg.bin {
+					description = "board-cfg";
+					type = "firmware";
+					arch = "arm";
+					compression = "none";
+					blob-ext {
+						filename = "board-cfg.bin";
+					};
+				};
+				pm-cfg.bin {
+					description = "pm-cfg";
+					type = "firmware";
+					arch = "arm";
+					compression = "none";
+					blob-ext {
+						filename = "pm-cfg.bin";
+					};
+				};
+				rm-cfg.bin {
+					description = "rm-cfg";
+					type = "firmware";
+					arch = "arm";
+					compression = "none";
+					blob-ext {
+						filename = "rm-cfg.bin";
+					};
+				};
+				sec-cfg.bin {
+					description = "sec-cfg";
+					type = "firmware";
+					arch = "arm";
+					compression = "none";
+					blob-ext {
+						filename = "sec-cfg.bin";
+					};
+				};
+			};
+		};
+	};
+};
+
+#include "k3-binman-capsule-r5.dtsi"
+
+// Capsue update GUIDs.  See beagleboneai64.h.
+#define BEAGLEBONEAI64_TIBOOT3_IMAGE_GUID_STR "772a4810-2194-4923-8754-0115870ef367"
+#define BEAGLEBONEAI64_SYSFW_IMAGE_GUID_STR "dfc9c683-49b7-46bd-b3c1-3a3b2fdb135b"
+
+&capsule_tiboot3 {
+	efi-capsule {
+		image-guid = BEAGLEBONEAI64_TIBOOT3_IMAGE_GUID_STR;
+	};
+};
+
+&binman {
+	capsule-sysfw {
+		filename = "sysfw-capsule.bin";
+		efi-capsule {
+			image-index = <0x4>;
+			image-guid = BEAGLEBONEAI64_SYSFW_IMAGE_GUID_STR;
+			private-key = "arch/arm/mach-k3/keys/custMpk.pem";
+			public-key-cert = "arch/arm/mach-k3/keys/custMpk.crt";
+			monotonic-count = <0x1>;
+
+			blob {
+				filename = "sysfw.itb";
+			};
+		};
+	};
+};

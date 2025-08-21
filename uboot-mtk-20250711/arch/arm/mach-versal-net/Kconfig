@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: GPL-2.0
+
+if ARCH_VERSAL_NET
+
+config SYS_BOARD
+	string "Board name"
+	default "versal-net"
+
+config SYS_VENDOR
+	string "Vendor name"
+	default "xilinx"
+
+config SYS_SOC
+	default "versal-net"
+
+config COUNTER_FREQUENCY
+	int "Timer clock frequency"
+	default 0
+	help
+	  Setup time clock frequency for certain platform
+
+config IOU_SWITCH_DIVISOR0
+	hex "IOU switch divisor0"
+	default 0x20
+	help
+	  Setup time clock divisor for input clock.
+
+config SYS_MEM_RSVD_FOR_MMU
+	bool "Reserve memory for MMU Table"
+	help
+	  If defined this option is used to setup different space for
+	  MMU table than the one which will be allocated during
+	  relocation.
+
+config GICV3
+	def_bool y
+
+config GICV3_SUPPORT_GIC600
+	def_bool y
+
+config SYS_MALLOC_LEN
+	default 0x2000000
+
+config ZYNQ_SDHCI_MAX_FREQ
+	default 200000000
+
+source "board/xilinx/Kconfig"
+
+endif

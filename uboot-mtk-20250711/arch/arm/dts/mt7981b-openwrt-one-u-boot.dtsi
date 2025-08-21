@@ -1,0 +1,77 @@
+#include <dt-bindings/reset/mt7629-reset.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	/delete-node/ cpus;
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		cpu0: cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x0>;
+			mediatek,hwver = <&hwver>;
+		};
+		cpu1: cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x1>;
+			mediatek,hwver = <&hwver>;
+		};
+	};
+
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0 0x40000000 0 0x10000000>;
+	};
+
+	hwver: hwver {
+		compatible = "mediatek,hwver", "syscon";
+		reg = <0 0x8000000 0 0x1000>;
+		bootph-all;
+	};
+};
+
+&apmixedsys {
+	bootph-all;
+};
+
+&eth {
+	resets = <&ethsys ETHSYS_FE_RST>;
+	reset-names = "fe";
+	mediatek,sgmiisys = <&sgmiisys0>;
+	/delete-property/ clocks;
+	/delete-property/ clock-names;
+	/delete-property/ assigned-clocks;
+	/delete-property/ assigned-clock-parents;
+	status = "okay";
+	mediatek,gmac-id = <0>;
+	phy-mode = "2500base-x";
+	mediatek,switch = "mt7531";
+	reset-gpios = <&pio 5 GPIO_ACTIVE_HIGH>;
+
+	fixed-link {
+		speed = <2500>;
+		full-duplex;
+	};
+};
+
+&infracfg {
+	bootph-all;
+};
+
+&pio {
+	bootph-all;
+};
+
+&uart0_pins {
+	bootph-all;
+};
+
+&topckgen {
+	bootph-all;
+};
+
+&uart0 {
+	bootph-all;
+};

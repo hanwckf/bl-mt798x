@@ -1,0 +1,13 @@
+if TARGET_PAZ00
+
+config SYS_BOARD
+	default "paz00"
+
+config SYS_VENDOR
+	default "compal"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "Compal Paz00"
+
+endif

@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) 2022 MediaTek Inc.
+ * Author: Sam Shih <sam.shih@mediatek.com>
+ */
+
+/dts-v1/;
+#include "mt7988-i2p5g-p1-rfb.dts"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "mt7988-rfb";
+	compatible = "mediatek,mt7988-rfb", "mediatek,mt7988-emmc-rfb";
+
+	bl2_verify {
+		bl2_compatible = "emmc";
+	};
+};

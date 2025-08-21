@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (C) 2018, STMicroelectronics - All Rights Reserved
+ * Author(s): Patrice Chotard, <patrice.chotard@foss.st.com> for STMicroelectronics.
+ *
+ */
+
+/{
+	soc {
+		clk_usb: clk-usb {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <100000000>;
+		};
+	};
+};
+
+&dwc3 {
+	dr_mode	= "peripheral";
+	phys = <&usb2_picophy0>;
+};
+
+&ehci0 {
+	compatible = "st,st-ehci-300x", "generic-ehci";
+	clocks = <&clk_usb>;
+};
+
+&ehci1 {
+	compatible = "st,st-ehci-300x", "generic-ehci";
+	clocks = <&clk_usb>;
+};
+
+&ohci0 {
+	compatible = "st,st-ehci-300x", "generic-ehci";
+	clocks = <&clk_usb>;
+};
+
+&ohci1 {
+	compatible = "st,st-ehci-300x", "generic-ehci";
+	clocks = <&clk_usb>;
+};

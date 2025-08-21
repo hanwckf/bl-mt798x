@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-2.0
+
+if ARCH_ZYNQMP_R5
+
+config SYS_BOARD
+	string "Board name"
+	default "zynqmp_r5"
+
+config SYS_VENDOR
+	string "Vendor name"
+	default "xilinx"
+
+config SYS_SOC
+	default "zynqmp-r5"
+
+config CPU_FREQ_HZ
+	int "CPU frequency"
+	default 800000000
+	help
+	  The value, in Hz, that the CPU clock is running at.
+
+endif

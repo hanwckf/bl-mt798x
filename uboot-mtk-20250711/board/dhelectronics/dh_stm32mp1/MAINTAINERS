@@ -1,0 +1,6 @@
+DH_STM32MP1_PDK2 BOARD
+M:	Marek Vasut <marex@denx.de>
+L:	u-boot@dh-electronics.com
+S:	Maintained
+N:	stm32mp.*dh[cs]o
+N:	dh_stm32

@@ -1,0 +1,17 @@
+if TARGET_MOCHA
+
+config SYS_BOARD
+	default "mocha"
+
+config SYS_VENDOR
+	default "xiaomi"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "Xiaomi Mocha"
+
+config TEGRA_PRAM_SIZE
+	depends on TEGRA_PRAM
+	default 0x38400
+
+endif

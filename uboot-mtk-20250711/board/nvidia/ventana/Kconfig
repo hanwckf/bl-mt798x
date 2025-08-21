@@ -1,0 +1,13 @@
+if TARGET_VENTANA
+
+config SYS_BOARD
+	default "ventana"
+
+config SYS_VENDOR
+	default "nvidia"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "NVIDIA Ventana"
+
+endif

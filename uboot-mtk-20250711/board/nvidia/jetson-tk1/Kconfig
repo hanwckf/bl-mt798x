@@ -1,0 +1,13 @@
+if TARGET_JETSON_TK1
+
+config SYS_BOARD
+	default "jetson-tk1"
+
+config SYS_VENDOR
+	default "nvidia"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "NVIDIA Jetson TK1"
+
+endif

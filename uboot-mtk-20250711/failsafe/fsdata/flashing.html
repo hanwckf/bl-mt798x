@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Flashing - MediaTek System Recovery Mode</title>
+	<link rel="stylesheet" type="text/css" href="/style.css">
+</head>
+<body>
+	<div id="banner">
+		MediaTek U-Boot System Recovery Mode
+	</div>
+	<div id="main">
+		<p>Upgrading is in progressing, please wait ...</p>
+		<p>This page may be in not responding status for a short time.</p>
+	</div>
+	<script type="text/javascript">
+		var interval = window.setInterval(function () {
+			var xmlhttp = new XMLHttpRequest();
+
+			window.clearInterval(interval);
+
+			xmlhttp.timeout = 300000;
+			xmlhttp.open("GET", "/result", true);
+			xmlhttp.send();
+			xmlhttp.onreadystatechange = function () {
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+					document.getElementById("main").innerHTML = xmlhttp.responseText;
+				}
+			}
+		}, 1000);
+	</script>
+</body>
+</html>

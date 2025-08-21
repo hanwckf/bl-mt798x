@@ -1,0 +1,40 @@
+if TARGET_MT7629
+
+config MTK_BROM_HEADER_INFO
+	string
+	default "media=nor" if BOOT_FROM_SNOR
+	default "media=snand;nandinfo=2k+64" if BOOT_FROM_SNAND_2K_64
+	default "media=snand;nandinfo=2k+128" if BOOT_FROM_SNAND_2K_128
+	default "media=snand;nandinfo=4k+128" if BOOT_FROM_SNAND_4K_128
+	default "media=snand;nandinfo=4k+256" if BOOT_FROM_SNAND_4K_256
+
+choice
+	prompt "Boot device"
+	default BOOT_FROM_SNOR
+
+config BOOT_FROM_SNOR
+	bool "SPI-NOR"
+
+config BOOT_FROM_SNAND_2K_64
+	bool "SPI-NAND (2K+64)"
+	select MT7629_BOOT_FROM_SNAND
+
+config BOOT_FROM_SNAND_2K_128
+	bool "SPI-NAND (2K+128)"
+	select MT7629_BOOT_FROM_SNAND
+
+config BOOT_FROM_SNAND_4K_128
+	bool "SPI-NAND (4K+128)"
+	select MT7629_BOOT_FROM_SNAND
+
+config BOOT_FROM_SNAND_4K_256
+	bool "SPI-NAND (4K+256)"
+	select MT7629_BOOT_FROM_SNAND
+
+endchoice
+
+config MT7629_BOOT_FROM_SNAND
+	bool
+	default n
+
+endif

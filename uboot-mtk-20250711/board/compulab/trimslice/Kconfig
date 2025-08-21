@@ -1,0 +1,13 @@
+if TARGET_TRIMSLICE
+
+config SYS_BOARD
+	default "trimslice"
+
+config SYS_VENDOR
+	default "compulab"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "Compulab Trimslice"
+
+endif

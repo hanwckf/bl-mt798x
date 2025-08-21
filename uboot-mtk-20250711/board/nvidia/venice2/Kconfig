@@ -1,0 +1,13 @@
+if TARGET_VENICE2
+
+config SYS_BOARD
+	default "venice2"
+
+config SYS_VENDOR
+	default "nvidia"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "NVIDIA Venice2"
+
+endif

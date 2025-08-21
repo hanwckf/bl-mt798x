@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: GPL-2.0+
+# (C) 2022 Pali Rohár <pali@kernel.org>
+
+if TARGET_TURRIS_1X
+
+# Board identification
+config SYS_BOARD
+	default "turris_1x"
+config SYS_VENDOR
+	default "CZ.NIC"
+config SYS_CONFIG_NAME
+	default "turris_1x"
+config DEFAULT_DEVICE_TREE
+	default "turris1x"
+
+endif

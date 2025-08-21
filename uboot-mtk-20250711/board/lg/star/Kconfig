@@ -1,0 +1,13 @@
+if TARGET_STAR
+
+config SYS_BOARD
+	default "star"
+
+config SYS_VENDOR
+	default "lg"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "LG Star"
+
+endif

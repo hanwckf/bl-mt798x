@@ -1,0 +1,7 @@
+menu "Nios II architecture"
+	depends on NIOS2
+
+config SYS_ARCH
+	default "nios2"
+
+endmenu

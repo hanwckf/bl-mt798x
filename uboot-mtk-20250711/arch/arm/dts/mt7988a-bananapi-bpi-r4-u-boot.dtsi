@@ -1,0 +1,94 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) 2022 MediaTek Inc.
+ * Author: Sam Shih <sam.shih@mediatek.com>
+ */
+
+#include <dt-bindings/reset/mt7988-reset.h>
+/ {
+	cpus {
+		cpu@0 {
+			mediatek,hwver = <&hwver>;
+		};
+
+		cpu@1 {
+			mediatek,hwver = <&hwver>;
+		};
+
+		cpu@2 {
+			mediatek,hwver = <&hwver>;
+		};
+
+		cpu@3 {
+			mediatek,hwver = <&hwver>;
+		};
+	};
+
+	soc {
+		hwver: hwver {
+			compatible = "mediatek,hwver", "syscon";
+			reg = <0 0x8000000 0 0x1000>;
+		};
+	};
+};
+
+&apmixedsys {
+	bootph-all;
+};
+
+&topckgen {
+	bootph-all;
+};
+
+&infracfg {
+	bootph-all;
+};
+
+&uart0 {
+	bootph-all;
+};
+
+&uart1 {
+	bootph-all;
+};
+
+&uart2 {
+	bootph-all;
+};
+
+&ethsys {
+	compatible = "mediatek,mt7988-ethsys", "mediatek,mt7988-ethdma",
+		     "syscon";
+};
+
+&ethwarp {
+	compatible = "mediatek,mt7988-ethwarp", "syscon";
+};
+
+&usxgmiisys0 {
+	compatible = "syscon";
+};
+
+&xfi_tphy0 {
+	compatible = "syscon";
+};
+
+&xfi_pll {
+	compatible = "syscon";
+};
+
+&eth {
+	resets = <&ethsys ETHDMA_FE_RST>, <&ethwarp ETHWARP_GSW_RST>;
+	reset-names = "fe", "mcm";
+	mediatek,ethsys = <&ethsys>;
+	mediatek,sgmiisys = <&sgmiisys0>;
+	mediatek,usxgmiisys = <&usxgmiisys0>;
+	mediatek,xfi_pextp = <&xfi_tphy0>;
+	mediatek,xfi_pll = <&xfi_pll>;
+	mediatek,infracfg = <&topmisc>;
+	mediatek,toprgu = <&watchdog>;
+	mediatek,mcm;
+	mediatek,gmac-id = <0>;
+	phy-mode = "usxgmii";
+	mediatek,switch = "mt7988";
+};

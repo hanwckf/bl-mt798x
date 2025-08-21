@@ -1,0 +1,177 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * U-Boot additions
+ *
+ * Copyright (C) 2020-2024 Intel Corporation <www.intel.com>
+ */
+
+#if defined(CONFIG_FIT)
+
+/ {
+	binman: binman {
+		multiple-images;
+	};
+};
+
+&binman {
+	u-boot {
+		filename = "u-boot.itb";
+		fit {
+			fit,external-offset = <CONFIG_FIT_EXTERNAL_OFFSET>;
+			description = "FIT with firmware and bootloader";
+			#address-cells = <1>;
+
+			images: images {
+				uboot {
+					description = "U-Boot SoC64";
+					type = "standalone";
+					os = "U-Boot";
+					arch = "arm64";
+					compression = "none";
+				#if IS_ENABLED(CONFIG_TARGET_SOCFPGA_AGILEX5)
+					load = <0x80200000>;
+				#else
+					load = <0x00200000>;
+				#endif
+					uboot_blob: blob-ext {
+						filename = "u-boot-nodtb.bin";
+					};
+					hash {
+						algo = "crc32";
+					};
+				};
+
+				atf {
+					description = "ARM Trusted Firmware";
+					type = "firmware";
+					os = "arm-trusted-firmware";
+					arch = "arm64";
+					compression = "none";
+				#if IS_ENABLED(CONFIG_TARGET_SOCFPGA_AGILEX5)
+					load = <0x80000000>;
+					entry = <0x80000000>;
+				#else
+					load = <0x00001000>;
+					entry = <0x00001000>;
+				#endif
+					atf_blob: blob-ext {
+						filename = "bl31.bin";
+					};
+					hash {
+						algo = "crc32";
+					};
+				};
+
+				fdt-0 {
+					description = "socfpga_socdk";
+					type = "flat_dt";
+					compression = "none";
+					fdt_0_blob: blob-ext {
+						filename = "u-boot.dtb";
+					};
+					hash {
+						algo = "crc32";
+					};
+				};
+			};
+
+			board_config: configurations {
+				default = "board-0";
+
+				board-0 {
+					description = "board_0";
+					firmware = "atf";
+					loadables = "uboot";
+					fdt = "fdt-0";
+					signature {
+						algo = "crc32";
+						key-name-hint = "dev";
+						sign-images = "atf", "uboot", "fdt-0";
+					};
+				};
+			};
+		};
+	};
+
+	kernel {
+		filename = "kernel.itb";
+		fit {
+			description = "FIT with Linux kernel image and FDT blob";
+			#address-cells = <1>;
+
+			images {
+				kernel {
+					description = "Linux Kernel";
+					type = "kernel";
+					arch = "arm64";
+					os = "linux";
+					compression = "none";
+				#if IS_ENABLED(CONFIG_TARGET_SOCFPGA_AGILEX5)
+					load = <0x86000000>;
+					entry = <0x86000000>;
+				#else
+					load = <0x6000000>;
+					entry = <0x6000000>;
+				#endif
+					kernel_blob: blob-ext {
+						filename = "Image";
+					};
+					hash {
+						algo = "crc32";
+					};
+				};
+
+				fdt {
+					description = "Linux DTB";
+					type = "flat_dt";
+					arch = "arm64";
+					compression = "none";
+					kernel_fdt_blob: blob-ext {
+						filename = "linux.dtb";
+					};
+					hash {
+						algo = "crc32";
+					};
+				};
+			};
+
+			configurations {
+				default = "conf";
+				conf {
+					description = "Intel SoC64 FPGA";
+					kernel = "kernel";
+					fdt = "fdt";
+					signature {
+						algo = "crc32";
+						key-name-hint = "dev";
+						sign-images = "fdt", "kernel";
+					};
+				};
+			};
+		};
+	};
+};
+
+#if defined(CONFIG_SOCFPGA_SECURE_VAB_AUTH)
+&uboot_blob {
+	filename = "signed-u-boot-nodtb.bin";
+};
+
+&atf_blob {
+	filename = "signed-bl31.bin";
+};
+
+&fdt_0_blob {
+	filename = "signed-u-boot.dtb";
+};
+
+&kernel_blob {
+	filename = "signed-Image";
+};
+
+&kernel_fdt_blob {
+	filename = "signed-linux.dtb";
+};
+#endif
+
+#endif

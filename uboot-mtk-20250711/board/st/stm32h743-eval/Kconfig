@@ -1,0 +1,15 @@
+if TARGET_STM32H743_EVAL
+
+config SYS_BOARD
+	default "stm32h743-eval"
+
+config SYS_VENDOR
+	default "st"
+
+config SYS_SOC
+	default "stm32h7"
+
+config SYS_CONFIG_NAME
+	default "stm32h743-eval"
+
+endif

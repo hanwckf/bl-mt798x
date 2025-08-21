@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: GPL-2.0
+
+#include "imx6qdl-u-boot.dtsi"
+
+/ {
+	wdt-reboot {
+		compatible = "wdt-reboot";
+		wdt = <&wdog1>;
+		bootph-pre-ram;
+	};
+};
+
+&aips2 {
+	bootph-all;
+};
+
+&pinctrl_uart2 {
+	bootph-all;
+};
+
+&soc {
+	bootph-all;
+};
+
+&uart2 {
+	bootph-all;
+};
+
+&wdog1 {
+	bootph-pre-ram;
+};

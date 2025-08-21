@@ -1,0 +1,18 @@
+menuconfig MTK_MISC_CUSTOMIZED
+	bool "Enable misc customized features support"
+	help
+	  This option enabled mediatek misc customized features support
+
+if MTK_MISC_CUSTOMIZED
+
+config MTK_COLOR_LED
+	bool "Enable color led program (cled)"
+	default n
+	select PWM_MTK
+	select CYCLIC
+	help
+	  Select this if you want to build mediatek color led program
+
+endif #MTK_MISC_CUSTOMIZED
+
+

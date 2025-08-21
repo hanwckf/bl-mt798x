@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * (C) Copyright 2018-2019 Rockchip Electronics Co., Ltd
+ */
+#include "rk3308-u-boot.dtsi"
+
+&u2phy_otg {
+	/delete-property/ phy-supply;
+};
+
+&uart0 {
+	bootph-all;
+	clock-frequency = <24000000>;
+};
+
+&uart0_xfer {
+	bootph-all;
+};
+
+&vcc5v0_otg {
+	/delete-property/ regulator-always-on;
+};
+
+&vdd_core {
+	regulator-init-microvolt = <1015000>;
+};

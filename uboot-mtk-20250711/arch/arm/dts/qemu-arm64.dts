@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+ OR MIT
+/*
+ * Empty device tree for qemu_arm64
+
+ * Copyright 2021 Google LLC
+ */
+
+/dts-v1/;
+
+#if defined(CONFIG_SYSINFO_SMBIOS) && !defined(QFW_SMBIOS)
+#include "smbios_generic.dtsi"
+#endif
+
+/ {
+};

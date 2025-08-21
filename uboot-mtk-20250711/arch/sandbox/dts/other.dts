@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Other devicetree file for running sandbox tests
+ *
+ * This used for tests which want to check they can access multiple device
+ * trees. This one is loaded and checks are made that it is actually visible.
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	compatible = "sandbox-other";
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	node {
+		other-phandle = <&target>;
+
+		subnode {
+			compatible = "sandbox-other2";
+			str-prop = "other";
+		};
+
+		subnode2 {
+		};
+	};
+
+	other-a-test {
+		other-test-gpios = <&other_gpio_a 1>, <&other_gpio_a 4>,
+			<&other_gpio_b 5 GPIO_ACTIVE_HIGH 3 2 1>,
+			<0>, <&other_gpio_a 12>;
+		other-phandle-value = <&other_gpio_c 10>, <0xFFFFFFFF 20>, <&other_gpio_a 30>;
+		other-phandle-nodes = <&other_phandle_node_1>, <&other_phandle_node_2>;
+	};
+
+	other_gpio_a: other-gpio-a {
+		#gpio-cells = <1>;
+	};
+
+	other_gpio_b: other-gpio-b {
+		#gpio-cells = <5>;
+	};
+
+	other_gpio_c: other-gpio-c {
+		#gpio-cells = <2>;
+	};
+
+	other_phandle_node_1: other-phandle-node-1 {
+	};
+
+	other_phandle_node_2: other-phandle-node-2 {
+	};
+
+	target: target {
+		compatible = "sandbox-other2";
+		str-prop = "other";
+		reg = <0x8000 0x100>;
+		status = "disabled";
+	};
+};

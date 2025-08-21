@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0
+
+#include "mt7987a-rfb-u-boot.dtsi"
+
+/ {
+	model = "mt7987";
+	compatible = "mediatek,mt7987", "mediatek,mt7987-spim-nand-rfb";
+
+	bl2_verify {
+		bl2_compatible = "spim-nand";
+	};
+};
+
+&spi2 {
+	status = "disabled";
+};

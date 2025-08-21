@@ -1,0 +1,174 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * (C) Copyright 2021 Rockchip Electronics Co., Ltd
+ */
+
+#include "rockchip-u-boot.dtsi"
+
+/ {
+	aliases {
+		mmc0 = &sdhci;
+		mmc1 = &sdmmc0;
+		spi4 = &sfc;
+	};
+
+	chosen {
+		u-boot,spl-boot-order = "same-as-spl", &sdmmc0, &sdhci;
+	};
+
+	dmc: dmc {
+		compatible = "rockchip,rk3568-dmc";
+		bootph-all;
+	};
+
+	otp: nvmem@fe38c000 {
+		compatible = "rockchip,rk3568-otp";
+		reg = <0x0 0xfe38c000 0x0 0x4000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		cpu_id: id@a {
+			reg = <0x0a 0x10>;
+		};
+	};
+};
+
+#ifdef CONFIG_ROCKCHIP_SPI_IMAGE
+&binman {
+	simple-bin-spi {
+		mkimage {
+			args = "-n", CONFIG_SYS_SOC, "-T", "rksd";
+			offset = <0x8000>;
+		};
+	};
+};
+#endif
+
+&cru {
+	bootph-all;
+};
+
+&emmc_bus8 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&emmc_clk {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&emmc_cmd {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&emmc_datastrobe {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&emmc_rstnout {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&fspi_pins {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&grf {
+	bootph-all;
+};
+
+&otp {
+	bootph-some-ram;
+};
+
+&pcfg_pull_none {
+	bootph-all;
+};
+
+&pcfg_pull_none_smt {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&pcfg_pull_up {
+	bootph-all;
+};
+
+&pcfg_pull_up_drv_level_2 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&pinctrl {
+	bootph-all;
+};
+
+&pmucru {
+	bootph-all;
+};
+
+&pmugrf {
+	bootph-all;
+};
+
+&rng {
+	status = "okay";
+};
+
+&sdhci {
+	bootph-pre-ram;
+	bootph-some-ram;
+	max-frequency = <200000000>;
+};
+
+&sdmmc0 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc0_bus4 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc0_clk {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc0_cmd {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc0_det {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc0_pwren {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sfc {
+	u-boot,spl-sfc-no-dma;
+};
+
+&uart2 {
+	bootph-all;
+	clock-frequency = <24000000>;
+};
+
+&uart2m0_xfer {
+	bootph-all;
+};
+
+&xin24m {
+	bootph-all;
+};

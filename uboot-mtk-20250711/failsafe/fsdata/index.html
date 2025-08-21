@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+	<title>MediaTek System Recovery Mode</title>
+	<link rel="stylesheet" type="text/css" href="/style.css">
+</head>
+<body>
+	<div id="banner">
+		MediaTek U-Boot System Recovery Mode
+	</div>
+	<div id="main">
+		<p>Upload new firmware:</p>
+		<form action="/upload" method="post" enctype="multipart/form-data">
+			<p><input type="file" name="firmware" /></p>
+			<p><input type="submit" id="submit" value="Upload" /></p>
+		</form>
+	</div>
+</body>
+</html>

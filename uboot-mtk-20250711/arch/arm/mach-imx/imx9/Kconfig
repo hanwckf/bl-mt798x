@@ -1,0 +1,96 @@
+if ARCH_IMX9
+
+config AHAB_BOOT
+    bool "Support i.MX9 AHAB features"
+    help
+    This option enables the support for AHAB secure boot.
+
+config IMX9
+	bool
+	select BINMAN
+	select CPU
+	select CPU_IMX
+	select HAS_CAAM
+	select ROM_UNIFIED_SECTIONS
+	imply IMX_TMU
+
+config IMX93
+	bool
+	select IMX9
+	select ARMV8_SPL_EXCEPTION_VECTORS
+
+config IMX91
+	bool
+	select IMX9
+	select ARMV8_SPL_EXCEPTION_VECTORS
+
+config IMX95
+	bool
+	select ARMV8_SPL_EXCEPTION_VECTORS
+	select IMX9
+	select DM_MAILBOX
+	select SCMI_FIRMWARE
+	select SPL_IMX_CONTAINER_USE_TRAMPOLINE
+
+config SYS_SOC
+	default "imx9"
+
+choice
+	prompt  "NXP i.MX9 board select"
+	optional
+
+config TARGET_IMX91_11X11_EVK
+	bool "imx91_11x11_evk"
+	select OF_BOARD_FIXUP
+	select IMX91
+	imply BOOTSTD_FULL
+	imply BOOTSTD_BOOTCOMMAND
+
+config TARGET_IMX93_9X9_QSB
+	bool "imx93_qsb"
+	select OF_BOARD_FIXUP
+	select IMX93
+	select IMX9_LPDDR4X
+	imply OF_UPSTREAM
+	imply BOOTSTD_FULL
+	imply BOOTSTD_BOOTCOMMAND
+
+config TARGET_IMX93_11X11_EVK
+	bool "imx93_11x11_evk"
+	select OF_BOARD_FIXUP
+	select IMX93
+	imply OF_UPSTREAM
+	imply BOOTSTD_FULL
+	imply BOOTSTD_BOOTCOMMAND
+
+config TARGET_IMX93_VAR_SOM
+	bool "imx93_var_som"
+	select IMX93
+	select IMX9_LPDDR4X
+
+config TARGET_PHYCORE_IMX93
+	bool "phycore_imx93"
+	select IMX93
+	select IMX9_LPDDR4X
+	imply OF_UPSTREAM
+	select OF_BOARD_FIXUP
+	select OF_BOARD_SETUP
+
+config TARGET_IMX95_19X19_EVK
+	bool "imx95_19x19_evk"
+	select IMX95
+	imply BOOTSTD_BOOTCOMMAND
+	imply BOOTSTD_FULL
+	imply OF_UPSTREAM
+
+endchoice
+
+source "board/freescale/imx91_evk/Kconfig"
+source "board/freescale/imx93_evk/Kconfig"
+source "board/freescale/imx93_qsb/Kconfig"
+source "board/phytec/phycore_imx93/Kconfig"
+source "board/variscite/imx93_var_som/Kconfig"
+source "board/freescale/imx95_evk/Kconfig"
+
+endif
+

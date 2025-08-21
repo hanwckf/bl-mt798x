@@ -1,0 +1,12 @@
+if TARGET_GEEKBOX
+
+config SYS_BOARD
+	default "geekbox"
+
+config SYS_VENDOR
+	default "geekbuying"
+
+config SYS_CONFIG_NAME
+	default "geekbox"
+
+endif

@@ -1,0 +1,14 @@
+if TARGET_STARQLTECHN
+
+config SYS_BOARD
+	default "starqltechn"
+	help
+	  starqltechn is a production board for S9 and S9+ phones(SM-G96x0) phones based on SDM845 SoC.
+
+config SYS_CONFIG_NAME
+	default "sdm845"
+
+config SYS_VENDOR
+	default "samsung"
+
+endif

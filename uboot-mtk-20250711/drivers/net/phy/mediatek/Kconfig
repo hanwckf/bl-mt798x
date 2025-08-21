@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-2.0-only
+config MTK_NET_PHYLIB
+	tristate
+
+config PHY_MEDIATEK_2P5GE
+	tristate "MediaTek 2.5Gb Ethernet PHYs"
+	depends on OF_CONTROL
+	select MTK_NET_PHYLIB
+	help
+	  Supports MediaTek SoC built-in 2.5Gb Ethernet PHYs.
+
+	  This will load necessary firmware and add appropriate time delay.
+	  Accelerate this procedure through internal pbus instead of MDIO
+	  bus. Certain link-up issues will also be fixed here.

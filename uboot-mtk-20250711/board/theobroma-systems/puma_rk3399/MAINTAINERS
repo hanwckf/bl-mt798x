@@ -1,0 +1,12 @@
+PUMA-RK3399
+M:	Quentin Schulz <quentin.schulz@cherry.de>
+M:	Klaus Goger <klaus.goger@cherry.de>
+S:	Maintained
+F:	board/theobroma-systems/puma_rk3399
+F:	board/theobroma-systems/common
+F:	doc/board/theobroma-systems
+F:	include/configs/puma_rk3399.h
+F:	arch/arm/dts/rk3399-puma*
+F:	configs/puma-rk3399_defconfig
+W:	https://embedded.cherry.de/product/puma-som-rk3399-q7/
+T:	git https://git.embedded.cherry.de/puma-u-boot.git

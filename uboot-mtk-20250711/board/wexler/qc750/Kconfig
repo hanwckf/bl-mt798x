@@ -1,0 +1,13 @@
+if TARGET_QC750
+
+config SYS_BOARD
+	default "qc750"
+
+config SYS_VENDOR
+	default "wexler"
+
+config TEGRA_BOARD_STRING
+	string "Default Tegra board name"
+	default "Wexler QC750"
+
+endif

@@ -1,0 +1,12 @@
+if TARGET_EVB_RK3229
+
+config SYS_BOARD
+	default "evb_rk3229"
+
+config SYS_VENDOR
+	default "rockchip"
+
+config SYS_CONFIG_NAME
+	default "evb_rk3229"
+
+endif
