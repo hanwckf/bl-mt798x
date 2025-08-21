@@ -14,6 +14,9 @@
 #include <command.h>
 #include <console.h>
 #include <env.h>
+#ifdef CONFIG_CMD_GL_BTN
+#include <glbtn.h>
+#endif
 #include <fdtdec.h>
 #include <init.h>
 #include <net.h>
@@ -63,6 +66,22 @@ void main_loop(void)
 	}
 
 	process_button_cmds();
+
+#ifdef CONFIG_MTK_HTTPD
+	if (env_get("failsafe") != NULL) {
+		env_set("failsafe", NULL);
+		env_save();
+
+#ifdef CONFIG_CMD_GL_BTN
+		led_control("led", "system_led", "on");
+#endif /* CONFIG_CMD_GL_BTN */
+		run_command("httpd", 0);
+	}
+#endif /* CONFIG_MTK_HTTPD */
+
+#ifdef CONFIG_CMD_GL_BTN
+	run_command("glbtn", 0);
+#endif
 
 	s = bootdelay_process();
 	if (cli_process_fdt(&s))
