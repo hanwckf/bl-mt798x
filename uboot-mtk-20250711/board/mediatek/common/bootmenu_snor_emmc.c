@@ -28,7 +28,7 @@ static const struct data_part_entry snor_emmc_parts[] = {
 		.write = generic_mmc_write_fip,
 #endif
 		.post_action = UPGRADE_ACTION_CUSTOM,
-		.do_post_action = generic_invalidate_env,
+		//.do_post_action = generic_invalidate_env,
 	},
 #ifdef CONFIG_MTK_FIP_SUPPORT
 	{
@@ -54,7 +54,7 @@ static const struct data_part_entry snor_emmc_parts[] = {
 		.write = generic_mmc_update_bl33,
 #endif
 		.post_action = UPGRADE_ACTION_CUSTOM,
-		.do_post_action = generic_invalidate_env,
+		//.do_post_action = generic_invalidate_env,
 	},
 #endif
 	{

@@ -24,7 +24,7 @@ static const struct data_part_entry mtd_parts[] = {
 		.validate = generic_validate_fip,
 		.write = generic_mtd_write_fip,
 		.post_action = UPGRADE_ACTION_CUSTOM,
-		.do_post_action = generic_invalidate_env,
+		//.do_post_action = generic_invalidate_env,
 	},
 #ifdef CONFIG_MTK_FIP_SUPPORT
 	{
@@ -42,7 +42,7 @@ static const struct data_part_entry mtd_parts[] = {
 		.validate = generic_validate_bl33,
 		.write = generic_mtd_update_bl33,
 		.post_action = UPGRADE_ACTION_CUSTOM,
-		.do_post_action = generic_invalidate_env,
+		//.do_post_action = generic_invalidate_env,
 	},
 #endif
 	{
