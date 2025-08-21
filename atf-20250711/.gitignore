@@ -57,3 +57,6 @@ venv/
 # MediaTek related
 .vscode/
 Kconfiglib/__pycache__/
+
+.config
+
