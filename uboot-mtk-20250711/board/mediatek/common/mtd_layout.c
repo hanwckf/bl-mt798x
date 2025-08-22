@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0+
 
-#include <common.h>
 #include <command.h>
 #include <env.h>
 #include <mtd_node.h>

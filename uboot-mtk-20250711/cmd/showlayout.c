@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0+
 
-#include <common.h>
 #include <command.h>
 #include <dm/ofnode.h>
 
@@ -20,7 +19,7 @@ static int do_showlayout(struct cmd_tbl *cmdtp, int flag, int argc, char *const 
     } else {
         printf("get mtd layout failed!\n");
     }
-    
+
     return CMD_RET_SUCCESS;
 }
 

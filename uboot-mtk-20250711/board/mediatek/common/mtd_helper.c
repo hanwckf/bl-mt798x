@@ -8,6 +8,7 @@
  */
 
 #include <env.h>
+#include <exports.h>
 #include <errno.h>
 #include <image.h>
 #include <memalign.h>
