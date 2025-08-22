@@ -3,9 +3,11 @@
  * Copyright (C) 2010 Marc Kleine-Budde <mkl@pengutronix.de>
  */
 
-#include <common.h>
+#include <linux/errno.h>
+#include <linux/kernel.h>
 #include <malloc.h>
 #include <poller.h>
+#include <time.h>
 
 static LIST_HEAD(poller_list);
 static int __poller_active;
