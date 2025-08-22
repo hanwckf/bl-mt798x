@@ -86,6 +86,12 @@ struct snand_mem_org {
 
 typedef int (*snand_select_die_t)(struct mtk_snand *snf, uint32_t dieidx);
 
+enum snand_drv {
+	SNAND_DRV_NO_CHANGE = 0,
+	SNAND_DRV_8mA = 8,
+	SNAND_DRV_12mA = 12,
+};
+
 struct snand_flash_info {
 	const char *model;
 	struct snand_id id;
@@ -93,6 +99,7 @@ struct snand_flash_info {
 	const struct snand_io_cap *cap_rd;
 	const struct snand_io_cap *cap_pl;
 	snand_select_die_t select_die;
+	enum snand_drv drv;
 };
 
 #define SNAND_INFO(_model, _id, _memorg, _cap_rd, _cap_pl, ...) \
