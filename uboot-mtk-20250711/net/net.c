@@ -111,6 +111,7 @@
 #include <net/udp.h>
 #include <net/wget.h>
 #include <test/test.h>
+#include <linux/stringify.h>
 #include "arp.h"
 #include "bootp.h"
 #include "cdp.h"
