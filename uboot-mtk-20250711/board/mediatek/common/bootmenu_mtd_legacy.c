@@ -59,7 +59,7 @@ static const struct data_part_entry mtd_parts[] = {
 		.env_name = "bootfile.bl",
 		.write = write_bl,
 		.post_action = UPGRADE_ACTION_CUSTOM,
-		.do_post_action = generic_invalidate_env,
+		//.do_post_action = generic_invalidate_env,
 	},
 	{
 		.name = "Firmware",
