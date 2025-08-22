@@ -53,7 +53,7 @@ static const struct data_part_entry *find_part(const struct data_part_entry *par
 void *httpd_get_upload_buffer_ptr(size_t size)
 {
 	/* Skip BL31 address range started from 0x43000000 */
-	return (void *)gd->ram_base + 0x4000000;
+	return (void *)gd->ram_base + 0x6000000;
 }
 
 int failsafe_validate_image(const void *data, size_t size, failsafe_fw_t fw)
