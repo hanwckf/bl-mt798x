@@ -1,0 +1,756 @@
+# SPDX-License-Identifier: GPL-2.0+
+
+variables:
+  DEFAULT_ALL_TAG: "all"
+  DEFAULT_ARM64_TAG: "arm64"
+  DEFAULT_FAST_ARM64_TAG: "fast arm64"
+  DEFAULT_AMD64_TAG: "amd64"
+  DEFAULT_FAST_AMD64_TAG: "fast amd64"
+  MIRROR_DOCKER: docker.io
+  SJG_LAB: ""
+  PLATFORM: linux/amd64,linux/arm64
+
+default:
+  tags:
+    - ${DEFAULT_ALL_TAG}
+
+workflow:
+  rules:
+    - when: always
+
+# Grab our configured image.  The source for this is found
+# in the u-boot tree at tools/docker/Dockerfile
+image: ${MIRROR_DOCKER}/trini/u-boot-gitlab-ci-runner:jammy-20250404-29Apr2025
+
+# We run some tests in different order, to catch some failures quicker.
+stages:
+  - testsuites
+  - test.py
+  - sjg-lab
+  - world build
+
+.buildman_and_testpy_template: &buildman_and_testpy_dfn
+  stage: test.py
+  retry: 2 # QEMU may be too slow, etc.
+  needs: [ "Run binman, buildman, dtoc, Kconfig and patman testsuites" ]
+  before_script:
+    # Clone uboot-test-hooks
+    - git config --global --add safe.directory "${CI_PROJECT_DIR}"
+    - git clone --depth=1 https://source.denx.de/u-boot/u-boot-test-hooks /tmp/uboot-test-hooks
+    # qemu_arm64_lwip_defconfig is the same as qemu_arm64 but with NET_LWIP enabled.
+    # The test config and the boardenv file from qemu_arm64 can be re-used so create symlinks
+    - ln -s conf.qemu_arm64_na /tmp/uboot-test-hooks/bin/travis-ci/conf.qemu_arm64_lwip_na
+    - ln -s u_boot_boardenv_qemu_arm64_na.py /tmp/uboot-test-hooks/py/travis-ci/u_boot_boardenv_qemu_arm64_lwip_na.py
+    - ln -s travis-ci /tmp/uboot-test-hooks/bin/`hostname`
+    - ln -s travis-ci /tmp/uboot-test-hooks/py/`hostname`
+    - if [[ "${TEST_PY_BD}" == "qemu-riscv32_spl" ]]; then
+        wget -O - https://github.com/riscv-software-src/opensbi/releases/download/v1.3.1/opensbi-1.3.1-rv-bin.tar.xz | tar -C /tmp -xJ;
+        export OPENSBI=/tmp/opensbi-1.3.1-rv-bin/share/opensbi/ilp32/generic/firmware/fw_dynamic.bin;
+      fi
+    - if [[ "${TEST_PY_BD}" == "qemu-riscv64_spl" ]] || [[ "${TEST_PY_BD}" == "sifive_unleashed" ]]; then
+        wget -O - https://github.com/riscv-software-src/opensbi/releases/download/v1.3.1/opensbi-1.3.1-rv-bin.tar.xz | tar -C /tmp -xJ;
+        export OPENSBI=/tmp/opensbi-1.3.1-rv-bin/share/opensbi/lp64/generic/firmware/fw_dynamic.bin;
+      fi
+    - if [[ "${TEST_PY_BD}" == "qemu-arm-sbsa" ]]; then
+        wget -O /tmp/bl1.bin https://artifacts.codelinaro.org/artifactory/linaro-419-sbsa-ref/latest/tf-a/bl1.bin;
+        wget -O /tmp/fip.bin https://artifacts.codelinaro.org/artifactory/linaro-419-sbsa-ref/latest/tf-a/fip.bin;
+        export BINMAN_INDIRS=/tmp;
+      fi
+    # Prepare python environment
+    - python3 -m venv /tmp/venv;
+      . /tmp/venv/bin/activate;
+      pip install -r test/py/requirements.txt -r tools/binman/requirements.txt
+        -r tools/buildman/requirements.txt -r tools/u_boot_pylib/requirements.txt
+
+  after_script:
+    - cp -v /tmp/${TEST_PY_BD}/*.{html,css,xml} .
+    - rm -rf /tmp/uboot-test-hooks /tmp/venv
+  script:
+    # If we've been asked to use clang only do one configuration.
+    - export UBOOT_TRAVIS_BUILD_DIR=/tmp/${TEST_PY_BD}
+    - echo BUILD_ENV ${BUILD_ENV}
+    - if [ -n "${BUILD_ENV}" ]; then
+        export ${BUILD_ENV};
+      fi
+    - tools/buildman/buildman -o ${UBOOT_TRAVIS_BUILD_DIR} -w -E -W -e
+        --board ${TEST_PY_BD} ${OVERRIDE}
+    - cp /opt/grub/grub_x86.efi $UBOOT_TRAVIS_BUILD_DIR/
+    - cp /opt/grub/grub_x64.efi $UBOOT_TRAVIS_BUILD_DIR/
+    - cp /opt/grub/grubriscv64.efi $UBOOT_TRAVIS_BUILD_DIR/grub_riscv64.efi
+    - cp /opt/grub/grubaa64.efi $UBOOT_TRAVIS_BUILD_DIR/grub_arm64.efi
+    - cp /opt/grub/grubarm.efi $UBOOT_TRAVIS_BUILD_DIR/grub_arm.efi
+    # create sdcard / spi-nor images for sifive unleashed using genimage
+    - if [[ "${TEST_PY_BD}" == "sifive_unleashed" ]]; then
+        mkdir -p root;
+        cp ${UBOOT_TRAVIS_BUILD_DIR}/spl/u-boot-spl.bin .;
+        cp ${UBOOT_TRAVIS_BUILD_DIR}/u-boot.itb .;
+        rm -rf tmp;
+        genimage --inputpath . --config board/sifive/unleashed/genimage_sdcard.cfg;
+        cp images/sdcard.img ${UBOOT_TRAVIS_BUILD_DIR}/;
+        rm -rf tmp;
+        genimage --inputpath . --config board/sifive/unleashed/genimage_spi-nor.cfg;
+        cp images/spi-nor.img ${UBOOT_TRAVIS_BUILD_DIR}/;
+      fi
+    - if [[ "${TEST_PY_BD}" == "coreboot" ]]; then
+        cp /opt/coreboot/coreboot.rom ${UBOOT_TRAVIS_BUILD_DIR}/coreboot.rom;
+        /opt/coreboot/cbfstool ${UBOOT_TRAVIS_BUILD_DIR}/coreboot.rom remove -n fallback/payload;
+        /opt/coreboot/cbfstool ${UBOOT_TRAVIS_BUILD_DIR}/coreboot.rom add-flat-binary -f ${UBOOT_TRAVIS_BUILD_DIR}/u-boot.bin -n fallback/payload -c LZMA -l 0x1110000 -e 0x1110000;
+      fi
+    # If we have TF-A binaries, we need to use them.
+    - if [[ -d /opt/tf-a/"${TEST_PY_BD}" ]]; then
+        cp /opt/tf-a/"${TEST_PY_BD}"/fip.bin /opt/tf-a/"${TEST_PY_BD}"/bl1.bin /tmp/;
+        export fip=/tmp/fip.bin;
+        export bl1=/tmp/bl1.bin;
+        export PATH=/opt/Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3:${PATH};
+      fi
+    # "${var:+"-k $var"}" expands to "" if $var is empty, "-k $var" if not
+    - export PATH=/opt/qemu/bin:/tmp/uboot-test-hooks/bin:${PATH};
+      export PYTHONPATH=/tmp/uboot-test-hooks/py/travis-ci;
+      python3 -m http.server 80 --directory "${UBOOT_TRAVIS_BUILD_DIR}" > /dev/null 2>&1 &
+      HTTP_PID=$!;
+      sleep 1;
+      if ps -p ${HTTP_PID} > /dev/null; then
+        export HTTP_PID;
+      else
+        unset HTTP_PID;
+      fi;
+      ./test/py/test.py -ra --bd ${TEST_PY_BD} ${TEST_PY_ID} ${TEST_PY_EXTRA}
+        ${TEST_PY_TEST_SPEC:+"-k ${TEST_PY_TEST_SPEC}"}
+        --build-dir "$UBOOT_TRAVIS_BUILD_DIR"
+        --junitxml=/tmp/${TEST_PY_BD}/results.xml;
+      if [[ -n "${HTTP_PID}" ]]; then
+        kill ${HTTP_PID};
+      fi
+  artifacts:
+    when: always
+    paths:
+      - "*.html"
+      - "*.css"
+      - results.xml
+    reports:
+      junit: results.xml
+    expire_in: 1 week
+
+build all platforms in a single job:
+  stage: world build
+  dependencies: []
+  parallel:
+    matrix:
+      - HOST: "fast arm64"
+      - HOST: "fast amd64"
+  tags:
+    - ${HOST}
+  script:
+    # Prepare python environment
+    - python3 -m venv /tmp/venv;
+      . /tmp/venv/bin/activate;
+      pip install -r tools/binman/requirements.txt
+        -r tools/buildman/requirements.txt
+    - ret=0;
+      git config --global --add safe.directory "${CI_PROJECT_DIR}";
+      ./tools/buildman/buildman -o /tmp -PEWM -x xtensa || ret=$?;
+      if [[ $ret -ne 0 ]]; then
+        ./tools/buildman/buildman -o /tmp -seP;
+        exit $ret;
+      fi;
+
+.testsuites:
+  stage: testsuites
+
+check for new CONFIG symbols outside Kconfig:
+  extends: .testsuites
+  script:
+    - git config --global --add safe.directory "${CI_PROJECT_DIR}"
+    # If grep succeeds and finds a match the test fails as we should
+    # have no matches.
+    - git grep -E '^#[[:blank:]]*(define|undef)[[:blank:]]*CONFIG_'
+        :^doc/ :^arch/arm/dts/ :^scripts/kconfig/lkc.h
+        :^include/linux/kconfig.h :^tools/ :^dts/upstream/
+        :^lib/mbedtls/external :^lib/mbedtls/mbedtls_def_config.h &&
+        exit 1 || exit 0
+
+# build documentation
+docs:
+  extends: .testsuites
+  script:
+    - python3 -m venv /tmp/venvhtml
+    - . /tmp/venvhtml/bin/activate
+    - pip install -r doc/sphinx/requirements.txt -r test/py/requirements.txt
+    - make htmldocs KDOC_WERROR=1
+    - make infodocs
+
+# ensure all configs have MAINTAINERS entries
+Check for configs without MAINTAINERS entry:
+  extends: .testsuites
+  script:
+    - ./tools/buildman/buildman --maintainer-check
+
+# Ensure host tools build
+Build tools-only and envtools:
+  extends: .testsuites
+  script:
+    - make tools-only_config tools-only -j$(nproc);
+      make mrproper;
+      make tools-only_config envtools -j$(nproc)
+
+Run binman, buildman, dtoc, Kconfig and patman testsuites:
+  extends: .testsuites
+  tags:
+    - ${DEFAULT_AMD64_TAG}
+  script:
+    - git config --global user.name "GitLab CI Runner";
+      git config --global user.email trini@konsulko.com;
+      git config --global --add safe.directory "${CI_PROJECT_DIR}";
+      export USER=gitlab;
+      python3 -m venv /tmp/venv;
+      . /tmp/venv/bin/activate;
+      pip install -r test/py/requirements.txt -r tools/binman/requirements.txt
+        -r tools/buildman/requirements.txt -r tools/patman/requirements.txt
+        -r tools/u_boot_pylib/requirements.txt;
+      export UBOOT_TRAVIS_BUILD_DIR=/tmp/tools-only;
+      export PYTHONPATH="${UBOOT_TRAVIS_BUILD_DIR}/scripts/dtc/pylibfdt";
+      export PATH="${UBOOT_TRAVIS_BUILD_DIR}/scripts/dtc:${PATH}";
+      set +e;
+      ./tools/buildman/buildman -T0 -o ${UBOOT_TRAVIS_BUILD_DIR} -w
+        --board tools-only;
+      set -e;
+      export TOOLPATH="--toolpath ${UBOOT_TRAVIS_BUILD_DIR}/tools --toolpath /opt/coreboot";
+      ./tools/binman/binman ${TOOLPATH} tool -f missing;
+      ./tools/binman/binman ${TOOLPATH} test;
+      ./tools/binman/binman ${TOOLPATH} test -T;
+      ./tools/buildman/buildman -t;
+      ./tools/dtoc/dtoc -t;
+      ./tools/patman/patman test;
+      make testconfig
+
+# Check for any pylint regressions
+Run pylint:
+  extends: .testsuites
+  script:
+    - git config --global --add safe.directory "${CI_PROJECT_DIR}"
+    - python3 -m venv /tmp/venv
+    - . /tmp/venv/bin/activate
+    - pip install -r test/py/requirements.txt -r tools/binman/requirements.txt
+        -r tools/buildman/requirements.txt -r tools/patman/requirements.txt
+        -r tools/u_boot_pylib/requirements.txt asteval pylint==3.3.4 pyopenssl
+    - export PATH=${PATH}:~/.local/bin
+    - echo "[MASTER]" >> .pylintrc
+    - echo "load-plugins=pylint.extensions.docparams" >> .pylintrc
+    - export UBOOT_TRAVIS_BUILD_DIR=/tmp/tools-only
+    - set +e
+    - ./tools/buildman/buildman -T0 -o ${UBOOT_TRAVIS_BUILD_DIR} -w
+        --board tools-only
+    - set -e
+    - pylint --version
+    - export PYTHONPATH="${UBOOT_TRAVIS_BUILD_DIR}/scripts/dtc/pylibfdt"
+    - make pylint_err
+
+# Check for pre-schema driver model tags
+Check for pre-schema tags:
+  extends: .testsuites
+  script:
+    - git config --global --add safe.directory "${CI_PROJECT_DIR}";
+    # If grep succeeds and finds a match the test fails as we should
+    # have no matches.
+    - git grep u-boot,dm- -- '*.dts*' && exit 1 || exit 0
+
+# Check we can package the Python tools
+Check packing of Python tools:
+  extends: .testsuites
+  script:
+    - make pip
+
+# Test sandbox with test.py
+sandbox test.py:
+  parallel:
+    matrix:
+      - HOST: "arm64"
+      - HOST: "amd64"
+  tags:
+    - ${HOST}
+  variables:
+    TEST_PY_BD: "sandbox"
+    TEST_PY_EXTRA: "--timing"
+  <<: *buildman_and_testpy_dfn
+
+sandbox with clang test.py:
+  parallel:
+    matrix:
+      - HOST: "arm64"
+      - HOST: "amd64"
+  tags:
+    - ${HOST}
+  variables:
+    TEST_PY_BD: "sandbox"
+    OVERRIDE: "-O clang-18"
+  <<: *buildman_and_testpy_dfn
+
+sandbox64 test.py:
+  parallel:
+    matrix:
+      - HOST: "arm64"
+      - HOST: "amd64"
+  tags:
+    - ${HOST}
+  variables:
+    TEST_PY_BD: "sandbox64"
+  <<: *buildman_and_testpy_dfn
+
+sandbox64 with clang test.py:
+  parallel:
+    matrix:
+      - HOST: "arm64"
+      - HOST: "amd64"
+  tags:
+    - ${HOST}
+  variables:
+    TEST_PY_BD: "sandbox64"
+    OVERRIDE: "-O clang-18"
+  <<: *buildman_and_testpy_dfn
+
+sandbox64_lwip test.py:
+  parallel:
+    matrix:
+      - HOST: "arm64"
+      - HOST: "amd64"
+  tags:
+    - ${HOST}
+  variables:
+    TEST_PY_BD: "sandbox64_lwip"
+  <<: *buildman_and_testpy_dfn
+
+sandbox_spl test.py:
+  variables:
+    TEST_PY_BD: "sandbox_spl"
+    TEST_PY_TEST_SPEC: "test_ofplatdata or test_handoff or test_spl"
+  <<: *buildman_and_testpy_dfn
+
+sandbox_noinst_test.py:
+  variables:
+    TEST_PY_BD: "sandbox_noinst"
+    TEST_PY_TEST_SPEC: "test_ofplatdata or test_handoff or test_spl"
+  <<: *buildman_and_testpy_dfn
+
+sandbox_noinst with LOAD_FIT_FULL test.py:
+  variables:
+    TEST_PY_BD: "sandbox_noinst"
+    TEST_PY_TEST_SPEC: "test_ofplatdata or test_handoff or test_spl"
+    OVERRIDE: "-a CONFIG_SPL_LOAD_FIT_FULL=y"
+  <<: *buildman_and_testpy_dfn
+
+sandbox_vpl test.py:
+  variables:
+    TEST_PY_BD: "sandbox_vpl"
+    TEST_PY_TEST_SPEC: "vpl or test_spl"
+  <<: *buildman_and_testpy_dfn
+
+# Enable tracing and disable LTO, to ensure functions are not elided
+sandbox trace_test.py:
+  variables:
+    TEST_PY_BD: "sandbox"
+    BUILD_ENV: "FTRACE=1 NO_LTO=1"
+    TEST_PY_TEST_SPEC: "trace"
+    OVERRIDE: "-a CONFIG_TRACE=y -a CONFIG_TRACE_EARLY=y -a CONFIG_TRACE_EARLY_SIZE=0x01000000 -a CONFIG_TRACE_BUFFER_SIZE=0x02000000"
+  <<: *buildman_and_testpy_dfn
+
+evb-ast2500 test.py:
+  variables:
+    TEST_PY_BD: "evb-ast2500"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id qemu"
+  <<: *buildman_and_testpy_dfn
+
+sandbox_flattree test.py:
+  tags:
+    - ${DEFAULT_AMD64_TAG}
+  variables:
+    TEST_PY_BD: "sandbox_flattree"
+  <<: *buildman_and_testpy_dfn
+
+vexpress_ca9x4 test.py:
+  variables:
+    TEST_PY_BD: "vexpress_ca9x4"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id qemu"
+  <<: *buildman_and_testpy_dfn
+
+integratorcp_cm926ejs test.py:
+  variables:
+    TEST_PY_BD: "integratorcp_cm926ejs"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id qemu"
+  <<: *buildman_and_testpy_dfn
+
+qemu_arm test.py:
+  variables:
+    TEST_PY_BD: "qemu_arm"
+    TEST_PY_TEST_SPEC: "not sleep"
+  <<: *buildman_and_testpy_dfn
+
+qemu_arm64 test.py:
+  variables:
+    TEST_PY_BD: "qemu_arm64"
+    TEST_PY_TEST_SPEC: "not sleep"
+  <<: *buildman_and_testpy_dfn
+
+qemu_arm64_lwip test.py:
+  variables:
+    TEST_PY_BD: "qemu_arm64_lwip"
+    TEST_PY_TEST_SPEC: "test_net_dhcp or test_net_ping or test_net_tftpboot"
+  <<: *buildman_and_testpy_dfn
+
+qemu_arm_sbsa test.py:
+  variables:
+    TEST_PY_BD: "qemu-arm-sbsa"
+    TEST_PY_TEST_SPEC: "not sleep"
+  <<: *buildman_and_testpy_dfn
+
+qemu_m68k test.py:
+  variables:
+    TEST_PY_BD: "M5208EVBE"
+    TEST_PY_ID: "--id qemu"
+    TEST_PY_TEST_SPEC: "not sleep and not efi"
+    OVERRIDE: "-a CONFIG_M68K_QEMU=y -a ~CONFIG_MCFTMR"
+  <<: *buildman_and_testpy_dfn
+
+qemu_malta test.py:
+  variables:
+    TEST_PY_BD: "malta"
+    TEST_PY_TEST_SPEC: "not sleep and not efi"
+    TEST_PY_ID: "--id qemu"
+  <<: *buildman_and_testpy_dfn
+
+qemu_maltael test.py:
+  variables:
+    TEST_PY_BD: "maltael"
+    TEST_PY_TEST_SPEC: "not sleep and not efi"
+    TEST_PY_ID: "--id qemu"
+  <<: *buildman_and_testpy_dfn
+
+qemu_malta64 test.py:
+  variables:
+    TEST_PY_BD: "malta64"
+    TEST_PY_TEST_SPEC: "not sleep and not efi"
+    TEST_PY_ID: "--id qemu"
+  <<: *buildman_and_testpy_dfn
+
+qemu_malta64el test.py:
+  variables:
+    TEST_PY_BD: "malta64el"
+    TEST_PY_TEST_SPEC: "not sleep and not efi"
+    TEST_PY_ID: "--id qemu"
+  <<: *buildman_and_testpy_dfn
+
+qemu-ppce500 test.py:
+  variables:
+    TEST_PY_BD: "qemu-ppce500"
+    TEST_PY_TEST_SPEC: "not sleep"
+  <<: *buildman_and_testpy_dfn
+
+qemu-riscv32 test.py:
+  variables:
+    TEST_PY_BD: "qemu-riscv32"
+    TEST_PY_TEST_SPEC: "not sleep"
+  <<: *buildman_and_testpy_dfn
+
+qemu-riscv64 test.py:
+  variables:
+    TEST_PY_BD: "qemu-riscv64"
+    TEST_PY_TEST_SPEC: "not sleep"
+  <<: *buildman_and_testpy_dfn
+
+qemu-riscv32_spl test.py:
+  variables:
+    TEST_PY_BD: "qemu-riscv32_spl"
+    TEST_PY_TEST_SPEC: "not sleep"
+  <<: *buildman_and_testpy_dfn
+
+qemu-riscv64_spl test.py:
+  variables:
+    TEST_PY_BD: "qemu-riscv64_spl"
+    TEST_PY_TEST_SPEC: "not sleep"
+  <<: *buildman_and_testpy_dfn
+
+qemu-x86 test.py:
+  variables:
+    TEST_PY_BD: "qemu-x86"
+    TEST_PY_TEST_SPEC: "not sleep"
+  <<: *buildman_and_testpy_dfn
+
+qemu-x86_64 test.py:
+  variables:
+    TEST_PY_BD: "qemu-x86_64"
+    TEST_PY_TEST_SPEC: "not sleep"
+  <<: *buildman_and_testpy_dfn
+
+qemu-xtensa-dc233c test.py:
+  variables:
+    TEST_PY_BD: "qemu-xtensa-dc233c"
+    TEST_PY_TEST_SPEC: "not sleep and not efi"
+  tags:
+    - ${DEFAULT_AMD64_TAG}
+  <<: *buildman_and_testpy_dfn
+
+r2dplus_i82557c test.py:
+  variables:
+    TEST_PY_BD: "r2dplus"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id i82557c_qemu"
+  <<: *buildman_and_testpy_dfn
+
+r2dplus_pcnet test.py:
+  variables:
+    TEST_PY_BD: "r2dplus"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id pcnet_qemu"
+  <<: *buildman_and_testpy_dfn
+
+r2dplus_rtl8139 test.py:
+  variables:
+    TEST_PY_BD: "r2dplus"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id rtl8139_qemu"
+  <<: *buildman_and_testpy_dfn
+
+r2dplus_tulip test.py:
+  variables:
+    TEST_PY_BD: "r2dplus"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id tulip_qemu"
+  <<: *buildman_and_testpy_dfn
+
+sifive_unleashed_sdcard test.py:
+  variables:
+    TEST_PY_BD: "sifive_unleashed"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id sdcard_qemu"
+  <<: *buildman_and_testpy_dfn
+
+sifive_unleashed_spi-nor test.py:
+  variables:
+    TEST_PY_BD: "sifive_unleashed"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id spi-nor_qemu"
+  <<: *buildman_and_testpy_dfn
+
+vexpress_fvp test.py:
+  variables:
+    TEST_PY_BD: "vexpress_fvp"
+    TEST_PY_TEST_SPEC: "not sleep and not hostfs"
+  tags:
+    - ${DEFAULT_AMD64_TAG}
+  <<: *buildman_and_testpy_dfn
+
+vexpress_fvp_bloblist test.py:
+  variables:
+    TEST_PY_BD: "vexpress_fvp_bloblist"
+    TEST_PY_TEST_SPEC: "not sleep and not hostfs"
+  tags:
+    - ${DEFAULT_AMD64_TAG}
+  <<: *buildman_and_testpy_dfn
+
+xilinx_zynq_virt test.py:
+  variables:
+    TEST_PY_BD: "xilinx_zynq_virt"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id qemu"
+  <<: *buildman_and_testpy_dfn
+
+xilinx_versal_virt test.py:
+  variables:
+    TEST_PY_BD: "xilinx_versal_virt"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id qemu"
+    OVERRIDE: "-a ~CONFIG_USB_DWC3"
+  <<: *buildman_and_testpy_dfn
+
+xtfpga test.py:
+  variables:
+    TEST_PY_BD: "xtfpga"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id qemu"
+  tags:
+    - ${DEFAULT_AMD64_TAG}
+  <<: *buildman_and_testpy_dfn
+
+coreboot test.py:
+  variables:
+    TEST_PY_BD: "coreboot"
+    TEST_PY_TEST_SPEC: "not sleep"
+    TEST_PY_ID: "--id qemu"
+  <<: *buildman_and_testpy_dfn
+
+.lab_template: &lab_dfn
+  stage: sjg-lab
+  rules:
+    - if: $SJG_LAB == "1"
+      when: always
+    - if: $SJG_LAB != "1"
+      when: manual
+      allow_failure: true
+  dependencies: []
+  tags: [ 'lab' ]
+  script:
+    # Environment:
+    #   SRC  - source tree
+    #   OUT  - output directory for builds
+    - export SRC="$(pwd)"
+    - export OUT="${SRC}/build/${BOARD}"
+    - export PATH=$PATH:~/bin
+    - export PATH=$PATH:/vid/software/devel/ubtest/u-boot-test-hooks/bin
+
+    # Load it on the device
+    - ret=0
+    - echo "role ${ROLE}"
+    - export strategy="-s uboot -e off"
+    - export USE_LABGRID_SJG=1
+    # export verbose="-v"
+    - ${SRC}/test/py/test.py -ra --role ${ROLE} ${TEST_PY_EXTRA:-"--capture=tee-sys"}
+        --build-dir "${OUT}"
+        ${TEST_PY_TEST_SPEC:+"-k ${TEST_PY_TEST_SPEC}"}
+        --junitxml=${OUT}/results.xml || ret=$?
+    - U_BOOT_BOARD_IDENTITY="${ROLE}" u-boot-test-release || true
+    - if [[ $ret -ne 0 ]]; then
+        exit $ret;
+      fi
+  artifacts:
+    when: always
+    paths:
+      - "build/${BOARD}/test-log.html"
+      - "build/${BOARD}/multiplexed_log.css"
+      - "build/${BOARD}/results.xml"
+    reports:
+      junit: "build/${BOARD}/results.xml"
+    expire_in: 1 week
+
+rpi3:
+  variables:
+    ROLE: rpi3
+  <<: *lab_dfn
+
+opi_pc:
+  variables:
+    ROLE: opi_pc
+  <<: *lab_dfn
+
+pcduino3_nano:
+  variables:
+    ROLE: pcduino3_nano
+  <<: *lab_dfn
+
+samus:
+  variables:
+    ROLE: samus
+  <<: *lab_dfn
+
+link:
+  variables:
+    ROLE: link
+  <<: *lab_dfn
+
+jerry:
+  variables:
+    ROLE: jerry
+  <<: *lab_dfn
+
+minnowmax:
+  variables:
+    ROLE: minnowmax
+  <<: *lab_dfn
+
+opi_pc2:
+  variables:
+    ROLE: opi_pc2
+  <<: *lab_dfn
+
+bpi:
+  variables:
+    ROLE: bpi
+  <<: *lab_dfn
+
+rpi2:
+  variables:
+    ROLE: rpi2
+  <<: *lab_dfn
+
+bob:
+  variables:
+    ROLE: bob
+  <<: *lab_dfn
+
+ff3399:
+  variables:
+    ROLE: ff3399
+  <<: *lab_dfn
+
+coral:
+  variables:
+    ROLE: coral
+  <<: *lab_dfn
+
+rpi3z:
+  variables:
+    ROLE: rpi3z
+  <<: *lab_dfn
+
+bbb:
+  variables:
+    ROLE: bbb
+  <<: *lab_dfn
+
+kevin:
+  variables:
+    ROLE: kevin
+  <<: *lab_dfn
+
+pine64:
+  variables:
+    ROLE: pine64
+  <<: *lab_dfn
+
+c4:
+  variables:
+    ROLE: c4
+  <<: *lab_dfn
+
+rpi4:
+  variables:
+    ROLE: rpi4
+  <<: *lab_dfn
+
+rpi0:
+  variables:
+    ROLE: rpi0
+  <<: *lab_dfn
+
+snow:
+  variables:
+    ROLE: snow
+  <<: *lab_dfn
+
+pcduino3:
+  variables:
+    ROLE: pcduino3
+  <<: *lab_dfn
+
+nyan-big:
+  variables:
+    ROLE: nyan-big
+  <<: *lab_dfn
+
+rpi:
+  variables:
+    ROLE: rpi
+  <<: *lab_dfn
+
+# StarFive VisionFive 2
+vf2:
+  variables:
+    ROLE: vf2
+  <<: *lab_dfn
+
+qemu-x86_64:
+  variables:
+    ROLE: qemu-x86_64
+    TEST_PY_TEST_SPEC: "and not sleep"
+  <<: *lab_dfn
