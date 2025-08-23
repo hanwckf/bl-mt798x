@@ -1,14 +1,11 @@
-*.o
 *.sym
 *.map
-*.cmd
 *.su
 *.dtb
 *.tmp
 .config
 *.lex.c
 *.tab.*
-*.bin
 *.srec
 *.pyc
 .binman_stamp
@@ -23,6 +20,7 @@ dt.dtb.S
 u-boot.cfg
 /uboot*/include/config
 /uboot*/u-boot.lds
+/uboot*/u-boot.bin
 /uboot*/u-boot
 .vscode
 /mkgpt/*.bin
