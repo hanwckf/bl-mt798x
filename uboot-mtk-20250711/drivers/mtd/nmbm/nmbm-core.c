@@ -2670,8 +2670,6 @@ int nmbm_read_range(struct nmbm_instance *ni, uint64_t addr, size_t size,
 	while (sizeremain) {
 		WATCHDOG_RESET();
 
-		poller_call();
-
 		leading = off & ni->writesize_mask;
 		chunksize = ni->lower.writesize - leading;
 		if (chunksize > sizeremain)
@@ -2911,6 +2909,8 @@ int nmbm_write_range(struct nmbm_instance *ni, uint64_t addr, size_t size,
 
 	while (sizeremain) {
 		WATCHDOG_RESET();
+
+		poller_call(); 
 
 		leading = off & ni->writesize_mask;
 		chunksize = ni->lower.writesize - leading;
