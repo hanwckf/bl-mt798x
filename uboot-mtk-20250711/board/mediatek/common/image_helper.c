@@ -406,7 +406,7 @@ static int parse_image_itb(const void *fit, size_t size, u32 blocksize,
 	image_size = fit_get_totalsize(fit);
 	if (!image_size || image_size > size) {
 		if (image_size) {
-			printf("itb image size is invalid (%lu >= %zu)\n",
+			printf("itb image size is invalid (%zd >= %zu)\n",
 			       image_size, size);
 		}
 

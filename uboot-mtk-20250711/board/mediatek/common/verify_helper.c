@@ -714,7 +714,7 @@ bool read_verify_itb_image(struct image_read_priv *rpriv, void *ptr, u64 addr,
 	image_size = fit_get_totalsize(ptr);
 	if (!image_size || (max_size && image_size > max_size)) {
 		if (image_size && max_size) {
-			printf("itb image size is invalid (%lu >= %zu)\n",
+			printf("itb image size is invalid (%zu >= %zu)\n",
 			       image_size, max_size);
 		}
 
