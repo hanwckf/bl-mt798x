@@ -210,7 +210,7 @@ static int wget_parse_response(struct mtk_wget_pdata *pdata)
 			p++;
 
 		pdata->data_len = dectoul(p, NULL);
-		printf("Content-Length: %ld\n", pdata->data_len);
+		printf("Content-Length: %zd\n", pdata->data_len);
 	} else {
 		if ((ulong)pdata->data_ptr >= gd->ram_base &&
 		    (ulong)pdata->data_ptr < gd->ram_top)
