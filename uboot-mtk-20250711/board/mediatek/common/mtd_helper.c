@@ -1617,7 +1617,7 @@ int mtd_upgrade_image(const void *data, size_t size)
 #endif /* CONFIG_CMD_UBI */
 
 #ifndef CONFIG_MTK_DUAL_BOOT
-	mtd = get_mtd_device_nm(PART_FIT_NAME);
+	mtd = get_mtd_device_nm(PART_FIRMWARE_NAME);
 	if (!IS_ERR_OR_NULL(mtd)) {
 		put_mtd_device(mtd);
 
@@ -1685,7 +1685,7 @@ int mtd_boot_image(bool do_boot)
 #endif /* CONFIG_CMD_UBI */
 
 #ifndef CONFIG_MTK_DUAL_BOOT
-	mtd = get_mtd_device_nm(PART_FIT_NAME);
+	mtd = get_mtd_device_nm(PART_FIRMWARE_NAME);
 	if (!IS_ERR_OR_NULL(mtd)) {
 		put_mtd_device(mtd);
 
