@@ -701,7 +701,7 @@ static void httpd_rx(struct httpd_instance *inst, struct mtk_tcp_cb_data *cbd)
 	if (pdata->status == HTTPD_S_NEW) {
 		memcpy(sip, &cbd->sip, 4);
 		debug("New connection from %d.%d.%d.%d:%d\n",
-		      sip[0], sip[1], sip[2], sip[3], ntohs(cbd->sp));
+		      sip[0], sip[1], sip[2], sip[3], ntohs(cbd->sport));
 		pdata->status = HTTPD_S_HEADER_RECVING;
 	}
 
@@ -774,7 +774,7 @@ static void httpd_mtk_tcp_callback(struct mtk_tcp_cb_data *cbd)
 {
 	struct httpd_instance *inst;
 
-	inst = httpd_find_instance(ntohs(cbd->dp));
+	inst = httpd_find_instance(ntohs(cbd->dport));
 	if (!inst) {
 		mtk_tcp_close_conn(cbd->conn, 1);
 		return;

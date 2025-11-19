@@ -399,8 +399,8 @@ bool mtk_receive_tcp(struct ip_hdr *ip, int len, struct ethernet_hdr *et)
 	/* Prepare for callback data */
 	cbd.conn = c;
 	cbd.sip = c->ip_remote.s_addr;
-	cbd.sp = tcp->src;
-	cbd.dp = tcp->dst;
+	cbd.sport = tcp->src;
+	cbd.dport = tcp->dst;
 	cbd.pdata = c->pdata;
 
 	if (flags & MTK_TCP_RST) {
@@ -672,8 +672,8 @@ static void mtk_tcp_conn_check(struct mtk_tcp_conn *c)
 
 	cbd.conn = c;
 	cbd.sip = c->ip_remote.s_addr;
-	cbd.sp = c->port_remote;
-	cbd.dp = c->port_local;
+	cbd.sport = c->port_remote;
+	cbd.dport = c->port_local;
 	cbd.pdata = c->pdata;
 
 	switch (c->status) {
