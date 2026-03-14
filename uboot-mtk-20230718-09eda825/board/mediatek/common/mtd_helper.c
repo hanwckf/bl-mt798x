@@ -561,7 +561,7 @@ static int mount_ubi(struct mtd_info *mtd, bool create)
 			if (ret)
 				return ret;
 
-			ubi_exit();
+			ubi_detach();
 			ret = ubi_part(mtd->name, NULL);
 		}
 
@@ -657,7 +657,7 @@ static int write_ubi_fit_image(const void *data, size_t size,
 
 	if (!ubi_find_volume(PART_FIT_NAME) && !ubi_find_volume(PART_FIP_NAME)) {
 		/* ubi is dirty, erase ubi and recreate volumes */
-		ubi_exit();
+		ubi_detach();
 		ret = mtd_erase_skip_bad(mtd, 0, mtd->size, mtd->size, NULL, NULL, false);
 		if (ret)
 			return ret;

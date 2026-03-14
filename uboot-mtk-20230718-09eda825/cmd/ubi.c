@@ -552,7 +552,7 @@ static int ubi_set_skip_check(char *volume, bool skip_check)
 	return ubi_change_vtbl_record(ubi, vol->vol_id, &vtbl_rec);
 }
 
-static int ubi_detach(void)
+int ubi_detach(void)
 {
 #ifdef CONFIG_CMD_UBIFS
 	/*
