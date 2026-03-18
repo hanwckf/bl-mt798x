@@ -1,0 +1,142 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+
+/dts-v1/;
+#include "mt7981.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	model = "mt7981-cmcc_rax3000m-emmc";
+	compatible = "mediatek,mt7981", "mediatek,mt7981-rfb";
+
+	chosen {
+		stdout-path = &uart0;
+		tick-timer = &timer0;
+	};
+
+	config {
+		bootcmd = "mtkboardboot";
+		blink_led = "blue:status";
+		system_led = "red:status";
+	};
+
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0x40000000 0x20000000>;
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		button-reset {
+			label = "reset";
+			linux,code = <KEY_RESTART>;
+			gpios = <&pio 1 GPIO_ACTIVE_LOW>;
+		};
+
+		button-mesh {
+			label = "mesh";
+			linux,code = <BTN_9>;
+			gpios = <&pio 0 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led-0 {
+			label = "green:status";
+			gpios = <&pio 9 GPIO_ACTIVE_LOW>;
+		};
+
+		led-1 {
+			label = "blue:status";
+			gpios = <&pio 12 GPIO_ACTIVE_LOW>;
+		};
+
+		led-2 {
+			label = "red:status";
+			gpios = <&pio 35 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	reg_3p3v: regulator-3p3v {
+		  compatible = "regulator-fixed";
+		  regulator-name = "fixed-3.3V";
+		  regulator-min-microvolt = <3300000>;
+		  regulator-max-microvolt = <3300000>;
+		  regulator-boot-on;
+		  regulator-always-on;
+	};
+
+	bl2_verify {
+		bl2_compatible = "emmc";
+	};
+};
+
+&eth {
+	status = "okay";
+	mediatek,gmac-id = <0>;
+	phy-mode = "2500base-x";
+	mediatek,switch = "auto";
+	reset-gpios = <&pio 39 GPIO_ACTIVE_HIGH>;
+
+	fixed-link {
+		speed = <2500>;
+		full-duplex;
+	};
+};
+
+&mmc0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&mmc0_pins_default>;
+	bus-width = <8>;
+	max-frequency = <26000000>;
+	cap-mmc-hw-reset;
+	vmmc-supply = <&reg_3p3v>;
+	non-removable;
+	status = "okay";
+};
+
+&pio {
+	spic_pins: spi1-pins-func-1 {
+		mux {
+			function = "spi";
+			groups = "spi1_1";
+		};
+	};
+
+	mmc0_pins_default: mmc0default {
+		mux {
+			function = "flash";
+			groups = "emmc_45";
+		};
+		conf-cmd-dat {
+			pins = "SPI0_CLK", "SPI0_MOSI", "SPI0_MISO",
+				"SPI0_CS",  "SPI0_HOLD", "SPI0_WP",
+				"SPI1_CLK", "SPI1_MOSI", "SPI1_MISO";
+			input-enable;
+			drive-strength = <MTK_DRIVE_4mA>;
+			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;
+		};
+		conf-clk {
+			pins = "SPI1_CS";
+			drive-strength = <MTK_DRIVE_6mA>;
+			bias-pull-down = <MTK_PUPD_SET_R1R0_10>;
+		};
+		conf-rst {
+			pins = "PWM0";
+			drive-strength = <MTK_DRIVE_4mA>;
+			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;
+		};
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&watchdog {
+	status = "disabled";
+};

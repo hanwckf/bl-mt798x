@@ -1,0 +1,131 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+
+/dts-v1/;
+#include "mt7981.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	model = "mt7981-openembed-som7981";
+	compatible = "mediatek,mt7981", "mediatek,mt7981-rfb";
+
+	chosen {
+		stdout-path = &uart0;
+		tick-timer = &timer0;
+	};
+
+	config {
+		bootcmd = "mtkboardboot";
+		blink_led = "red:wlan5g";
+		system_led = "red:wlan5g";
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		button-reset {
+			label = "reset";
+			linux,code = <KEY_RESTART>;
+			gpios = <&pio 1 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		led-0 {
+			label = "green:gbe";
+			gpios = <&pio 8 GPIO_ACTIVE_LOW>;
+		};
+
+		led-1 {
+			label = "amber:gbe";
+			gpios = <&pio 13 GPIO_ACTIVE_LOW>;
+		};
+
+		led-2 {
+			label = "green:wlan2g";
+			gpios = <&pio 34 GPIO_ACTIVE_LOW>;
+		};
+
+		wlan5g_led: led-3 {
+			label = "red:wlan5g";
+			gpios = <&pio 35 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0x40000000 0x40000000>;
+	};
+
+	bl2_verify {
+		bl2_compatible = "spim-nand";
+	};
+};
+
+&eth {
+	status = "okay";
+	mediatek,gmac-id = <1>;
+	phy-mode = "gmii";
+	phy-handle = <&phy0>;
+
+	mdio {
+		phy0: ethernet-phy@0 {
+			compatible = "ethernet-phy-id03a2.9461";
+			reg = <0>;
+			phy-mode = "gmii";
+		};
+	};
+};
+
+&pio {
+	spi_flash_pins: spi0-pins-func-1 {
+		mux {
+			function = "flash";
+			groups = "spi0", "spi0_wp_hold";
+		};
+
+		conf-pu {
+			pins = "SPI0_CS", "SPI0_HOLD", "SPI0_WP";
+			drive-strength = <MTK_DRIVE_4mA>;
+			bias-pull-up = <MTK_PUPD_SET_R1R0_00>;
+		};
+
+		conf-pd {
+			pins = "SPI0_CLK", "SPI0_MOSI", "SPI0_MISO";
+			drive-strength = <MTK_DRIVE_4mA>;
+			bias-pull-down = <MTK_PUPD_SET_R1R0_00>;
+		};
+	};
+};
+
+&spi0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi_flash_pins>;
+	status = "okay";
+	must_tx;
+	enhance_timing;
+	dma_ext;
+	ipm_design;
+	support_quad;
+	tick_dly = <2>;
+	sample_sel = <0>;
+
+	spi_nand@0 {
+		compatible = "spi-nand";
+		reg = <0>;
+		spi-max-frequency = <52000000>;
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&watchdog {
+	status = "disabled";
+};

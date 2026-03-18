@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: GPL-2.0
+
+/dts-v1/;
+#include "mt7981-sn-r1-common.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "mt7981-sn-r1";
+	compatible = "mediatek,mt7981", "mediatek,mt7981-rfb";
+};
+
+&mmc0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&mmc0_pins_default>;
+	bus-width = <8>;
+	max-frequency = <52000000>;
+	cap-mmc-highspeed;
+	cap-mmc-hw-reset;
+	vmmc-supply = <&reg_3p3v>;
+	non-removable;
+	status = "okay";
+};

@@ -1,0 +1,43 @@
+// SPDX-License-Identifier: GPL-2.0
+
+/dts-v1/;
+#include "mt7986a-netcore-n60.dtsi"
+
+/ {
+	model = "mt7986-netcore_n60-pro";
+	compatible = "mediatek,mt7986", "mediatek,mt7986-rfb";
+
+	config {
+		blink_led = "blue:power";
+		system_led = "blue:power";
+	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		led-0 {
+			label = "blue:wlan";
+			gpios = <&pio 2 GPIO_ACTIVE_LOW>;
+		};
+
+		led_power: led-1 {
+			label = "blue:power";
+			gpios = <&pio 29 GPIO_ACTIVE_LOW>;
+		};
+
+		led-2 {
+			label = "blue:usb";
+			gpios = <&pio 30 GPIO_ACTIVE_LOW>;
+		};
+
+		led-3 {
+			label = "blue:mesh";
+			gpios = <&pio 31 GPIO_ACTIVE_LOW>;
+		};
+
+		led-4 {
+			label = "blue:wan";
+			gpios = <&pio 32 GPIO_ACTIVE_LOW>;
+		};
+	};
+};

@@ -1,0 +1,130 @@
+// SPDX-License-Identifier: GPL-2.0
+
+/dts-v1/;
+#include "mt7986.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	model = "mt7986-redmi-ax6000";
+	compatible = "mediatek,mt7986", "mediatek,mt7986-rfb", "mt7986-redmi-ax6000";
+
+	chosen {
+		stdout-path = &uart0;
+		tick-timer = &timer0;
+	};
+
+	config {
+		bootcmd = "mtkboardboot";
+	};
+
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0x40000000 0x20000000>;
+	};
+
+	mtd-layout {
+		layout@0 {
+			label = "default";
+			// mtd layout for xiaomi stock ubi or openwrt-stock/immortalwrt-stock firmware
+			cmdline = "console=ttyS0,115200n1 loglevel=8 firmware=0 uart_en=1";
+			mtdids = "nmbm0=nmbm0";
+			mtdparts = "nmbm0:1024k(bl2),256k(Nvram),256k(Bdata),2048k(factory),2048k(fip),256k(crash),256k(crash_log),30720k(ubi_kernel),81920k(ubi)";
+			boot_part = "ubi_kernel"; // ubi boot part, default is "ubi"
+			factory_part = "ubi_kernel"; // factory firmware write part, default is "ubi"
+			sysupgrade_kernel_ubipart = "ubi_kernel"; // sysupgrade kernel write part (ubi volume: kernel), default is "ubi"
+			sysupgrade_rootfs_ubipart = "ubi"; // sysupgrade rootfs write part (ubi volume: rootfs, rootfs_data)
+		};
+
+		layout@1 {
+			label = "immortalwrt-110m";
+			// mtd layout for immortalwrt/openwrt 110M ubi firmware
+			mtdids = "nmbm0=nmbm0";
+			mtdparts = "nmbm0:1024k(bl2),256k(Nvram),256k(Bdata),2048k(factory),2048k(fip),256k(crash),256k(crash_log),110m(ubi)";
+		};
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		reset-button {
+			label = "reset";
+			linux,code = <KEY_RESTART>;
+			gpios = <&pio 9 GPIO_ACTIVE_LOW>;
+		};
+
+		mesh-button {
+			label = "mesh";
+			linux,code = <BTN_9>;
+			gpios = <&pio 10 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	bl2_verify {
+		bl2_compatible = "spim-nand";
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&eth {
+	status = "okay";
+	mediatek,gmac-id = <0>;
+	phy-mode = "2500base-x";
+	mediatek,switch = "auto";
+	reset-gpios = <&pio 5 GPIO_ACTIVE_HIGH>;
+
+	fixed-link {
+		speed = <2500>;
+		full-duplex;
+	};
+};
+
+&pio {
+	spi_flash_pins: spi0-pins-func-1 {
+		mux {
+			function = "flash";
+			groups = "spi0", "spi0_wp_hold";
+		};
+
+		conf-pu {
+			pins = "SPI2_CS", "SPI2_HOLD", "SPI2_WP";
+			drive-strength = <MTK_DRIVE_4mA>;
+			bias-pull-up = <MTK_PUPD_SET_R1R0_11>;
+		};
+
+		conf-pd {
+			pins = "SPI2_CLK", "SPI2_MOSI", "SPI2_MISO";
+			drive-strength = <MTK_DRIVE_4mA>;
+			bias-pull-down = <MTK_PUPD_SET_R1R0_11>;
+		};
+	};
+};
+
+&spi0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi_flash_pins>;
+	status = "okay";
+	must_tx;
+	enhance_timing;
+	dma_ext;
+	ipm_design;
+	support_quad;
+	tick_dly = <2>;
+	sample_sel = <0>;
+
+	spi_nand@0 {
+		compatible = "spi-nand";
+		reg = <1>;
+		spi-max-frequency = <52000000>;
+	};
+};
+
+&watchdog {
+	status = "disabled";
+};

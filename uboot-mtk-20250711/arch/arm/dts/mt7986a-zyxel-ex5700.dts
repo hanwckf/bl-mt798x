@@ -1,0 +1,158 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+/dts-v1/;
+#include <dt-bindings/input/linux-event-codes.h>
+#include "mt7986.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	model = "mt7986-zyxel_ex5700";
+	compatible = "mediatek,mt7986", "mediatek,mt7986-rfb";
+
+	chosen {
+		stdout-path = &uart0;
+		tick-timer = &timer0;
+	};
+
+	config {
+		bootcmd = "mtkboardboot";
+		blink_led = "amber:sys";
+		system_led = "green:sys";
+	};
+
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0x40000000 0x40000000>;
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		reset-button {
+			label = "reset";
+			gpios = <&pio 9 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_RESTART>;
+		};
+
+		wps-button {
+			label = "wps";
+			gpios = <&pio 10 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_WPS_BUTTON>;
+		};
+	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		red1 {
+			label = "red:net";
+			gpios = <&pio 23 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		green1 {
+			label = "green:net";
+			gpios = <&pio 25 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		amber1 {
+			label = "amber:net";
+			gpios = <&pio 29 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		white2 {
+			label = "white:sys";
+			gpios = <&pio 16 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		red2 {
+			label = "red:sys";
+			gpios = <&pio 17 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_status_green: green2 {
+			label = "green:sys";
+			gpios = <&pio 31 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_status_amber: amber2 {
+			label = "amber:sys";
+			gpios = <&pio 18 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+	};
+
+	bl2_verify {
+		bl2_compatible = "spim-nand";
+	};
+};
+
+&eth {
+	status = "okay";
+	mediatek,gmac-id = <0>;
+	phy-mode = "2500base-x";
+	mediatek,switch = "auto";
+	reset-gpios = <&pio 5 GPIO_ACTIVE_HIGH>;
+
+	fixed-link {
+		speed = <2500>;
+		full-duplex;
+	};
+};
+
+&pio {
+	spi_flash_pins: spi0-pins-func-1 {
+		mux {
+			function = "flash";
+			groups = "spi0", "spi0_wp_hold";
+		};
+
+		conf-pu {
+			pins = "SPI2_CS", "SPI2_HOLD", "SPI2_WP";
+			drive-strength = <MTK_DRIVE_4mA>;
+			bias-pull-up = <MTK_PUPD_SET_R1R0_11>;
+		};
+
+		conf-pd {
+			pins = "SPI2_CLK", "SPI2_MOSI", "SPI2_MISO";
+			drive-strength = <MTK_DRIVE_4mA>;
+			bias-pull-down = <MTK_PUPD_SET_R1R0_11>;
+		};
+	};
+};
+
+&spi0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi_flash_pins>;
+	status = "okay";
+	must_tx;
+	enhance_timing;
+	dma_ext;
+	ipm_design;
+	support_quad;
+	tick_dly = <2>;
+	sample_sel = <0>;
+
+	spi_nand@0 {
+		compatible = "spi-nand";
+		reg = <1>;
+		spi-max-frequency = <52000000>;
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&watchdog {
+	status = "disabled";
+};

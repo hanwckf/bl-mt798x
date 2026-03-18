@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0
+
+/dts-v1/;
+#include "mt7981-ax3000t.dts"
+
+/ {
+	model = "mt7981-xiaomi-ax3000t-an8855";
+};
+
+&eth {
+	mediatek,switch = "an8855";
+};
