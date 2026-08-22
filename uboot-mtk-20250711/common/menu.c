@@ -7,6 +7,9 @@
 #include <ansi.h>
 #include <cli.h>
 #include <malloc.h>
+#ifdef CONFIG_MTK_NET_ABORT
+#include <net_abort.h>
+#endif
 #include <errno.h>
 #include <linux/ctype.h>
 #include <linux/delay.h>
@@ -475,6 +478,14 @@ enum bootmenu_key bootmenu_autoboot_loop(struct bootmenu_data *menu,
 		for (i = 0; i < 100; ++i) {
 			if (!tstc()) {
 				schedule();
+#ifdef CONFIG_MTK_NET_ABORT
+				net_abort_poll();
+				if (net_abort_detected()) {
+					menu->delay = -1;
+					key = BKEY_QUIT;
+					break;
+				}
+#endif
 				mdelay(10);
 				continue;
 			}

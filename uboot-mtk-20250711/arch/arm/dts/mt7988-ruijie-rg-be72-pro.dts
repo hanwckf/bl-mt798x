@@ -1,0 +1,169 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Ruijie RG-BE72 Pro (MT7988D)
+ * Ported from airjinkela/bl-798x-e, adapted for U-Boot 2025
+ */
+
+/dts-v1/;
+#include "mt7988.dtsi"
+#include <dt-bindings/input/linux-event-codes.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "mt7988-ruijie-rg-be72-pro";
+	compatible = "mediatek,mt7988", "mediatek,mt7988-rfb";
+
+	chosen {
+		stdout-path = &uart0;
+	};
+
+	config {
+		bootcmd = "mtkboardboot";
+		blink_led = "sys_green";
+		system_led = "sys_red";
+	};
+
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0 0x40000000 0 0x40000000>;
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		reset-button {
+			label = "reset";
+			linux,code = <KEY_RESTART>;
+			gpios = <&pio 13 GPIO_ACTIVE_LOW>;
+		};
+
+		mesh-button {
+			label = "mesh";
+			linux,code = <BTN_8>;
+			gpios = <&pio 14 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		led-0 {
+			label = "atm_red";
+			gpios = <&pio 61 GPIO_ACTIVE_LOW>;
+		};
+
+		led-1 {
+			label = "atm_green";
+			gpios = <&pio 62 GPIO_ACTIVE_LOW>;
+		};
+
+		led-2 {
+			label = "atm_blue";
+			gpios = <&pio 4 GPIO_ACTIVE_LOW>;
+		};
+
+		led-3 {
+			label = "sys_red";
+			gpios = <&pio 58 GPIO_ACTIVE_LOW>;
+		};
+
+		led-4 {
+			label = "sys_green";
+			gpios = <&pio 60 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	cpus {
+		/delete-node/ cpu@3;
+	};
+
+	reg_3p3v: regulator-3p3v {
+		compatible = "regulator-fixed";
+		regulator-name = "fixed-3.3V";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	reg_1p8v: regulator-1p8v {
+		compatible = "regulator-fixed";
+		regulator-name = "fixed-1.8V";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	bl2_verify {
+		bl2_compatible = "spim-nand";
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c0_pins>;
+	status = "okay";
+};
+
+&eth0 {
+	status = "okay";
+	mediatek,gmac-id = <0>;
+	phy-mode = "usxgmii";
+	mediatek,switch = "mt7988";
+
+	fixed-link {
+		speed = <1000>;
+		full-duplex;
+		pause;
+	};
+};
+
+&pio {
+	spi0_pins: spi0-pins {
+		mux {
+			function = "spi";
+			groups = "spi0", "spi0_wp_hold";
+		};
+	};
+
+	i2c0_pins: i2c0-pins-g0 {
+		mux {
+			function = "i2c";
+			groups = "i2c0_1";
+		};
+	};
+};
+
+&pwm {
+	status = "okay";
+};
+
+&spi0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi0_pins>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+	must_tx;
+	enhance_timing;
+	dma_ext;
+	ipm_design;
+	support_quad;
+	tick_dly = <2>;
+	sample_sel = <0>;
+
+	spi_nand@0 {
+		compatible = "spi-nand";
+		reg = <0>;
+		spi-max-frequency = <52000000>;
+	};
+};
+
+&watchdog {
+	status = "disabled";
+};

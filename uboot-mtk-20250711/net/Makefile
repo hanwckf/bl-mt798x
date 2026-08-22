@@ -31,6 +31,7 @@ obj-$(CONFIG_PROT_TCP) += tcp.o
 obj-$(CONFIG_WGET) += wget.o
 obj-$(CONFIG_MTK_TCP)  += mtk_tcp.o
 obj-$(CONFIG_MTK_HTTPD)  += mtk_httpd.o
+obj-$(CONFIG_MTK_NET_ABORT) += net_abort.o
 
 # Disable this warning as it is triggered by:
 # sprintf(buf, index ? "foo%d" : "foo", index)

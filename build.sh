@@ -1,10 +1,24 @@
 #!/bin/sh
 
-TOOLCHAIN=aarch64-linux-gnu-
-#UBOOT_DIR=uboot-mtk-20220606
-UBOOT_DIR=uboot-mtk-20230718-09eda825
-#ATF_DIR=atf-20220606-637ba581b
-ATF_DIR=atf-20240117-bacca82a8
+# 2026-08-22 ⑨号实验: BE72 板级移植进 hanwckf 原版 2025 树
+# UBOOT_DIR/ATF_DIR 指向 20250711 (纯血 TF-A 2.13 + U-Boot 2025.07)
+UBOOT_DIR=uboot-mtk-20250711
+ATF_DIR=atf-20250711
+
+# GCC 11 交叉链(社区活版指纹 GCC 11.4; GCC 15 编老树入口死)
+if [ -x /usr/bin/aarch64-linux-gnu-gcc-11 ]; then
+	GCC11_BIN=/opt/cross11/bin
+	mkdir -p "$GCC11_BIN"
+	for t in gcc gcc-ar gcc-nm gcc-ranlib; do
+		ln -sf "/usr/bin/aarch64-linux-gnu-$t-11" "$GCC11_BIN/aarch64-linux-gnu-$t"
+	done
+	for t in ld ld.bfd as ar nm ranlib objcopy objdump readelf strip; do
+		[ -e "/usr/bin/aarch64-linux-gnu-$t" ] && ln -sf "/usr/bin/aarch64-linux-gnu-$t" "$GCC11_BIN/aarch64-linux-gnu-$t"
+	done
+	TOOLCHAIN="$GCC11_BIN/aarch64-linux-gnu-"
+else
+	TOOLCHAIN=aarch64-linux-gnu-
+fi
 
 if [ -z "$SOC" ] || [ -z "$BOARD" ]; then
 	echo "Usage: SOC=[mt7981|mt7986] BOARD=<board name> MULTI_LAYOUT=[0|1] $0"

@@ -14,6 +14,9 @@
 #include <command.h>
 #include <console.h>
 #include <env.h>
+#ifdef CONFIG_MTK_NET_ABORT
+#include <net_abort.h>
+#endif
 #ifdef CONFIG_CMD_GL_BTN
 #include <glbtn.h>
 #endif
@@ -83,11 +86,17 @@ void main_loop(void)
 	run_command("glbtn", 0);
 #endif
 
+	if (IS_ENABLED(CONFIG_MTK_NET_ABORT))
+		net_abort_prepare();
+
 	s = bootdelay_process();
 	if (cli_process_fdt(&s))
 		cli_secure_boot_cmd(s);
 
 	autoboot_command(s);
+
+	if (IS_ENABLED(CONFIG_MTK_NET_ABORT))
+		net_abort_finish();
 
 	/* if standard boot if enabled, assume that it will be able to boot */
 	if (IS_ENABLED(CONFIG_BOOTSTD_PROG)) {

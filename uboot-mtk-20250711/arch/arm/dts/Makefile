@@ -1136,6 +1136,7 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += \
 	mt7986a-emmc-rfb.dtb \
 	mt7986b-emmc-rfb.dtb \
 	mt7988-rfb.dtb \
+	mt7988-ruijie-rg-be72-pro.dtb \
 	mt7988-snfi-nand-rfb.dtb \
 	mt7988-spim-nand-rfb.dtb \
 	mt7988-spim-nor-rfb.dtb \
