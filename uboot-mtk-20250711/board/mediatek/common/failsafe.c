@@ -26,7 +26,8 @@ const char *fw_to_part_name(failsafe_fw_t fw)
 	{
 		case FW_TYPE_GPT: return "gpt";
 		case FW_TYPE_BL2: return "bl2";
-		case FW_TYPE_FIP: return "fip";
+		case FW_TYPE_FIP:
+			return IS_ENABLED(CONFIG_MTK_BOOTMENU_MTD_LEGACY) ? "bl" : "fip";
 		case FW_TYPE_FW: return "fw";
 		default: return "err";
 	}
