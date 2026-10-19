@@ -26,8 +26,8 @@ struct mtk_tcp_cb_data {
 	enum mtk_tcp_cb_status status;
 	bool timedout;
 	__be32 sip;
-	__be16 sp;
-	__be16 dp;
+	__be16 sport;
+	__be16 dport;
 	void *pdata;
 	void *data;
 	uint32_t datalen;

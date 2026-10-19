@@ -174,7 +174,7 @@ done:
 	upload_data = fw->data;
 	upload_size = fw->size;
 
-	md5_wd((u8 *)fw->data, fw->size, md5_sum, 0);
+	md5_wd((u8 *)fw->data, fw->size, md5_sum, MD5_DEF_CHUNK_SZ);
 	for (i = 0; i < 16; i++) {
 		u8 hex = (md5_sum[i] >> 4) & 0xf;
 		md5_str[i * 2] = hexchars[hex];
@@ -185,12 +185,12 @@ done:
 #ifdef CONFIG_MEDIATEK_MULTI_MTD_LAYOUT
 	if (mtd) {
 		mtd_layout_label = mtd->data;
-		sprintf(resp, "%ld %s %s", fw->size, md5_str, mtd->data);
+		sprintf(resp, "%zd %s %s", fw->size, md5_str, mtd->data);
 	} else {
-		sprintf(resp, "%ld %s", fw->size, md5_str);
+		sprintf(resp, "%zd %s", fw->size, md5_str);
 	}
 #else
-	sprintf(resp, "%ld %s", fw->size, md5_str);
+	sprintf(resp, "%zd %s", fw->size, md5_str);
 #endif
 
 	response->data = resp;
