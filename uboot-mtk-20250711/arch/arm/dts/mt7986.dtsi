@@ -10,6 +10,7 @@
 #include <dt-bindings/clock/mt7986-clk.h>
 #include <dt-bindings/reset/mt7629-reset.h>
 #include <dt-bindings/pinctrl/mt65xx.h>
+#include <dt-bindings/input/linux-event-codes.h>
 
 / {
 	compatible = "mediatek,mt7986";
@@ -197,6 +198,14 @@
 		clock-names = "top", "main", "pwm1", "pwm2";
 		status = "disabled";
 		bootph-all;
+	};
+
+	rng@1020f000 {
+		compatible = "mediatek,mt7986-rng",
+			     "mediatek,mt7623-rng";
+		reg = <0x1020f000 0x100>;
+		clocks = <&infracfg CLK_INFRA_TRNG_CK>;
+		clock-names = "rng";
 	};
 
 	uart0: serial@11002000 {
